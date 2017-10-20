@@ -28,7 +28,7 @@ public class OpenOcdConfigurationType extends CMakeRunConfigurationType {
                 "EmbeddedApplication",
                 "OpenOcd Download & Run",
                 "Downloads and Runs Embedded Applications using OpenOcd",
-                IconLoader.findIcon("ocd.png",OpenOcdConfigurationType.class));
+                IconLoader.findIcon("ocd_run.png",OpenOcdConfigurationType.class));
         factory = new ConfigurationFactory(this) {
             @NotNull
             @Override
