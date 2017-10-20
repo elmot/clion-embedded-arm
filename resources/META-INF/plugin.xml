@@ -23,16 +23,25 @@
     <depends>com.intellij.modules.clion</depends>
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
-        <configurationType implementation="xyz.elmot.clion.openocd.OpenOcdConfigurationType" />
+        <configurationType implementation="xyz.elmot.clion.openocd.OpenOcdConfigurationType"/>
+        <projectConfigurable id="elmot.openocd.config" instance="xyz.elmot.clion.openocd.OpenOcdSettings"
+                             displayName="OpenOCD Support" groupId="build.tools"/>
     </extensions>
     <actions>
         <!-- Add your actions here -->
-        <action id="stm32cubemx.project.convert" class="xyz.elmot.clion.cubemx.ConvertProject" text="Import STM32CubeMX project">
+        <action id="stm32cubemx.project.convert" class="xyz.elmot.clion.cubemx.ConvertProject"
+                text="Import STM32CubeMX project">
             <add-to-group group-id="ToolsMenu" anchor="after" relative-to-action="stm32cubemx.project.convert"/>
         </action>
-        <action id="openocd.run" class="xyz.elmot.clion.openocd.OpenOcdRun" text="Run OpenOCD" icon="/xyz/elmot/clion/openocd/ocd.png">
+        <action id="openocd.run" class="xyz.elmot.clion.openocd.OpenOcdRun" text="Run OpenOCD"
+                icon="/xyz/elmot/clion/openocd/ocd.png">
             <add-to-group group-id="ToolsMenu" anchor="after" relative-to-action="CMake.ToolsMenu"/>
         </action>
     </actions>
+    <project-components>
+        <component>
+            <implementation-class>xyz.elmot.clion.openocd.OpenOcdSettings</implementation-class>
+        </component>
+    </project-components>
 
 </idea-plugin>

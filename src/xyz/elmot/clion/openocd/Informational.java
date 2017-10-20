@@ -18,11 +18,11 @@ public class Informational {
 
     @SuppressWarnings("WeakerAccess")
     public static void showSuccessfulDownloadNotification(Project project) {
-        Notifications.Bus.notify(new Notification(GROUP_DISPLAY, FIRMWARE_DOWNLOAD, "Firmware Downloaded", NotificationType.INFORMATION), project);
+        Notifications.Bus.notify(new Notification(GROUP_DISPLAY, FIRMWARE_DOWNLOAD, "Success", NotificationType.INFORMATION), project);
     }
 
     @SuppressWarnings("WeakerAccess")
     public static void showFailedDownloadNotification(Project project) {
-        Notifications.Bus.notify(new Notification(GROUP_DISPLAY, FIRMWARE_DOWNLOAD, "Download Failed", NotificationType.ERROR), project);
+        Notifications.Bus.notify(new Notification(GROUP_DISPLAY, FIRMWARE_DOWNLOAD, "FAILED", NotificationType.ERROR), project);
     }
 }

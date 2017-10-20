@@ -2,7 +2,9 @@ package xyz.elmot.clion.openocd;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
+import com.intellij.execution.configuration.ConfigurationFactoryEx;
 import com.intellij.execution.configurations.ConfigurationFactory;
+import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.project.Project;
 import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
@@ -21,7 +23,7 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
 
     @SuppressWarnings("WeakerAccess")
     public OpenOcdConfiguration(Project project, ConfigurationFactory configurationFactory, String targetName) {
-        super(project, configurationFactory, targetName);
+        super(project, new OpenOcdConfigurationFactoryEx(configurationFactory), targetName);
     }
 
     @Nullable
@@ -46,4 +48,29 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
         return runFile;
     }
 
+    private static class OpenOcdConfigurationFactoryEx extends ConfigurationFactoryEx {
+        private final ConfigurationFactory configurationFactory;
+
+        public OpenOcdConfigurationFactoryEx(ConfigurationFactory configurationFactory) {
+            super(configurationFactory.getType());
+            this.configurationFactory = configurationFactory;
+        }
+
+        public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
+            return configurationFactory.createTemplateConfiguration(project);
+        }
+
+        public String getId() {
+            return configurationFactory.getId();
+        }
+
+        public void onNewConfigurationCreated(@NotNull CMakeAppRunConfiguration factoryEx) {
+            ((ConfigurationFactoryEx<CMakeAppRunConfiguration>) configurationFactory).onNewConfigurationCreated(factoryEx);
+        }
+
+        @Override
+        public boolean isConfigurationSingletonByDefault() {
+            return true;
+        }
+    }
 }

@@ -66,7 +66,7 @@ public class OpenOcdRun extends AnAction {
 
         try {
             process = new OSProcessHandler(commandLine);
-            RunContentExecutor openOCDConsole = new RunContentExecutor(project, process)//todo color console
+            RunContentExecutor openOCDConsole = new RunContentExecutor(project, process)
                     .withTitle("OpenOCD console")
                     .withActivateToolWindow(true)
                     .withFilter(new ErrorFilter(project))
@@ -74,6 +74,9 @@ public class OpenOcdRun extends AnAction {
                             () -> !process.isProcessTerminated() && !process.isProcessTerminating());
 
             openOCDConsole.run();
+            //todo color console
+            //todo process exit report
+            //todo restart
 
         } catch (ExecutionException e) {
             ExecutionErrorDialog.show(e, "OpenOCD start failed", project);
@@ -83,12 +86,13 @@ public class OpenOcdRun extends AnAction {
     @SuppressWarnings("WeakerAccess")
     @NotNull
     public static GeneralCommandLine createOcdCommandLine(@NotNull Project project, @Nullable File fileToLoad, @Nullable String additionalCommand, boolean shutdown) {
+        OpenOcdSettings ocdSettings = project.getComponent(OpenOcdSettings.class);
         GeneralCommandLine commandLine = new GeneralCommandLine()
                 .withRedirectErrorStream(true)
                 .withWorkDirectory(project.getBasePath())
                 .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
-                .withExePath(OpenOcdLauncher.OPENOCD)
-                .withParameters("-f", OpenOcdLauncher.BOARD_CFG);
+                .withExePath(ocdSettings.getOpenOcdLocation())
+                .withParameters("-f", ocdSettings.getBoardConfigFile());
         String command = "";
         if (fileToLoad != null) {
             command += "program \"" + fileToLoad.getAbsolutePath() + "\";";
@@ -109,6 +113,7 @@ public class OpenOcdRun extends AnAction {
     public void update(AnActionEvent e) {
         super.update(e);
         e.getPresentation().setEnabled(process == null || process.isProcessTerminated());
+        e.getPresentation().setVisible(true);
     }
 
     private class ErrorFilter implements Filter {

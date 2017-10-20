@@ -24,10 +24,6 @@ import java.io.File;
  * (c) elmot on 19.10.2017.
  */
 class OpenOcdLauncher extends CidrLauncher {
-    static final String OPENOCD = "openocd";//TODO path to parameters
-    static final String BOARD_CFG = "board/stm32l4discovery.cfg";//todo parameters
-    private static final String GDB_PATH = "/usr/bin/arm-none-eabi-gdb";//todo parameters
-    private static final int GDB_PORT = 3333;//todo parameters
 
     private OpenOcdConfiguration openOcdConfiguration;
 
@@ -60,12 +56,14 @@ class OpenOcdLauncher extends CidrLauncher {
     @NotNull
     @Override
     protected CidrDebugProcess createDebugProcess(@NotNull CommandLineState commandLineState, @NotNull XDebugSession xDebugSession) throws ExecutionException {
+        Project project = commandLineState.getEnvironment().getProject();
+        OpenOcdSettings ocdSettings = project.getComponent(OpenOcdSettings.class);
         CidrRemoteDebugParameters remoteDebugParameters = new CidrRemoteDebugParameters();
         remoteDebugParameters.setSymbolFile(openOcdConfiguration.findRunFile().getAbsolutePath());
-        remoteDebugParameters.setRemoteCommand("tcp:localhost:" + GDB_PORT);
+        remoteDebugParameters.setRemoteCommand("tcp:localhost:" + ocdSettings.getGdbPort());
 
         CPPToolchains.Toolchain defaultToolchain = CPPToolchains.getInstance().getDefaultToolchain();
-        GDBDriverConfiguration gdbDriverConfiguration = new GDBDriverConfiguration(getProject(), defaultToolchain, new File(GDB_PATH));
+        GDBDriverConfiguration gdbDriverConfiguration = new GDBDriverConfiguration(getProject(), defaultToolchain, new File(ocdSettings.getGdbLocation()));
         CidrRemoteGDBDebugProcess debugProcess = new CidrRemoteGDBDebugProcess(gdbDriverConfiguration, remoteDebugParameters, xDebugSession, commandLineState.getConsoleBuilder());
         debugProcess.getProcessHandler().addProcessListener(new ProcessAdapter() {
             @Override
