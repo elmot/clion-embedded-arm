@@ -1,38 +1,38 @@
-<idea-plugin    >
-  <id>xyz.elmot.clion.stm32cubemx.prj</id>
-  <name>STM32CubeMX project generator</name>
-  <version>1.0</version>
-  <vendor email="me@elmot.xyz" url="http://elmot.xyz">Elmot</vendor>
+<idea-plugin>
+    <id>xyz.elmot.clion.stm32cubemx.prj</id>
+    <name>STM32CubeMX project generator</name>
+    <version>1.0</version>
+    <vendor email="me@elmot.xyz" url="http://elmot.xyz">Elmot</vendor>
 
-  <description><![CDATA[
+    <description><![CDATA[
   The plugin converts a project made in <b>STM32CubeMX</b> into a CLion project with
   <b>OpenOCD</b> support.
     ]]></description>
 
-  <change-notes><![CDATA[
+    <change-notes><![CDATA[
       The very first revision<br>
 
     ]]>
-  </change-notes>
+    </change-notes>
 
-  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-  <idea-version since-build="171.0"/>
+    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
+    <idea-version since-build="171.0"/>
 
-  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
-       on how to target different products -->
-  <!-- uncomment to enable plugin in all products
-  <depends>com.intellij.modules.lang</depends>
-  -->
-  <depends>com.intellij.modules.clion</depends>
-  <extensions defaultExtensionNs="com.intellij">
-    <!-- Add your extensions here -->
-    <configurationType implementation="xyz.elmot.clion.openocd.OpenOcdConfigurationType" />
-  </extensions>
-  <actions>
-    <!-- Add your actions here -->
-    <action id="project.convert" class="xyz.elmot.clion.cubemx.ConvertProject" text="STM32CubeMX-&gt;CLion">
-      <add-to-group group-id="ToolsMenu" anchor="after" relative-to-action="CMake.ToolsMenu"/>
-    </action>
-  </actions>
+    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+         on how to target different products -->
+    <depends>com.intellij.modules.clion</depends>
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Add your extensions here -->
+        <configurationType implementation="xyz.elmot.clion.openocd.OpenOcdConfigurationType" />
+    </extensions>
+    <actions>
+        <!-- Add your actions here -->
+        <action id="stm32cubemx.project.convert" class="xyz.elmot.clion.cubemx.ConvertProject" text="Import STM32CubeMX project">
+            <add-to-group group-id="ToolsMenu" anchor="after" relative-to-action="stm32cubemx.project.convert"/>
+        </action>
+        <action id="openocd.run" class="xyz.elmot.clion.openocd.OpenOcdRun" text="Run OpenOCD" icon="/xyz/elmot/clion/openocd/ocd.png">
+            <add-to-group group-id="ToolsMenu" anchor="after" relative-to-action="CMake.ToolsMenu"/>
+        </action>
+    </actions>
 
 </idea-plugin>

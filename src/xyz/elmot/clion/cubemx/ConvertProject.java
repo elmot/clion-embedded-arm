@@ -71,7 +71,6 @@ public class ConvertProject extends AnAction {
         writeProjectFile(project, "tmpl_toolset.txt", projectData.getCmakeFileName(), projectData);
         writeProjectFile(project, "tmpl_CMakeLists.txt", "CMakeLists.txt", projectData);
         writeProjectFile(project, "tmpl_gitignore.txt", ".gitignore", projectData);
-        //todo create openocd.cfg
         CMakeWorkspace.getInstance(project).scheduleClearGeneratedFilesAndReload();
         Messages.showInfoMessage(project, projectData.toString(), "Project Info");
     }
