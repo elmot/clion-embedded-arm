@@ -86,13 +86,13 @@ public class OpenOcdRun extends AnAction {
     @SuppressWarnings("WeakerAccess")
     @NotNull
     public static GeneralCommandLine createOcdCommandLine(@NotNull Project project, @Nullable File fileToLoad, @Nullable String additionalCommand, boolean shutdown) {
-        OpenOcdSettings ocdSettings = project.getComponent(OpenOcdSettings.class);
+        OpenOcdSettingsState ocdSettings = project.getComponent(OpenOcdSettingsState.class);
         GeneralCommandLine commandLine = new GeneralCommandLine()
                 .withRedirectErrorStream(true)
                 .withWorkDirectory(project.getBasePath())
                 .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
-                .withExePath(ocdSettings.getOpenOcdLocation())
-                .withParameters("-f", ocdSettings.getBoardConfigFile());
+                .withExePath(ocdSettings.openOcdLocation)
+                .withParameters("-f", ocdSettings.boardConfigFile);
         String command = "";
         if (fileToLoad != null) {
             command += "program \"" + fileToLoad.getAbsolutePath() + "\";";

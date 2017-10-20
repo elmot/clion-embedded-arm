@@ -1,8 +1,6 @@
 package xyz.elmot.clion.openocd;
 
-import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ProjectComponent;
-import com.intellij.openapi.components.State;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
@@ -33,52 +31,18 @@ import static com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW;
 /**
  * (c) elmot on 20.10.2017.
  */
-@State(name = "elmot.OpenOcdPlugin")
-public class OpenOcdSettings implements ProjectComponent, PersistentStateComponent<OpenOcdSettings.State>, Configurable {
+@SuppressWarnings("WeakerAccess")
+
+public class OpenOcdSettings implements ProjectComponent, Configurable {
     //todo file choosers
     private final Project project;
-    private File projectFile;
 
     public OpenOcdSettings(Project project) {
         this.project = project;
     }
 
-    private State state = new State();
     private OpenOcdSettingsPanel panel = null;
 
-    @Nullable
-    @Override
-    public OpenOcdSettings.State getState() {
-        return this.state;
-    }
-
-    @Override
-    public void loadState(OpenOcdSettings.State state) {
-        this.state = state;
-    }
-
-    public static class State {
-        private String boardConfigFile = "board/stm32l4discovery.cfg";
-        private String openOcdLocation = "/usr/local/bin/openocd";
-        private String gdbLocation = "/usr/bin/arm-none-eabi-gdb";
-        private int gdbPort = 3333;
-    }
-
-    public String getBoardConfigFile() {
-        return state.boardConfigFile;
-    }
-
-    public String getOpenOcdLocation() {
-        return state.openOcdLocation;
-    }
-
-    public String getGdbLocation() {
-        return state.gdbLocation;
-    }
-
-    public int getGdbPort() {
-        return state.gdbPort;
-    }
 
     @Nls
     @Override
@@ -94,10 +58,11 @@ public class OpenOcdSettings implements ProjectComponent, PersistentStateCompone
     @Override
     public void apply() throws ConfigurationException {
         panel.gdbPort.validateContent();
-        projectFile = project.getBasePath() == null ? null : new File(project.getBasePath());
+        File projectFile = project.getBasePath() == null ? null : new File(project.getBasePath());
         File ocdFile = checkFileExistenceAndCorrect(projectFile, panel.openOcdLocation, true);
         checkFileExistenceAndCorrect(projectFile, panel.gdbLocation, true);
         checkFileExistenceAndCorrect(new File(ocdFile.getParentFile().getParentFile(),"share/openocd/scripts"), panel.boardConfigFile, false);
+        OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
         state.gdbPort = panel.gdbPort.getValue();
         state.boardConfigFile = panel.boardConfigFile.getText();
         state.openOcdLocation = panel.openOcdLocation.getText();
@@ -146,6 +111,7 @@ public class OpenOcdSettings implements ProjectComponent, PersistentStateCompone
 
     @Override
     public void reset() {
+        OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
         panel.gdbPort.setValue(state.gdbPort);
         panel.boardConfigFile.setText(state.boardConfigFile);
         panel.openOcdLocation.setText(state.openOcdLocation);

@@ -57,13 +57,13 @@ class OpenOcdLauncher extends CidrLauncher {
     @Override
     protected CidrDebugProcess createDebugProcess(@NotNull CommandLineState commandLineState, @NotNull XDebugSession xDebugSession) throws ExecutionException {
         Project project = commandLineState.getEnvironment().getProject();
-        OpenOcdSettings ocdSettings = project.getComponent(OpenOcdSettings.class);
+        OpenOcdSettingsState ocdSettings = project.getComponent(OpenOcdSettingsState.class);
         CidrRemoteDebugParameters remoteDebugParameters = new CidrRemoteDebugParameters();
         remoteDebugParameters.setSymbolFile(openOcdConfiguration.findRunFile().getAbsolutePath());
-        remoteDebugParameters.setRemoteCommand("tcp:localhost:" + ocdSettings.getGdbPort());
+        remoteDebugParameters.setRemoteCommand("tcp:localhost:" + ocdSettings.gdbPort);
 
         CPPToolchains.Toolchain defaultToolchain = CPPToolchains.getInstance().getDefaultToolchain();
-        GDBDriverConfiguration gdbDriverConfiguration = new GDBDriverConfiguration(getProject(), defaultToolchain, new File(ocdSettings.getGdbLocation()));
+        GDBDriverConfiguration gdbDriverConfiguration = new GDBDriverConfiguration(getProject(), defaultToolchain, new File(ocdSettings.gdbLocation));
         CidrRemoteGDBDebugProcess debugProcess = new CidrRemoteGDBDebugProcess(gdbDriverConfiguration, remoteDebugParameters, xDebugSession, commandLineState.getConsoleBuilder());
         debugProcess.getProcessHandler().addProcessListener(new ProcessAdapter() {
             @Override

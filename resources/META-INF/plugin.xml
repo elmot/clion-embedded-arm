@@ -1,13 +1,29 @@
 <idea-plugin>
-    <id>xyz.elmot.clion.stm32cubemx.prj</id>
-    <name>STM32CubeMX project generator</name>
+    <id>xyz.elmot.clion.armsupport.prj</id>
+    <name>OpenOCD + STM32CubeMX support for ARM embedded development</name>
     <version>1.0</version>
     <vendor email="me@elmot.xyz" url="http://elmot.xyz">Elmot</vendor>
 
     <description><![CDATA[
-  The plugin converts a project made in <b>STM32CubeMX</b> into a CLion project with
-  <b>OpenOCD</b> support.
-    ]]></description>
+<h3>The plugin is able to:</h3>
+<ul>
+    <li>Convert a project made in <i>STM32CubeMX</i> into a <i>CLion</i> project</li>
+    <li>Download project binaries into compatible MCU using <i>OpenOCD</i></li>
+    <li>Debug project sources using on-chip debugger</li>
+</ul>
+<h3>Pre-requisites:</h3>
+<ul>
+    <li><a href="http://openocd.org/">OpenOCD</a></li>
+    <li><a href="https://developer.arm.com/open-source/gnu-toolchain/gnu-rm">GNU Arm Embedded Toolchain</a> (arm-none-eabi-gcc) and tools</li>
+    <li><a href="http://www.st.com/en/development-tools/stm32cubemx.html">STM32CubeMX</a>(optional)</li>
+    <li>Compatible hardware, virtually any of <a href="http://www.st.com/en/evaluation-tools/stm32-mcu-eval-tools.html"> STM32 development boards</a></li>
+</ul>
+<h3>Disclaimer</h3>
+<ul>
+    <li>No warranties, you are using the plugin at your own risk.</li>
+    <li>Beware bugs! This is very early version</li>
+</ul>
+]]></description>
 
     <change-notes><![CDATA[
       The very first revision<br>
@@ -39,6 +55,9 @@
         </action>
     </actions>
     <project-components>
+        <component>
+            <implementation-class>xyz.elmot.clion.openocd.OpenOcdSettingsState</implementation-class>
+        </component>
         <component>
             <implementation-class>xyz.elmot.clion.openocd.OpenOcdSettings</implementation-class>
         </component>
