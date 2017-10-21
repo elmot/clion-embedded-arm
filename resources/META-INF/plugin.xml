@@ -6,12 +6,14 @@
 
     <description><![CDATA[
 <h2>ARM MCU development plugin</h2>
+
 <h3>The plugin is able to:</h3>
 <ul>
     <li>Convert a project made in <i>STM32CubeMX</i> into a <i>CLion</i> project</li>
     <li>Download project binaries into compatible MCU using <i>OpenOCD</i></li>
     <li>Debug project sources using on-chip debugger</li>
 </ul>
+
 <h3>Pre-requisites:</h3>
 <ul>
     <li><a href="http://openocd.org/">OpenOCD</a></li>
@@ -33,7 +35,7 @@
     </change-notes>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-    <idea-version since-build="171.0"/>
+    <idea-version since-build="173.0" until-build="173.*"/>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
          on how to target different products -->
