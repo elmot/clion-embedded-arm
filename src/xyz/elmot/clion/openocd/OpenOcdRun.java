@@ -102,7 +102,7 @@ public class OpenOcdRun extends AnAction {
         commandLine.addParameters("-f", ocdSettings.boardConfigFile);
         String command = "";
         if (fileToLoad != null) {
-            command += "program \"" + fileToLoad.getAbsolutePath() + "\";";
+            command += "program \"" + fileToLoad.getAbsolutePath().replace(File.separatorChar,'/') + "\";";
         }
         if (additionalCommand != null) {
             command += additionalCommand + ";";
