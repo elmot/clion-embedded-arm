@@ -1,10 +1,11 @@
 <idea-plugin>
     <id>xyz.elmot.clion.armsupport.prj</id>
     <name>OpenOCD + STM32CubeMX support for ARM embedded development</name>
-    <version>1.0</version>
+    <version>0.1.alpha</version>
     <vendor email="me@elmot.xyz" url="http://elmot.xyz">Elmot</vendor>
 
     <description><![CDATA[
+<h2>ARM MCU development plugin</h2>
 <h3>The plugin is able to:</h3>
 <ul>
     <li>Convert a project made in <i>STM32CubeMX</i> into a <i>CLion</i> project</li>
