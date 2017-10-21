@@ -4,6 +4,8 @@ import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.io.PathExecLazyValue;
+import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.ui.components.fields.IntegerField;
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -17,9 +19,14 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.net.URI;
-import java.util.function.Consumer;
+import java.util.Objects;
 
-import static com.intellij.uiDesigner.core.GridConstraints.*;
+import static com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER;
+import static com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST;
+import static com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL;
+import static com.intellij.uiDesigner.core.GridConstraints.FILL_NONE;
+import static com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED;
+import static com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW;
 
 /**
  * (c) elmot on 20.10.2017.
@@ -43,7 +50,13 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
 
     @Override
     public boolean isModified() {
-        return true;//todo
+        OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
+        return !(Objects.equals(panel.boardConfigFile.getText(), state.boardConfigFile) &&
+                Objects.equals(panel.openOcdLocation.getText(), state.openOcdLocation) &&
+                Objects.equals(panel.gdbLocation.getText(), state.gdbLocation) &&
+                Objects.equals(panel.gdbPort.getValue(), state.gdbPort) &&
+                Objects.equals(panel.openOcdScriptsLocation.getText(), state.openOcdScriptsLocation) &&
+                Objects.equals(panel.defaultOpenOcdScriptsLocation.isSelected(), state.defaultOpenOcdScriptsLocation));
     }
 
     @Override
@@ -52,12 +65,19 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         File projectFile = project.getBasePath() == null ? null : new File(project.getBasePath());
         File ocdFile = checkFileExistenceAndCorrect(projectFile, panel.openOcdLocation, true);
         checkFileExistenceAndCorrect(projectFile, panel.gdbLocation, true);
-        checkFileExistenceAndCorrect(new File(ocdFile.getParentFile().getParentFile(), "share/openocd/scripts"), panel.boardConfigFile, false);
+        checkFileExistenceAndCorrect(openOcdDefScriptsLocation(ocdFile), panel.boardConfigFile, false);
         OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
         state.gdbPort = panel.gdbPort.getValue();
-        state.boardConfigFile = panel.boardConfigFile.getText();
-        state.openOcdLocation = panel.openOcdLocation.getText();
-        state.gdbLocation = panel.gdbLocation.getText();
+        state.boardConfigFile = panel.boardConfigFile.getText().trim();
+        state.openOcdLocation = panel.openOcdLocation.getText().trim();
+        state.gdbLocation = panel.gdbLocation.getText().trim();
+        state.defaultOpenOcdScriptsLocation = panel.defaultOpenOcdScriptsLocation.isSelected();
+        state.openOcdScriptsLocation = panel.openOcdScriptsLocation.getText().trim();
+    }
+
+    @NotNull
+    static File openOcdDefScriptsLocation(File ocdFile) {
+        return new File(ocdFile.getParentFile().getParentFile(), "share/openocd/scripts");
     }
 
     private File checkFileExistenceAndCorrect(@Nullable File basePath, JBTextField path, boolean checkExecutable) throws ConfigurationException {
@@ -79,7 +99,6 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
             }
 
         }
-        //todo optional openocd parameters
         if (basePath != null) {
             URI relativized = basePath.toURI().relativize(file.toURI());
             if (relativized.isAbsolute()) {
@@ -108,6 +127,9 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         panel.gdbPort.setValue(state.gdbPort);
         panel.boardConfigFile.setText(state.boardConfigFile);
         panel.openOcdLocation.setText(state.openOcdLocation);
+        panel.openOcdScriptsLocation.setText(state.openOcdScriptsLocation);
+        panel.defaultOpenOcdScriptsLocation.setSelected(state.defaultOpenOcdScriptsLocation);
+        panel.openOcdScriptsLocation.setEnabled(!state.defaultOpenOcdScriptsLocation);
         panel.gdbLocation.setText(state.gdbLocation);
     }
 
@@ -116,35 +138,44 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
      */
     public static class OpenOcdSettingsPanel extends JPanel {
 
-        private final IntegerField gdbPort;
         private final JBTextField boardConfigFile;
         private final JBTextField openOcdLocation;
+        private final JBTextField openOcdScriptsLocation;
+        private final JBCheckBox defaultOpenOcdScriptsLocation;
         private final JBTextField gdbLocation;
+        private final IntegerField gdbPort;
 
         public OpenOcdSettingsPanel() {
-            super(new GridLayoutManager(5, 3), true);
+            super(new GridLayoutManager(7, 3), true);
+            ((GridLayoutManager) getLayout()).setColumnStretch(1, 10);
+            openOcdLocation = addValueRow(0, "OpenOCD Location", new JBTextField(), null);
 
-            gdbPort = addValueRow(0, "GDB Port", s(new IntegerField("GDB Port", 1024, 65353), f -> f.setCanBeEmpty(false)))[0];
-            boardConfigFile = addValueRow(1, "Board Config File", new JBTextField())[0];
-            openOcdLocation = addValueRow(2, "OpenOCD Location", new JBTextField())[0];
-            gdbLocation = addValueRow(3, "Debugger (arm-none-eabi-gdb) Location", new JBTextField())[0];
-            add(new Spacer(), new GridConstraints(4, 0, 1, 1, ANCHOR_CENTER, FILL_NONE, SIZEPOLICY_WANT_GROW, SIZEPOLICY_WANT_GROW, null, null, null));
+            defaultOpenOcdScriptsLocation = addValueRow(1, "OpenOCD Scripts Default Location", new JBCheckBox("default"), null);
+            openOcdScriptsLocation = addValueRow(2, "OpenOCD Scripts Location", new JBTextField(), null);
+            defaultOpenOcdScriptsLocation.addChangeListener(e -> openOcdScriptsLocation.setEnabled(!defaultOpenOcdScriptsLocation.isSelected()));
+
+            boardConfigFile = addValueRow(3, "Board Config File", new JBTextField(), null);
+            gdbLocation = addValueRow(4, "Debugger (arm-none-eabi-gdb) Location", new JBTextField(), null);
+            gdbPort = addValueRow(5, "GDB Port", new IntegerField("GDB Port", 1024, 65353), null);
+            gdbPort.setCanBeEmpty(false);
+            add(new Spacer(), new GridConstraints(6, 0, 1, 1, ANCHOR_CENTER, FILL_NONE,
+                    SIZEPOLICY_FIXED, SIZEPOLICY_WANT_GROW, null, null, null));
         }
 
-        private <T extends Component> T[] addValueRow(int row, @NotNull String labelText, @NotNull T... components) {
+        private <T extends Component> T addValueRow(int row, @NotNull String labelText, @NotNull T component, @Nullable Component additionalComponent) {
             JLabel label = new JLabel(labelText);
-            add(label, new GridConstraints(row, 0, 1, 1, ANCHOR_EAST, FILL_NONE, SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED, null, null, null));
-            for (int i = 0; i < components.length; i++) {
-                add(components[i], new GridConstraints(row, i + 1, 1, 1, ANCHOR_WEST, FILL_HORIZONTAL, SIZEPOLICY_WANT_GROW, SIZEPOLICY_FIXED, null, null, null));
+            add(label, new GridConstraints(row, 0, 1, 1, ANCHOR_WEST, FILL_NONE,
+                    SIZEPOLICY_FIXED, SIZEPOLICY_FIXED, null, null, null));
+            add(component, new GridConstraints(row, 1, 1, additionalComponent == null ? 2 : 1, ANCHOR_WEST,
+                    FILL_HORIZONTAL, SIZEPOLICY_WANT_GROW, SIZEPOLICY_FIXED, null, null, null));
+            if (additionalComponent != null) {
+                add(component, new GridConstraints(row, 2, 1, 1, ANCHOR_WEST,
+                        FILL_HORIZONTAL, SIZEPOLICY_WANT_GROW, SIZEPOLICY_FIXED, null, null, null));
             }
-            label.setLabelFor(components[0]);
-            return components;
-        }
-
-        private <T extends Component> T s/*etup*/(T component, Consumer<T> setup) {
-            setup.accept(component);
+            label.setLabelFor(component);
             return component;
         }
+
 
     }
 }

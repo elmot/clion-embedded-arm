@@ -89,10 +89,17 @@ public class OpenOcdRun extends AnAction {
         OpenOcdSettingsState ocdSettings = project.getComponent(OpenOcdSettingsState.class);
         GeneralCommandLine commandLine = new GeneralCommandLine()
                 .withRedirectErrorStream(true)
-                .withWorkDirectory(project.getBasePath())
+                .withWorkDirectory(new File(ocdSettings.openOcdLocation).getParent())
                 .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
-                .withExePath(ocdSettings.openOcdLocation)
-                .withParameters("-f", ocdSettings.boardConfigFile);
+                .withExePath(ocdSettings.openOcdLocation);
+
+        if (!ocdSettings.defaultOpenOcdScriptsLocation) {
+            commandLine.addParameters("-s", ocdSettings.openOcdScriptsLocation);
+        }
+        if (ocdSettings.gdbPort != 3333) {
+            commandLine.addParameters("-c", "gdb_port " + ocdSettings.gdbPort);
+        }
+        commandLine.addParameters("-f", ocdSettings.boardConfigFile);
         String command = "";
         if (fileToLoad != null) {
             command += "program \"" + fileToLoad.getAbsolutePath() + "\";";
@@ -104,7 +111,7 @@ public class OpenOcdRun extends AnAction {
             command += "shutdown";
         }
         if (!command.isEmpty()) {
-            commandLine.withParameters("-c", command);
+            commandLine.addParameters("-c", command);
         }
         return commandLine;
     }
@@ -143,7 +150,7 @@ public class OpenOcdRun extends AnAction {
                         return HighlighterLayer.ERROR;
                     }
                 };
-            } else if(line.contains("** Programming Finished **")){
+            } else if (line.contains("** Programming Finished **")) {
                 Informational.showSuccessfulDownloadNotification(project);
             }
             return null;

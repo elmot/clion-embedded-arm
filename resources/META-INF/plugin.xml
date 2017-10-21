@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>xyz.elmot.clion.armsupport.prj</id>
     <name>OpenOCD + STM32CubeMX support for ARM embedded development</name>
-    <version>0.1.alpha</version>
+    <version>0.2.alpha</version>
     <vendor email="me@elmot.xyz" url="http://elmot.xyz">Elmot</vendor>
 
     <description><![CDATA[
@@ -41,21 +41,20 @@
          on how to target different products -->
     <depends>com.intellij.modules.clion</depends>
     <extensions defaultExtensionNs="com.intellij">
-        <!-- Add your extensions here -->
         <configurationType implementation="xyz.elmot.clion.openocd.OpenOcdConfigurationType"/>
-        <projectConfigurable id="elmot.openocd.config" instance="xyz.elmot.clion.openocd.OpenOcdSettings"
+        <projectConfigurable id="elmot.embedded.config" instance="xyz.elmot.clion.openocd.OpenOcdSettings"
                              displayName="OpenOCD Support" groupId="build.tools"/>
     </extensions>
     <actions>
-        <!-- Add your actions here -->
-        <action id="stm32cubemx.project.convert" class="xyz.elmot.clion.cubemx.ConvertProject"
-                text="Import STM32CubeMX project">
-            <add-to-group group-id="ToolsMenu" anchor="after" relative-to-action="stm32cubemx.project.convert"/>
-        </action>
-        <action id="openocd.run" class="xyz.elmot.clion.openocd.OpenOcdRun" text="Run OpenOCD"
-                icon="/xyz/elmot/clion/openocd/ocd.png">
+        <group id="elmot.embedded.grp" icon="/xyz/elmot/clion/openocd/ocd.png" description="ARM MCU Firmware"
+               text="ARM MCU">
+
+            <action id="elmot.embedded.stm32cubemx.import" class="xyz.elmot.clion.cubemx.ConvertProject"
+                    text="Import STM32CubeMX project">
+            </action>
+            <action id="elmot.embedded.openocd.run" class="xyz.elmot.clion.openocd.OpenOcdRun" text="Run OpenOCD"/>
             <add-to-group group-id="ToolsMenu" anchor="after" relative-to-action="CMake.ToolsMenu"/>
-        </action>
+        </group>
     </actions>
     <project-components>
         <component>

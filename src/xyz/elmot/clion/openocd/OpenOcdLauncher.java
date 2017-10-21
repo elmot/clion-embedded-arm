@@ -86,7 +86,7 @@ class OpenOcdLauncher extends CidrLauncher {
     }
 
     private OpenOcdRun findOpenOcdAction() {
-        return (OpenOcdRun) ActionManager.getInstance().getAction("openocd.run");
+        return (OpenOcdRun) ActionManager.getInstance().getAction("elmot.embedded.openocd.run");
     }
 
 
