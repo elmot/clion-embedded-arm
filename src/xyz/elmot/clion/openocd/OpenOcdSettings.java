@@ -19,14 +19,7 @@ import java.io.File;
 import java.net.URI;
 import java.util.function.Consumer;
 
-import static com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER;
-import static com.intellij.uiDesigner.core.GridConstraints.ANCHOR_EAST;
-import static com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST;
-import static com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL;
-import static com.intellij.uiDesigner.core.GridConstraints.FILL_NONE;
-import static com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK;
-import static com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED;
-import static com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW;
+import static com.intellij.uiDesigner.core.GridConstraints.*;
 
 /**
  * (c) elmot on 20.10.2017.
@@ -36,13 +29,11 @@ import static com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW;
 public class OpenOcdSettings implements ProjectComponent, Configurable {
     //todo file choosers
     private final Project project;
+    private OpenOcdSettingsPanel panel = null;
 
     public OpenOcdSettings(Project project) {
         this.project = project;
     }
-
-    private OpenOcdSettingsPanel panel = null;
-
 
     @Nls
     @Override
@@ -61,7 +52,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         File projectFile = project.getBasePath() == null ? null : new File(project.getBasePath());
         File ocdFile = checkFileExistenceAndCorrect(projectFile, panel.openOcdLocation, true);
         checkFileExistenceAndCorrect(projectFile, panel.gdbLocation, true);
-        checkFileExistenceAndCorrect(new File(ocdFile.getParentFile().getParentFile(),"share/openocd/scripts"), panel.boardConfigFile, false);
+        checkFileExistenceAndCorrect(new File(ocdFile.getParentFile().getParentFile(), "share/openocd/scripts"), panel.boardConfigFile, false);
         OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
         state.gdbPort = panel.gdbPort.getValue();
         state.boardConfigFile = panel.boardConfigFile.getText();
@@ -72,8 +63,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
     private File checkFileExistenceAndCorrect(@Nullable File basePath, JBTextField path, boolean checkExecutable) throws ConfigurationException {
         String text = path.getText();
         File file = new File(text);
-        if(!file.isAbsolute())
-        {
+        if (!file.isAbsolute()) {
             file = new File(basePath, text);
         }
         if (!file.exists() || !file.isFile()) {
@@ -89,9 +79,12 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
             }
 
         }
+        //todo optional openocd parameters
         if (basePath != null) {
             URI relativized = basePath.toURI().relativize(file.toURI());
-            path.setText(relativized.getRawPath());
+            if (relativized.isAbsolute()) {
+                path.setText(file.getAbsolutePath());
+            }
         }
         return file;
     }
