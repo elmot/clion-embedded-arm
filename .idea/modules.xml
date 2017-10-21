@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/cubemx-clion.iml" filepath="$PROJECT_DIR$/cubemx-clion.iml" />
+      <module fileurl="file://$PROJECT_DIR$/clion-embedded-arm.iml" filepath="$PROJECT_DIR$/clion-embedded-arm.iml" />
     </modules>
   </component>
 </project>
