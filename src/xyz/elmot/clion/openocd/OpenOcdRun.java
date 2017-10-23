@@ -74,10 +74,6 @@ public class OpenOcdRun extends AnAction {
                             () -> !process.isProcessTerminated() && !process.isProcessTerminating());
 
             openOCDConsole.run();
-            //todo color console
-            //todo process exit report
-            //todo restart
-
         } catch (ExecutionException e) {
             ExecutionErrorDialog.show(e, "OpenOCD start failed", project);
         }

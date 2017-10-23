@@ -24,10 +24,10 @@ public class OpenOcdConfigurationType extends CMakeRunConfigurationType {
 
     public OpenOcdConfigurationType() {
         //noinspection ConstantConditions
-        super(OpenOcdConfigurationType.class.getSimpleName(),
+        super("elmot.embedded.openocd.conf.type",
                 "EmbeddedApplication",
-                "OpenOcd Download & Run",
-                "Downloads and Runs Embedded Applications using OpenOcd",
+                "OpenOCD Download & Run",
+                "Downloads and Runs Embedded Applications using OpenOCD",
                 IconLoader.findIcon("ocd_run.png",OpenOcdConfigurationType.class));
         factory = new ConfigurationFactory(this) {
             @NotNull
