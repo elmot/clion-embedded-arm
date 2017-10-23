@@ -44,7 +44,6 @@ import static com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW;
 
 public class OpenOcdSettings implements ProjectComponent, Configurable {
     public static final String OPENOCD_SCRIPTS_SUBFOLDER = "share/openocd/scripts";
-    //todo file choosers
     private final Project project;
     private OpenOcdSettingsPanel panel = null;
 
