@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 public class ConvertProject extends AnAction {
     //TODO CubeMX run
     //Todo generate run configuration automatically
+    //todo FPU support flag
 
     private static final String DEFINES_KEY = "gnu.c.compiler.option.preprocessor.def.symbols";
     private static final String CONFIG_DEBUG_XPATH = ".//configuration[@artifactExtension='elf' and @name='Debug']";

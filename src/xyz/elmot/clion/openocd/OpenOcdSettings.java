@@ -98,7 +98,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         if (!file.isAbsolute()) {
             file = new File(basePath, text);
         }
-        if (!file.exists() || !file.isFile()) {
+        if (!file.exists()) {
             throw new ConfigurationException("File " + text + " does not exist.");
         }
         if (!checkFile.test(file)) {
