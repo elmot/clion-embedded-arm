@@ -13,7 +13,6 @@ class ProjectData {
     private String mcuFamily;
     private String genericConfigName;
     private String linkerFlags;
-    private String cmakeFileName;
     private String defines;
     private String includes;
     private String sources;
@@ -30,7 +29,6 @@ class ProjectData {
     void setLinkerScript(String linkerScript) {
         this.linkerScript = linkerScript;
         genericConfigName = linkerScript.replace(".ld", "");
-        cmakeFileName = genericConfigName + ".cmake";
     }
 
     void setMcuFamily(String mcuFamily) {
@@ -70,10 +68,6 @@ class ProjectData {
         return linkerFlags;
     }
 
-    public String getCmakeFileName() {
-        return cmakeFileName;
-    }
-
     public String getDefines() {
         return defines;
     }
@@ -109,7 +103,6 @@ class ProjectData {
                 "\n mcuFamily='" + mcuFamily + '\'' +
                 "\n genericConfigName='" + genericConfigName + '\'' +
                 "\n linkerFlags='" + linkerFlags + '\'' +
-                "\n cmakeFileName='" + cmakeFileName + '\'' +
                 "\n defines='" + defines + '\'' +
                 "\n includes='" + includes + '\'' +
                 "\n sources='" + sources + '\'' +
@@ -123,7 +116,6 @@ class ProjectData {
         map.put("mcuFamily", mcuFamily);
         map.put("genericConfigName", genericConfigName);
         map.put("linkerFlags", linkerFlags);
-        map.put("cmakeFileName", cmakeFileName);
         map.put("defines", defines);
         map.put("includes", includes);
         map.put("sources", sources);

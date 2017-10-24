@@ -48,9 +48,7 @@
         <group id="elmot.embedded.grp" icon="/xyz/elmot/clion/openocd/ocd.png" description="ARM MCU Firmware"
                text="ARM MCU">
 
-            <action id="elmot.embedded.stm32cubemx.import" class="xyz.elmot.clion.cubemx.ConvertProject"
-                    text="Update CMake project with STM32CubeMX project">
-            </action>
+            <action id="elmot.embedded.stm32cubemx.import" class="xyz.elmot.clion.cubemx.ConvertProject"/>
             <action id="elmot.embedded.openocd.run" class="xyz.elmot.clion.openocd.OpenOcdRun" text="Run OpenOCD"/>
             <add-to-group group-id="ToolsMenu" anchor="after" relative-to-action="CMake.ToolsMenu"/>
         </group>

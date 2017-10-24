@@ -7,6 +7,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
@@ -17,12 +18,7 @@ import org.jdom.JDOMException;
 import org.jdom.xpath.XPath;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.intellij.openapi.util.JDOMUtil.load;
@@ -38,7 +34,6 @@ public class ConvertProject extends AnAction {
     private static final String INCLUDES_KEY = "gnu.c.compiler.option.include.paths";
     private static final String INCLUDES_XPATH = CONFIG_DEBUG_XPATH + "//*[@superClass='" + INCLUDES_KEY + "']/listOptionValue/@value";
     private static final String SOURCE_XPATH = CONFIG_DEBUG_XPATH + "//sourceEntries/entry/@name";
-    private static final String DCMAKE_TOOLCHAIN_FILE = "-DCMAKE_TOOLCHAIN_FILE=";
 
     public ConvertProject() {
         super("Update CMake project with STM32CubeMX project");
@@ -68,7 +63,6 @@ public class ConvertProject extends AnAction {
         }
 
         modifyCMakeConfigs(project, projectData);
-        writeProjectFile(project, "tmpl_toolset.txt", projectData.getCmakeFileName(), projectData);
         writeProjectFile(project, "tmpl_CMakeLists.txt", "CMakeLists.txt", projectData);
         writeProjectFile(project, "tmpl_gitignore.txt", ".gitignore", projectData);
         CMakeWorkspace.getInstance(project).scheduleClearGeneratedFilesAndReload();
@@ -85,13 +79,10 @@ public class ConvertProject extends AnAction {
         Application application = ApplicationManager.getApplication();
         application.runWriteAction(() -> {
                     try {
-                        VirtualFile childData = project.getBaseDir().findOrCreateChildData(this, fileName);
-                        try (OutputStream outputStream = childData.getOutputStream(this);
-                             OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.US_ASCII)) {
-                            String template = FileUtil.loadTextAndClose(ConvertProject.class.getResourceAsStream(templateName));
-                            String text = new StrSubstitutor(projectData.getAsMap()).replace(template);
-                            writer.write(text);
-                        }
+                        VirtualFile projectFile = project.getBaseDir().findOrCreateChildData(this, fileName);
+                        String template = FileUtil.loadTextAndClose(ConvertProject.class.getResourceAsStream(templateName));
+                        String text = new StrSubstitutor(projectData.getAsMap()).replace(template);
+                        VfsUtil.saveText(projectFile, text);
                     } catch (IOException e) {
                         application.invokeLater(() ->
                                 Messages.showErrorDialog(project, String.format("%s:\n %s ", fileName, e.getLocalizedMessage()), "File Write Error"));
@@ -100,19 +91,8 @@ public class ConvertProject extends AnAction {
         );
     }
 
-
     private void modifyCMakeConfigs(Project project, ProjectData projectData) {
-        CMakeSettings component = project.getComponent(CMakeSettings.class);
-        List<CMakeSettings.Configuration> configurations = component.getConfigurations();
-        ArrayList<CMakeSettings.Configuration> newConfigs = new ArrayList<>(configurations.size());
-        for (CMakeSettings.Configuration configuration : configurations) {
-            String options = Objects.toString(configuration.getGenerationOptions(), "");
-            options = options.replaceAll(DCMAKE_TOOLCHAIN_FILE + "[^\\s]*", "").trim();
-            String newOptions = DCMAKE_TOOLCHAIN_FILE + projectData.getCmakeFileName();
-            if (!options.isEmpty()) newOptions += " " + options;
-            newConfigs.add(configuration.withGenerationOptions(newOptions));
-        }
-        component.setConfigurations(newConfigs);
+        //todo create run configuration
     }
 
     private String loadIncludes(Context context) throws JDOMException {
