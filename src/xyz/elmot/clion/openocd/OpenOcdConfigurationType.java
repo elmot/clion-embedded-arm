@@ -1,5 +1,6 @@
 package xyz.elmot.clion.openocd;
 
+import com.intellij.execution.configuration.ConfigurationFactoryEx;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.ui.CommonProgramParametersPanel;
@@ -29,12 +30,18 @@ public class OpenOcdConfigurationType extends CMakeRunConfigurationType {
                 "OpenOCD Download & Run",
                 "Downloads and Runs Embedded Applications using OpenOCD",
                 IconLoader.findIcon("ocd_run.png",OpenOcdConfigurationType.class));
-        factory = new ConfigurationFactory(this) {
+        factory = new ConfigurationFactoryEx(this) {
             @NotNull
             @Override
             public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
                 return new OpenOcdConfiguration(project, factory, "");
             }
+
+            @Override
+            public boolean isConfigurationSingletonByDefault() {
+                return true;
+            }
+
         };
     }
 
@@ -56,6 +63,6 @@ public class OpenOcdConfigurationType extends CMakeRunConfigurationType {
     @NotNull
     @Override
     protected CMakeAppRunConfiguration createRunConfiguration(@NotNull Project project, @NotNull ConfigurationFactory configurationFactory) {
-        return new OpenOcdConfiguration(project, configurationFactory, "");
+        return new OpenOcdConfiguration(project, factory, "");
     }
 }
