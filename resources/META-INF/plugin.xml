@@ -60,6 +60,9 @@
         <component>
             <implementation-class>xyz.elmot.clion.openocd.OpenOcdSettings</implementation-class>
         </component>
+        <component>
+            <implementation-class>xyz.elmot.clion.openocd.OpenOcdComponent</implementation-class>
+        </component>
     </project-components>
 
 </idea-plugin>

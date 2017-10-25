@@ -7,7 +7,6 @@ import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessHandler;
-import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.xdebugger.XDebugSession;
 import com.jetbrains.cidr.cpp.execution.debugger.backend.GDBDriverConfiguration;
@@ -34,8 +33,8 @@ class OpenOcdLauncher extends CidrLauncher {
     @Override
     protected ProcessHandler createProcess(@NotNull CommandLineState commandLineState) throws ExecutionException {
         File runFile = openOcdConfiguration.findRunFile();
-        findOpenOcdAction().stopOpenOcd();
-        GeneralCommandLine commandLine = OpenOcdRun.createOcdCommandLine(commandLineState.getEnvironment().getProject(),
+        findOpenOcdAction(commandLineState.getEnvironment().getProject()).stopOpenOcd();
+        GeneralCommandLine commandLine = OpenOcdComponent.createOcdCommandLine(commandLineState.getEnvironment().getProject(),
                 runFile, "reset init", true);
         OSProcessHandler osProcessHandler = new OSProcessHandler(commandLine);
         osProcessHandler.addProcessListener(new ProcessAdapter() {
@@ -69,7 +68,7 @@ class OpenOcdLauncher extends CidrLauncher {
             @Override
             public void processWillTerminate(@NotNull ProcessEvent event, boolean willBeDestroyed) {
                 super.processWillTerminate(event, willBeDestroyed);
-                findOpenOcdAction().stopOpenOcd();
+                findOpenOcdAction(project).stopOpenOcd();
             }
         });
         return debugProcess;
@@ -81,12 +80,12 @@ class OpenOcdLauncher extends CidrLauncher {
         Project project = commandLineState.getEnvironment().getProject();
         File runFile = openOcdConfiguration.findRunFile();
 
-        findOpenOcdAction().startOpenOcd(project, runFile, "reset halt");
+        findOpenOcdAction(commandLineState.getEnvironment().getProject()).startOpenOcd(project, runFile, "reset halt");
         return super.startDebugProcess(commandLineState, xDebugSession);
     }
 
-    private OpenOcdRun findOpenOcdAction() {
-        return (OpenOcdRun) ActionManager.getInstance().getAction("elmot.embedded.openocd.run");
+    private OpenOcdComponent findOpenOcdAction(Project project) {
+        return project.getComponent(OpenOcdComponent.class);
     }
 
 
