@@ -40,7 +40,7 @@
          on how to target different products -->
     <depends>com.intellij.modules.clion</depends>
     <extensions defaultExtensionNs="com.intellij">
-        <configurationType implementation="xyz.elmot.clion.openocd.OpenOcdConfigurationType"/>
+        <configurationType implementation="xyz.elmot.clion.openocd.OpenOcdConfigurationType" id="elmot.embedded.openocd.conf.type"/>
         <projectConfigurable order="last" id="elmot.embedded.config" instance="xyz.elmot.clion.openocd.OpenOcdSettings"
                              displayName="OpenOCD Support" groupId="build.tools"/>
     </extensions>
