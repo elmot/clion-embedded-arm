@@ -7,33 +7,26 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.jdom.Attribute;
-import org.jdom.Document;
+import org.jdom.Element;
 import org.jdom.JDOMException;
-import org.jdom.input.SAXBuilder;
 import org.jdom.xpath.XPath;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static com.intellij.openapi.util.JDOMUtil.load;
 
 /**
  * (c) elmot on 27.9.2017.
  */
 public class ConvertProject extends AnAction {
-    //TODO CubeMX run
-    //Todo generate run configuration automatically
-    //todo FPU support flag
 
     private static final String DEFINES_KEY = "gnu.c.compiler.option.preprocessor.def.symbols";
     private static final String CONFIG_DEBUG_XPATH = ".//configuration[@artifactExtension='elf' and @name='Debug']";
@@ -41,10 +34,9 @@ public class ConvertProject extends AnAction {
     private static final String INCLUDES_KEY = "gnu.c.compiler.option.include.paths";
     private static final String INCLUDES_XPATH = CONFIG_DEBUG_XPATH + "//*[@superClass='" + INCLUDES_KEY + "']/listOptionValue/@value";
     private static final String SOURCE_XPATH = CONFIG_DEBUG_XPATH + "//sourceEntries/entry/@name";
-    private static final String DCMAKE_TOOLCHAIN_FILE = "-DCMAKE_TOOLCHAIN_FILE=";
 
     public ConvertProject() {
-        super("Update CLion from STM32CubeMX project");
+        super("Update CMake project with STM32CubeMX project");
     }
 
     @Override
@@ -53,10 +45,10 @@ public class ConvertProject extends AnAction {
         Project project = getEventProject(event);
         if (project == null) return;
         Context context = new Context(detectAndLoadFile(project, ".cproject"));
-        Document dotProject = detectAndLoadFile(project, ".project");
+        Element dotProject = detectAndLoadFile(project, ".project");
         ProjectData projectData = new ProjectData();
         //noinspection ConstantConditions
-        projectData.setProjectName(dotProject.getRootElement().getChild("name").getText());
+        projectData.setProjectName(dotProject.getChild("name").getText());
         try {
             String linkerScript = fetchValueBySuperClass(context, "fr.ac6.managedbuild.tool.gnu.cross.c.linker.script");
             projectData.setLinkerScript(linkerScript.replace("../", ""));
@@ -71,7 +63,6 @@ public class ConvertProject extends AnAction {
         }
 
         modifyCMakeConfigs(project, projectData);
-        writeProjectFile(project, "tmpl_toolset.txt", projectData.getCmakeFileName(), projectData);
         writeProjectFile(project, "tmpl_CMakeLists.txt", "CMakeLists.txt", projectData);
         writeProjectFile(project, "tmpl_gitignore.txt", ".gitignore", projectData);
         CMakeWorkspace.getInstance(project).scheduleClearGeneratedFilesAndReload();
@@ -88,13 +79,10 @@ public class ConvertProject extends AnAction {
         Application application = ApplicationManager.getApplication();
         application.runWriteAction(() -> {
                     try {
-                        VirtualFile childData = project.getBaseDir().findOrCreateChildData(this, fileName);
-                        try (OutputStream outputStream = childData.getOutputStream(this);
-                             OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.US_ASCII)) {
-                            String template = FileUtil.loadTextAndClose(ConvertProject.class.getResourceAsStream(templateName));
-                            String text = new StrSubstitutor(projectData.getAsMap()).replace(template);
-                            writer.write(text);
-                        }
+                        VirtualFile projectFile = project.getBaseDir().findOrCreateChildData(this, fileName);
+                        String template = FileUtil.loadTextAndClose(ConvertProject.class.getResourceAsStream(templateName));
+                        String text = new StrSubstitutor(projectData.getAsMap()).replace(template);
+                        VfsUtil.saveText(projectFile, text);
                     } catch (IOException e) {
                         application.invokeLater(() ->
                                 Messages.showErrorDialog(project, String.format("%s:\n %s ", fileName, e.getLocalizedMessage()), "File Write Error"));
@@ -103,25 +91,14 @@ public class ConvertProject extends AnAction {
         );
     }
 
-
     private void modifyCMakeConfigs(Project project, ProjectData projectData) {
-        CMakeSettings component = project.getComponent(CMakeSettings.class);
-        List<CMakeSettings.Configuration> configurations = component.getConfigurations();
-        ArrayList<CMakeSettings.Configuration> newConfigs = new ArrayList<>(configurations.size());
-        for (CMakeSettings.Configuration configuration : configurations) {
-            String options = Objects.toString(configuration.getGenerationOptions(), "");
-            options = options.replaceAll(DCMAKE_TOOLCHAIN_FILE + "[^\\s]*", "").trim();
-            String newOptions = DCMAKE_TOOLCHAIN_FILE + projectData.getCmakeFileName();
-            if (!options.isEmpty()) newOptions += " " + options;
-            newConfigs.add(configuration.withGenerationOptions(newOptions));
-        }
-        component.setConfigurations(newConfigs);
+        //todo create run configuration
     }
 
     private String loadIncludes(Context context) throws JDOMException {
         context.currentKey = INCLUDES_KEY;
         @SuppressWarnings("unchecked")
-        List<Attribute> list = XPath.selectNodes(context.cProject, INCLUDES_XPATH);
+        List<Attribute> list = XPath.selectNodes(context.cProjectElement, INCLUDES_XPATH);
         return list.stream()
                 .map(Attribute::getValue)
                 .map(s -> s.replace("../", ""))
@@ -131,7 +108,7 @@ public class ConvertProject extends AnAction {
     private String loadSources(Context context) throws JDOMException {
         context.currentKey = SOURCE_XPATH;
         @SuppressWarnings("unchecked")
-        List<Attribute> list = XPath.selectNodes(context.cProject, SOURCE_XPATH);
+        List<Attribute> list = XPath.selectNodes(context.cProjectElement, SOURCE_XPATH);
 
         return list.stream()
                 .map(Attribute::getValue)
@@ -142,7 +119,7 @@ public class ConvertProject extends AnAction {
     private String loadDefines(Context context) throws JDOMException {
         context.currentKey = DEFINES_KEY;
         @SuppressWarnings("unchecked")
-        List<Attribute> list = XPath.selectNodes(context.cProject, DEFINES_XPATH);
+        List<Attribute> list = XPath.selectNodes(context.cProjectElement, DEFINES_XPATH);
         return list.stream()
                 .map(Attribute::getValue)
                 .map(s -> "-D" + s
@@ -155,21 +132,18 @@ public class ConvertProject extends AnAction {
 
     private String fetchValueBySuperClass(Context context, String key) throws JDOMException {
         context.currentKey = key;
-        return ((Attribute) XPath.selectSingleNode(context.cProject, ".//*[@superClass='" + key + "']/@value")).getValue();
+        return ((Attribute) XPath.selectSingleNode(context.cProjectElement, ".//*[@superClass='" + key + "']/@value")).getValue();
     }
 
-    private Document detectAndLoadFile(Project project, String fileName) {
+    private Element detectAndLoadFile(Project project, String fileName) {
         VirtualFile child = project.getBaseDir().findChild(fileName);
         if (child == null || !child.exists() || child.isDirectory()) {
             Messages.showErrorDialog("File not found",
                     String.format("File %s is not found in the project directory %s", fileName, project.getBasePath()));
             return null;
         }
-
-        try (InputStream inputStream = child.getInputStream()) {
-
-            SAXBuilder saxBuilder = new SAXBuilder();
-            return saxBuilder.build(inputStream);
+        try {
+            return load(child.getInputStream());
         } catch (IOException | JDOMException e) {
             Messages.showErrorDialog("File Read error",
                     String.format("Failed to read %s in project directory %s\n(%s)", fileName, project.getBasePath(), e.getLocalizedMessage()));
@@ -178,11 +152,11 @@ public class ConvertProject extends AnAction {
     }
 
     private static class Context {
-        final Document cProject;
+        final Element cProjectElement;
         String currentKey;
 
-        Context(Document cProject) {
-            this.cProject = cProject;
+        Context(Element cProjectElement) {
+            this.cProjectElement = cProjectElement;
         }
     }
 }

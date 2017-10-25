@@ -129,7 +129,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
     @Override
     public JComponent createComponent() {
 
-        if (panel == null) panel = new OpenOcdSettingsPanel();
+        panel = new OpenOcdSettingsPanel();
         return panel;
     }
 
