@@ -63,7 +63,7 @@ public class OpenOcdConfigurationType extends CMakeRunConfigurationType {
     @NotNull
     @Override
     protected CMakeAppRunConfiguration createRunConfiguration(@NotNull Project project, @NotNull ConfigurationFactory configurationFactory) {
-//        return new OpenOcdConfiguration(project, factory, ""); // todo uncomment AND fix ids on clion restar
+//        return new OpenOcdConfiguration(project, factory, ""); // todo uncomment AND fix ids on clion restart
         return new OpenOcdConfiguration(project, configurationFactory, "");
     }
 }

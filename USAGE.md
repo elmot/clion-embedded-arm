@@ -20,6 +20,8 @@ You will need following tolls being installed and configured:
  * [CLion](https://www.jetbrains.com/clion/). The project tested against CLion 2017.3 EAP.
  * [GNU Arm Embedded Toolchain](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm) 
  * [OpenOCD](http://openocd.org/)
+ * **(Windows only)** ST-LINK/V2 driver. May be downloaded from 
+ [st.com](http://www.st.com/en/development-tools/stsw-link009.html) or just borrowed from OpenOCD binary distribution
  * [STM32CubeMX](http://www.st.com/en/development-tools/stm32cubemx.html). After installation, do not forget
  to download MCU support library for your MCU. See _Help -> Install new libraries_ there.
  * **(Windows only)** [MinGW](http://www.mingw.org/)
