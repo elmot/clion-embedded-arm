@@ -1,5 +1,5 @@
 out
-community
+community.*
 cubemx-clion.jar
 /.idea/workspace.xml
 /clion-embedded-arm.jar
