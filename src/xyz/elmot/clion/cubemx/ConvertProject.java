@@ -39,6 +39,8 @@ public class ConvertProject extends AnAction {
     private static final String INCLUDES_KEY = "gnu.c.compiler.option.include.paths";
     private static final String INCLUDES_XPATH = CONFIG_DEBUG_XPATH + "//*[@superClass='" + INCLUDES_KEY + "']/listOptionValue/@value";
     private static final String SOURCE_XPATH = CONFIG_DEBUG_XPATH + "//sourceEntries/entry/@name";
+    static final String CPROJECT_FILE_NAME = ".cproject";
+    static final String PROJECT_FILE_NAME = ".project";
 
     public ConvertProject() {
         super("Update CMake project with STM32CubeMX project");
@@ -48,9 +50,13 @@ public class ConvertProject extends AnAction {
     public void actionPerformed(AnActionEvent event) {
 
         Project project = getEventProject(event);
+        updateProject(project);
+    }
+
+    public static void updateProject(Project project) {
         if (project == null) return;
-        Context context = new Context(detectAndLoadFile(project, ".cproject"));
-        Element dotProject = detectAndLoadFile(project, ".project");
+        Context context = new Context(detectAndLoadFile(project, CPROJECT_FILE_NAME));
+        Element dotProject = detectAndLoadFile(project, PROJECT_FILE_NAME);
         ProjectData projectData = new ProjectData();
         //noinspection ConstantConditions
         projectData.setProjectName(dotProject.getChild("name").getText());
@@ -85,17 +91,12 @@ public class ConvertProject extends AnAction {
         Messages.showInfoMessage(project, projectData.toString(), "Project Info");
     }
 
-    @Override
-    public boolean startInTransaction() {
-        return super.startInTransaction();
-    }
-
-    private void writeProjectFile(Project project, String templateName, String fileName, ProjectData projectData) {
+    private static void writeProjectFile(Project project, String templateName, String fileName, ProjectData projectData) {
 
         Application application = ApplicationManager.getApplication();
         application.runWriteAction(() -> {
                     try {
-                        VirtualFile projectFile = project.getBaseDir().findOrCreateChildData(this, fileName);
+                        VirtualFile projectFile = project.getBaseDir().findOrCreateChildData(project, fileName);
                         String template = FileUtil.loadTextAndClose(ConvertProject.class.getResourceAsStream(templateName));
                         String text = new StrSubstitutor(projectData.getAsMap()).replace(template);
                         VfsUtil.saveText(projectFile, text);
@@ -107,7 +108,7 @@ public class ConvertProject extends AnAction {
         );
     }
 
-    private void modifyCMakeConfigs(Project project, ProjectData projectData) {
+    private static void modifyCMakeConfigs(Project project, ProjectData projectData) {
         RunManager runManager = RunManager.getInstance(project);
         @SuppressWarnings("ConstantConditions")
         ConfigurationFactory factory = runManager.getConfigurationType(OpenOcdConfigurationType.TYPE_ID)
@@ -123,7 +124,7 @@ public class ConvertProject extends AnAction {
         }
     }
 
-    private String loadIncludes(Context context) throws JDOMException {
+    private static String loadIncludes(Context context) throws JDOMException {
         context.currentKey = INCLUDES_KEY;
         @SuppressWarnings("unchecked")
         List<Attribute> list = XPath.selectNodes(context.cProjectElement, INCLUDES_XPATH);
@@ -133,7 +134,7 @@ public class ConvertProject extends AnAction {
                 .collect(Collectors.joining(" "));
     }
 
-    private String loadSources(Context context) throws JDOMException {
+    private static String loadSources(Context context) throws JDOMException {
         context.currentKey = SOURCE_XPATH;
         @SuppressWarnings("unchecked")
         List<Attribute> list = XPath.selectNodes(context.cProjectElement, SOURCE_XPATH);
@@ -144,7 +145,7 @@ public class ConvertProject extends AnAction {
                 .collect(Collectors.joining(" "));
     }
 
-    private String loadDefines(Context context) throws JDOMException {
+    private static String loadDefines(Context context) throws JDOMException {
         context.currentKey = DEFINES_KEY;
         @SuppressWarnings("unchecked")
         List<Attribute> list = XPath.selectNodes(context.cProjectElement, DEFINES_XPATH);
@@ -158,12 +159,12 @@ public class ConvertProject extends AnAction {
                 .collect(Collectors.joining(" "));
     }
 
-    private String fetchValueBySuperClass(Context context, String key) throws JDOMException {
+    private static String fetchValueBySuperClass(Context context, String key) throws JDOMException {
         context.currentKey = key;
         return ((Attribute) XPath.selectSingleNode(context.cProjectElement, ".//*[@superClass='" + key + "']/@value")).getValue();
     }
 
-    private Element detectAndLoadFile(Project project, String fileName) {
+    private static Element detectAndLoadFile(Project project, String fileName) {
         VirtualFile child = project.getBaseDir().findChild(fileName);
         if (child == null || !child.exists() || child.isDirectory()) {
             Messages.showErrorDialog("File not found",

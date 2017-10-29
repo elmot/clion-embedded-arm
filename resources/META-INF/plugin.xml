@@ -65,4 +65,9 @@
         </component>
     </project-components>
 
+    <application-components>
+        <component>
+            <implementation-class>xyz.elmot.clion.cubemx.CubeFileListener</implementation-class>
+        </component>
+    </application-components>
 </idea-plugin>
