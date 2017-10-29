@@ -29,7 +29,10 @@
 ]]></description>
 
     <change-notes><![CDATA[
-        After code review changes
+        <ul>
+        <li>Run configuration is automatically created during project update</li>
+        <li>Bug fixes &amp; improvements</li>
+        </ul>
     ]]>
     </change-notes>
 

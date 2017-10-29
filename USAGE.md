@@ -40,8 +40,6 @@ Project creation and conversion HowTo
     1. Go to **File -\> Settings...  -\> Build, Execution, Deployment -\> OpenOCD support** and configure all the 
     required tools locations and setting, including your board config file. If there is no suitable config among existing, 
     _OpenOCD_ predefined ones, write your own one and use that.
-    1. Select **Run -\> Edit Configurations...** and create your run config of type **OpenOCD Download & Run**. 
-    Ensure if it has _Single Instance Only_ flag checked.
 
 Now you can connect your board and start the run config. The code should be compiled and downloaded to the chip. 
 Also you are able to debug your project using the same run config.
