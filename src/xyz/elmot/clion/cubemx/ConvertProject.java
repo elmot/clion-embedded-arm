@@ -1,5 +1,8 @@
 package xyz.elmot.clion.cubemx;
 
+import com.intellij.execution.RunManager;
+import com.intellij.execution.RunnerAndConfigurationSettings;
+import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.Application;
@@ -9,16 +12,18 @@ import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
+import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.jdom.Attribute;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.xpath.XPath;
+import xyz.elmot.clion.openocd.OpenOcdConfigurationType;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static com.intellij.openapi.util.JDOMUtil.load;
@@ -62,10 +67,21 @@ public class ConvertProject extends AnAction {
             Messages.showErrorDialog(project, "Xml data error", String.format("XML data retrieval error\n Key: %s ", context.currentKey));
         }
 
-        modifyCMakeConfigs(project, projectData);
         writeProjectFile(project, "tmpl_CMakeLists.txt", "CMakeLists.txt", projectData);
         writeProjectFile(project, "tmpl_gitignore.txt", ".gitignore", projectData);
-        CMakeWorkspace.getInstance(project).scheduleClearGeneratedFilesAndReload();
+        CMakeWorkspace cMakeWorkspace = CMakeWorkspace.getInstance(project);
+        cMakeWorkspace.scheduleClearGeneratedFilesAndReload();
+        ApplicationManager.getApplication().executeOnPooledThread(() ->
+                {
+                    try {
+                        cMakeWorkspace.waitForReloadsToFinish();
+                    } catch (TimeoutException e) {
+                        throw new RuntimeException(e);
+                    }
+                    modifyCMakeConfigs(project, projectData);
+
+                }
+        );
         Messages.showInfoMessage(project, projectData.toString(), "Project Info");
     }
 
@@ -92,7 +108,19 @@ public class ConvertProject extends AnAction {
     }
 
     private void modifyCMakeConfigs(Project project, ProjectData projectData) {
-        //todo create run configuration
+        RunManager runManager = RunManager.getInstance(project);
+        @SuppressWarnings("ConstantConditions")
+        ConfigurationFactory factory = runManager.getConfigurationType(OpenOcdConfigurationType.TYPE_ID)
+                .getConfigurationFactories()[0];
+        String name = "OCD " + projectData.getProjectName();
+        if (runManager.findConfigurationByTypeAndName(OpenOcdConfigurationType.TYPE_ID, name) == null) {
+            RunnerAndConfigurationSettings newRunConfig = runManager.createRunConfiguration(name, factory);
+            newRunConfig.setSingleton(true);
+            ((CMakeAppRunConfiguration) newRunConfig.getConfiguration()).setupDefaultTargetAndExecutable();
+            runManager.addConfiguration(newRunConfig);
+            runManager.makeStable(newRunConfig);
+            runManager.setSelectedConfiguration(newRunConfig);
+        }
     }
 
     private String loadIncludes(Context context) throws JDOMException {

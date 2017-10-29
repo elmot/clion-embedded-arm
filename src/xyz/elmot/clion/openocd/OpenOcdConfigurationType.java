@@ -21,12 +21,14 @@ import java.awt.*;
  */
 public class OpenOcdConfigurationType extends CMakeRunConfigurationType {
 
+    private static final String FACTORY_ID = "elmot.embedded.openocd.conf.factory";
+    public static final String TYPE_ID = "elmot.embedded.openocd.conf.type";
     private final ConfigurationFactory factory;
 
     public OpenOcdConfigurationType() {
         //noinspection ConstantConditions
-        super("elmot.embedded.openocd.conf.type",
-                "EmbeddedApplication",
+        super(TYPE_ID,
+                FACTORY_ID,
                 "OpenOCD Download & Run",
                 "Downloads and Runs Embedded Applications using OpenOCD",
                 IconLoader.findIcon("ocd_run.png",OpenOcdConfigurationType.class));
@@ -42,6 +44,10 @@ public class OpenOcdConfigurationType extends CMakeRunConfigurationType {
                 return true;
             }
 
+            @Override
+            public String getId() {
+                return FACTORY_ID;
+            }
         };
     }
 
@@ -63,7 +69,6 @@ public class OpenOcdConfigurationType extends CMakeRunConfigurationType {
     @NotNull
     @Override
     protected CMakeAppRunConfiguration createRunConfiguration(@NotNull Project project, @NotNull ConfigurationFactory configurationFactory) {
-//        return new OpenOcdConfiguration(project, factory, ""); // todo uncomment AND fix ids on clion restart
-        return new OpenOcdConfiguration(project, configurationFactory, "");
+        return new OpenOcdConfiguration(project, factory, "");
     }
 }

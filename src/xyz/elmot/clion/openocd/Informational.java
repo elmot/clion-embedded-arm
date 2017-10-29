@@ -39,6 +39,7 @@ public class Informational {
 
     @SuppressWarnings("WeakerAccess")
     public static void showFailedDownloadNotification(Project project) {
-        showMessage(project, MessageType.ERROR, "MCU Communication FAILURE");
+        showMessage(project, MessageType.ERROR,
+                "MCU Communication FAILURE.\nCheck board configuration and connection.");
     }
 }
