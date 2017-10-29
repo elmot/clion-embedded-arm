@@ -3,6 +3,7 @@ package xyz.elmot.clion.openocd;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.RunContentExecutor;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.configurations.PtyCommandLine;
 import com.intellij.execution.filters.Filter;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.ui.ConsoleViewContentType;
@@ -36,7 +37,7 @@ public class OpenOcdComponent {
     @SuppressWarnings("WeakerAccess")
     public void startOpenOcd(Project project, @Nullable File fileToLoad, @Nullable String additionalCommand) {
         if (project == null) return;
-        GeneralCommandLine commandLine = createOcdCommandLine(project, fileToLoad, additionalCommand, false);
+        GeneralCommandLine commandLine = createOcdCommandLine(project, fileToLoad, additionalCommand, false, false);
         if (process != null && !process.isProcessTerminated()) {
             LOG.info("openOcd is already run");
             return;
@@ -44,7 +45,7 @@ public class OpenOcdComponent {
 
 
         try {
-            process = new OSProcessHandler(commandLine){
+            process = new OSProcessHandler(commandLine) {
                 @Override
                 public boolean isSilentlyDestroyOnClose() {
                     return true;
@@ -65,10 +66,12 @@ public class OpenOcdComponent {
 
     @SuppressWarnings("WeakerAccess")
     @NotNull
-    public static GeneralCommandLine createOcdCommandLine(@NotNull Project project, @Nullable File fileToLoad, @Nullable String additionalCommand, boolean shutdown) {
+    public static GeneralCommandLine createOcdCommandLine(@NotNull Project project, @Nullable File fileToLoad,
+                                                          @Nullable String additionalCommand, boolean pty,
+                                                          boolean shutdown) {
         OpenOcdSettingsState ocdSettings = project.getComponent(OpenOcdSettingsState.class);
-        GeneralCommandLine commandLine = new GeneralCommandLine()
-                .withRedirectErrorStream(true)
+        GeneralCommandLine commandLine = pty ? new PtyCommandLine() : new GeneralCommandLine();
+        commandLine/*.withRedirectErrorStream(true)*/
                 .withWorkDirectory(new File(ocdSettings.openOcdLocation).getParent())
                 .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
                 .withExePath(ocdSettings.openOcdLocation);
@@ -82,7 +85,7 @@ public class OpenOcdComponent {
         commandLine.addParameters("-f", ocdSettings.boardConfigFile);
         String command = "";
         if (fileToLoad != null) {
-            command += "program \"" + fileToLoad.getAbsolutePath().replace(File.separatorChar,'/') + "\";";
+            command += "program \"" + fileToLoad.getAbsolutePath().replace(File.separatorChar, '/') + "\";";
         }
         if (additionalCommand != null) {
             command += additionalCommand + ";";
@@ -97,7 +100,7 @@ public class OpenOcdComponent {
     }
 
     public boolean isRun() {
-        return  process!=null && !process.isProcessTerminated();
+        return process != null && !process.isProcessTerminated();
     }
 
 

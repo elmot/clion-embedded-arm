@@ -25,7 +25,6 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
         gdbPort = 3333;
     }
 
-    @Nullable
     @Override
     public OpenOcdSettingsState getState() {
         return this;
