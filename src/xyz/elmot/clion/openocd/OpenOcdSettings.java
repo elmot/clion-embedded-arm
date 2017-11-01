@@ -218,9 +218,9 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
                     }
                 }
                 VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByIoFile(selected);
-                VirtualFile choosenFile = FileChooser.chooseFile(fileDescriptor, null, virtualFile);
-                if (choosenFile != null) {
-                    jTextField.setText(choosenFile.getCanonicalPath());
+                VirtualFile chosenFile = FileChooser.chooseFile(fileDescriptor, null, virtualFile);
+                if (chosenFile != null) {
+                    jTextField.setText(chosenFile.getCanonicalPath());
                 }
             };
             return addValueRow(row, labelText, new TextFieldWithBrowseButton(jTextField, fileClick));

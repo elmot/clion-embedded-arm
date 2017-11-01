@@ -109,8 +109,14 @@ class ProjectData {
                 "\n mcpu='" + mcpu + '\'';
     }
 
-    public Map<String,String> getAsMap() {
-        Map<String,String> map = new HashMap<>();
+    public String extraInfo() {
+        return String.format("Project Name: %s\nConfig Name: %s\nLinker Flags: %s\n" +
+                        "Sources: %s\nIncludes:%s",
+                projectName, genericConfigName,linkerFlags,sources,includes);
+    }
+
+    public Map<String, String> getAsMap() {
+        Map<String, String> map = new HashMap<>();
         map.put("projectName", projectName);
         map.put("linkerScript", linkerScript);
         map.put("mcuFamily", mcuFamily);
@@ -121,5 +127,12 @@ class ProjectData {
         map.put("sources", sources);
         map.put("mcpu", mcpu);
         return map;
+    }
+
+    public String shortHtml() {
+        return String.format("<html><table>" +
+                "<tr><td>Chip</td><td><b>%s</b></td></tr>" +
+                "<tr><td>CPU</td><td><b>%s</b></td></tr>" +
+                "</table></html>", mcuFamily, mcpu);
     }
 }

@@ -9,6 +9,7 @@ import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.openapi.project.Project;
 import com.intellij.xdebugger.XDebugSession;
+import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
 import com.jetbrains.cidr.cpp.execution.debugger.backend.GDBDriverConfiguration;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import com.jetbrains.cidr.execution.debugger.CidrDebugProcess;
@@ -24,7 +25,7 @@ import java.io.File;
  */
 class OpenOcdLauncher extends CidrLauncher {
 
-    private OpenOcdConfiguration openOcdConfiguration;
+    private final OpenOcdConfiguration openOcdConfiguration;
 
     OpenOcdLauncher(OpenOcdConfiguration openOcdConfiguration) {
         this.openOcdConfiguration = openOcdConfiguration;
@@ -32,7 +33,7 @@ class OpenOcdLauncher extends CidrLauncher {
 
     @Override
     protected ProcessHandler createProcess(@NotNull CommandLineState commandLineState) throws ExecutionException {
-        File runFile = openOcdConfiguration.findRunFile();
+        File runFile = findRunFile(commandLineState);
         findOpenOcdAction(commandLineState.getEnvironment().getProject()).stopOpenOcd();
         GeneralCommandLine commandLine = OpenOcdComponent.createOcdCommandLine(commandLineState.getEnvironment().getProject(),
                 runFile, "reset init", true);
@@ -58,7 +59,8 @@ class OpenOcdLauncher extends CidrLauncher {
         Project project = commandLineState.getEnvironment().getProject();
         OpenOcdSettingsState ocdSettings = project.getComponent(OpenOcdSettingsState.class);
         CidrRemoteDebugParameters remoteDebugParameters = new CidrRemoteDebugParameters();
-        remoteDebugParameters.setSymbolFile(openOcdConfiguration.findRunFile().getAbsolutePath());
+
+        remoteDebugParameters.setSymbolFile(findRunFile(commandLineState).getAbsolutePath());
         remoteDebugParameters.setRemoteCommand("tcp:localhost:" + ocdSettings.gdbPort);
 
         CPPToolchains.Toolchain defaultToolchain = CPPToolchains.getInstance().getDefaultToolchain();
@@ -73,12 +75,30 @@ class OpenOcdLauncher extends CidrLauncher {
         });
         return debugProcess;
     }
+    @NotNull
+    private File findRunFile(CommandLineState commandLineState) throws ExecutionException {
+        String targetProfileName = commandLineState.getExecutionTarget().getDisplayName();
+        CMakeAppRunConfiguration.BuildAndRunConfigurations runConfigurations = openOcdConfiguration.getBuildAndRunConfigurations(targetProfileName);
+        if (runConfigurations == null) {
+            throw new ExecutionException("Target is not defined");
+        }
+        File runFile = runConfigurations.getRunFile();
+        if (runFile == null) {
+            throw new ExecutionException("Run file is not defined for "+ runConfigurations);
+        }
+        if (!runFile.exists() || !runFile.isFile()) {
+            throw new ExecutionException("Invalid run file "+ runFile.getAbsolutePath());
+        }
+        return runFile;
+    }
+
 
     @NotNull
     @Override
     public CidrDebugProcess startDebugProcess(@NotNull CommandLineState commandLineState, @NotNull XDebugSession xDebugSession) throws ExecutionException {
         Project project = commandLineState.getEnvironment().getProject();
-        File runFile = openOcdConfiguration.findRunFile();
+
+        File runFile = findRunFile(commandLineState);
 
         findOpenOcdAction(commandLineState.getEnvironment().getProject()).startOpenOcd(project, runFile, "reset halt");
         return super.startDebugProcess(commandLineState, xDebugSession);

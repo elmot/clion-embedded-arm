@@ -1,9 +1,5 @@
 package xyz.elmot.clion.openocd;
 
-import com.intellij.notification.Notification;
-import com.intellij.notification.NotificationType;
-import com.intellij.notification.Notifications;
-import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.MessageType;
@@ -15,9 +11,6 @@ import com.intellij.openapi.wm.ToolWindowManager;
  */
 @SuppressWarnings("WeakerAccess")
 public class Informational {
-    private static final String GROUP_DISPLAY = "OpenOCD";
-    private static final String FIRMWARE_DOWNLOAD = "Firmware download";
-
     private Informational() {
     }
 
