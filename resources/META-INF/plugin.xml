@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>xyz.elmot.clion.armsupport.prj</id>
     <name>OpenOCD + STM32CubeMX support for ARM embedded development</name>
-    <version>0.4.alpha</version>
+    <version>0.5.alpha</version>
     <vendor email="me@elmot.xyz" url="http://elmot.xyz">Elmot</vendor>
 
     <description><![CDATA[
@@ -30,14 +30,14 @@
 
     <change-notes><![CDATA[
         <ul>
-        <li>Run configuration is automatically created during project update</li>
-        <li>Bug fixes &amp; improvements</li>
+        <li>Compatibility with latest CLion EAP(173.3531)</li>
+        <li>Bug fixes &amp; small improvements</li>
         </ul>
     ]]>
     </change-notes>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-    <idea-version since-build="173.0" until-build="173.*"/>
+    <idea-version since-build="173.3531" until-build="173.*"/>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
          on how to target different products -->
