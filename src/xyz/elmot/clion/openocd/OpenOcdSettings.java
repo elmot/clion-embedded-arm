@@ -64,6 +64,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
                 Objects.equals(panel.openOcdLocation.getText(), state.openOcdLocation) &&
                 Objects.equals(panel.gdbLocation.getText(), state.gdbLocation) &&
                 Objects.equals(panel.gdbPort.getValue(), state.gdbPort) &&
+                Objects.equals(panel.telnetPort.getValue(), state.telnetPort) &&
                 Objects.equals(panel.openOcdScriptsLocation.getText(), state.openOcdScriptsLocation) &&
                 Objects.equals(panel.defaultOpenOcdScriptsLocation.isSelected(), state.defaultOpenOcdScriptsLocation));
     }
@@ -80,6 +81,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         }
         OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
         state.gdbPort = panel.gdbPort.getValue();
+        state.telnetPort = panel.telnetPort.getValue();
         state.boardConfigFile = panel.boardConfigFile.getText();
         state.openOcdLocation = panel.openOcdLocation.getText();
         state.gdbLocation = panel.gdbLocation.getText();
@@ -137,6 +139,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
     public void reset() {
         OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
         panel.gdbPort.setValue(state.gdbPort);
+        panel.telnetPort.setValue(state.telnetPort);
         panel.boardConfigFile.setText(state.boardConfigFile);
         panel.openOcdLocation.setText(state.openOcdLocation);
         panel.openOcdScriptsLocation.setText(state.openOcdScriptsLocation);
@@ -156,9 +159,10 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         private final JBCheckBox defaultOpenOcdScriptsLocation;
         private final TextFieldWithBrowseButton gdbLocation;
         private final IntegerField gdbPort;
+        private final IntegerField telnetPort;
 
         public OpenOcdSettingsPanel() {
-            super(new GridLayoutManager(7, 3), true);
+            super(new GridLayoutManager(8, 3), true);
             ((GridLayoutManager) getLayout()).setColumnStretch(1, 10);
             openOcdLocation = addFileChooser(0, "OpenOCD Location", null, false, true);
 
@@ -175,7 +179,9 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
 
             gdbPort = addValueRow(5, "GDB Port", new IntegerField("GDB Port", 1024, 65353));
             gdbPort.setCanBeEmpty(false);
-            add(new Spacer(), new GridConstraints(6, 0, 1, 1, ANCHOR_CENTER, FILL_NONE,
+            telnetPort = addValueRow(6, "Telnet Port", new IntegerField("Telnet Port", 1024, 65353));
+            telnetPort.setCanBeEmpty(false);
+            add(new Spacer(), new GridConstraints(7, 0, 1, 1, ANCHOR_CENTER, FILL_NONE,
                     SIZEPOLICY_FIXED, SIZEPOLICY_WANT_GROW, null, null, null));
         }
 

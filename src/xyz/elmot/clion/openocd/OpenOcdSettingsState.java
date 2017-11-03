@@ -17,12 +17,17 @@ import java.util.StringTokenizer;
 @SuppressWarnings("WeakerAccess")
 @State(name = "elmot.OpenOcdPlugin", storages = @Storage(value = StoragePathMacros.WORKSPACE_FILE, roamingType = RoamingType.PER_OS))
 public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSettingsState> {
+
+    public static final int DEF_GDB_PORT = 3333;
+    public static final int DEF_TELNET_PORT = 4444;
+
     public OpenOcdSettingsState() {
         boardConfigFile = "board/stm32f4discovery.cfg";
         openOcdLocation = "/usr/bin/openocd";
         gdbLocation = "arm-none-eabi-gdb";
         defaultOpenOcdScriptsLocation = true;
-        gdbPort = 3333;
+        gdbPort = DEF_GDB_PORT;
+        telnetPort = DEF_TELNET_PORT;
     }
 
     @Nullable
@@ -37,6 +42,7 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
         openOcdLocation = state.openOcdLocation;
         gdbLocation = state.gdbLocation;
         gdbPort = state.gdbPort;
+        telnetPort = state.telnetPort;
         openOcdScriptsLocation = state.openOcdScriptsLocation;
         defaultOpenOcdScriptsLocation = state.defaultOpenOcdScriptsLocation;
     }
@@ -75,4 +81,5 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
     public boolean defaultOpenOcdScriptsLocation;
     public String gdbLocation;
     public int gdbPort;
+    public int telnetPort;
 }
