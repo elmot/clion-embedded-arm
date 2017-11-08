@@ -39,7 +39,7 @@ class OpenOcdLauncher extends CidrLauncher {
         findOpenOcdAction(commandLineState.getEnvironment().getProject()).stopOpenOcd();
         try {
             GeneralCommandLine commandLine = OpenOcdComponent.createOcdCommandLine(commandLineState.getEnvironment().getProject(),
-                    runFile, "reset init", true);
+                    runFile, "reset", true);
             OSProcessHandler osProcessHandler = new OSProcessHandler(commandLine);
             osProcessHandler.addProcessListener(new ProcessAdapter() {
                 @Override
