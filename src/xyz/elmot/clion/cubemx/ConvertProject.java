@@ -42,7 +42,8 @@ public class ConvertProject extends AnAction {
     private static final String SOURCE_XPATH = CONFIG_DEBUG_XPATH + "//sourceEntries/entry/@name";
     static final String CPROJECT_FILE_NAME = ".cproject";
     private static final String PROJECT_FILE_NAME = ".project";
-    private enum STRATEGY { CREATEONLY, OVERWRITE, MERGE/*todo Not supported yet*/}
+
+    private enum STRATEGY {CREATEONLY, OVERWRITE, MERGE/*todo Not supported yet*/}
 
     @SuppressWarnings("WeakerAccess")
     public ConvertProject() {
@@ -77,7 +78,7 @@ public class ConvertProject extends AnAction {
         }
 
         writeProjectFile(project, "tmpl_CMakeLists.txt", "CMakeLists.txt", projectData, STRATEGY.OVERWRITE);
-        writeProjectFile(project, "tmpl_gitignore.txt", ".gitignore", projectData,STRATEGY.CREATEONLY);
+        writeProjectFile(project, "tmpl_gitignore.txt", ".gitignore", projectData, STRATEGY.CREATEONLY);
         CMakeWorkspace cMakeWorkspace = CMakeWorkspace.getInstance(project);
         cMakeWorkspace.scheduleClearGeneratedFilesAndReload();
         ApplicationManager.getApplication().executeOnPooledThread(() ->
@@ -95,7 +96,7 @@ public class ConvertProject extends AnAction {
                 projectData.shortHtml(),
                 "Project Updated: " + projectData.getProjectName(),
                 projectData.extraInfo(),
-                new String[]{Messages.OK_BUTTON},0,0, AllIcons.General.InformationDialog);
+                new String[]{Messages.OK_BUTTON}, 0, 0, AllIcons.General.InformationDialog);
     }
 
     private static void writeProjectFile(Project project, String templateName, String fileName, ProjectData projectData, STRATEGY strategy) {
@@ -104,9 +105,9 @@ public class ConvertProject extends AnAction {
         application.runWriteAction(() -> {
                     try {
                         VirtualFile projectFile = project.getBaseDir().findChild(fileName);
-                        if(projectFile == null) {
-                            projectFile =project.getBaseDir().createChildData(project,fileName);
-                        } else  if(strategy == STRATEGY.CREATEONLY) {
+                        if (projectFile == null) {
+                            projectFile = project.getBaseDir().createChildData(project, fileName);
+                        } else if (strategy == STRATEGY.CREATEONLY) {
                             return;
                         }
                         String template = FileUtil.loadTextAndClose(ConvertProject.class.getResourceAsStream(templateName));
@@ -130,9 +131,14 @@ public class ConvertProject extends AnAction {
             RunnerAndConfigurationSettings newRunConfig = runManager.createRunConfiguration(name, factory);
             newRunConfig.setSingleton(true);
             ((CMakeAppRunConfiguration) newRunConfig.getConfiguration()).setupDefaultTargetAndExecutable();
-            runManager.addConfiguration(newRunConfig);
-            runManager.makeStable(newRunConfig);
-            runManager.setSelectedConfiguration(newRunConfig);
+            ApplicationManager.getApplication().invokeLater(() -> {
+                ApplicationManager.getApplication().runWriteAction(() ->
+                {
+                    runManager.addConfiguration(newRunConfig);
+                    runManager.makeStable(newRunConfig);
+                    runManager.setSelectedConfiguration(newRunConfig);
+                });
+            });
         }
     }
 
