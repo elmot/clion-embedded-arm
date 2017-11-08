@@ -79,8 +79,11 @@ public class OpenOcdComponent {
         if (!ocdSettings.defaultOpenOcdScriptsLocation) {
             commandLine.addParameters("-s", ocdSettings.openOcdScriptsLocation);
         }
-        if (ocdSettings.gdbPort != 3333) {
+        if (ocdSettings.gdbPort != OpenOcdSettingsState.DEF_GDB_PORT) {
             commandLine.addParameters("-c", "gdb_port " + ocdSettings.gdbPort);
+        }
+        if (ocdSettings.telnetPort != OpenOcdSettingsState.DEF_TELNET_PORT) {
+            commandLine.addParameters("-c", "telnet_port " + ocdSettings.telnetPort);
         }
         commandLine.addParameters("-f", ocdSettings.boardConfigFile);
         String command = "";
