@@ -22,7 +22,7 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
     public static final int DEF_TELNET_PORT = 4444;
 
     public OpenOcdSettingsState() {
-        boardConfigFile = "board/stm32f4discovery.cfg";
+        boardConfigFile = "";
         openOcdLocation = "/usr/bin/openocd";
         gdbLocation = "arm-none-eabi-gdb";
         defaultOpenOcdScriptsLocation = true;
