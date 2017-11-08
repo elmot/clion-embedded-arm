@@ -7,7 +7,9 @@ import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessHandler;
+import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.xdebugger.XDebugSession;
 import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
 import com.jetbrains.cidr.cpp.execution.debugger.backend.GDBDriverConfiguration;
@@ -35,22 +37,27 @@ class OpenOcdLauncher extends CidrLauncher {
     protected ProcessHandler createProcess(@NotNull CommandLineState commandLineState) throws ExecutionException {
         File runFile = findRunFile(commandLineState);
         findOpenOcdAction(commandLineState.getEnvironment().getProject()).stopOpenOcd();
-        GeneralCommandLine commandLine = OpenOcdComponent.createOcdCommandLine(commandLineState.getEnvironment().getProject(),
-                runFile, "reset init", true);
-        OSProcessHandler osProcessHandler = new OSProcessHandler(commandLine);
-        osProcessHandler.addProcessListener(new ProcessAdapter() {
-            @Override
-            public void processTerminated(@NotNull ProcessEvent event) {
-                super.processTerminated(event);
-                Project project = commandLineState.getEnvironment().getProject();
-                if (event.getExitCode() == 0) {
-                    Informational.showSuccessfulDownloadNotification(project);
-                } else {
-                    Informational.showFailedDownloadNotification(project);
+        try {
+            GeneralCommandLine commandLine = OpenOcdComponent.createOcdCommandLine(commandLineState.getEnvironment().getProject(),
+                    runFile, "reset init", true);
+            OSProcessHandler osProcessHandler = new OSProcessHandler(commandLine);
+            osProcessHandler.addProcessListener(new ProcessAdapter() {
+                @Override
+                public void processTerminated(@NotNull ProcessEvent event) {
+                    super.processTerminated(event);
+                    Project project = commandLineState.getEnvironment().getProject();
+                    if (event.getExitCode() == 0) {
+                        Informational.showSuccessfulDownloadNotification(project);
+                    } else {
+                        Informational.showFailedDownloadNotification(project);
+                    }
                 }
-            }
-        });
-        return osProcessHandler;
+            });
+            return osProcessHandler;
+        } catch (ConfigurationException e) {
+            Messages.showErrorDialog(getProject(), e.getLocalizedMessage(), e.getTitle());
+            throw new ExecutionException(e);
+        }
     }
 
     @NotNull
@@ -75,6 +82,7 @@ class OpenOcdLauncher extends CidrLauncher {
         });
         return debugProcess;
     }
+
     @NotNull
     private File findRunFile(CommandLineState commandLineState) throws ExecutionException {
         String targetProfileName = commandLineState.getExecutionTarget().getDisplayName();
@@ -84,10 +92,10 @@ class OpenOcdLauncher extends CidrLauncher {
         }
         File runFile = runConfigurations.getRunFile();
         if (runFile == null) {
-            throw new ExecutionException("Run file is not defined for "+ runConfigurations);
+            throw new ExecutionException("Run file is not defined for " + runConfigurations);
         }
         if (!runFile.exists() || !runFile.isFile()) {
-            throw new ExecutionException("Invalid run file "+ runFile.getAbsolutePath());
+            throw new ExecutionException("Invalid run file " + runFile.getAbsolutePath());
         }
         return runFile;
     }
@@ -100,8 +108,13 @@ class OpenOcdLauncher extends CidrLauncher {
 
         File runFile = findRunFile(commandLineState);
 
-        findOpenOcdAction(commandLineState.getEnvironment().getProject()).startOpenOcd(project, runFile, "reset halt");
-        return super.startDebugProcess(commandLineState, xDebugSession);
+        try {
+            findOpenOcdAction(commandLineState.getEnvironment().getProject()).startOpenOcd(project, runFile, "reset halt");
+            return super.startDebugProcess(commandLineState, xDebugSession);
+        } catch (ConfigurationException e) {
+            Messages.showErrorDialog(getProject(), e.getLocalizedMessage(), e.getTitle());
+            throw new ExecutionException(e);
+        }
     }
 
     private OpenOcdComponent findOpenOcdAction(Project project) {

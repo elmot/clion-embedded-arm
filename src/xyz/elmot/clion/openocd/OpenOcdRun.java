@@ -2,7 +2,9 @@ package xyz.elmot.clion.openocd;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 
 /**
  * (c) elmot on 19.10.2017.
@@ -18,7 +20,11 @@ public class OpenOcdRun extends AnAction {
     @Override
     public void actionPerformed(AnActionEvent event) {
         Project project = event.getProject();
-        getOpenOcdComponent(project).startOpenOcd(project, null, null);
+        try {
+            getOpenOcdComponent(project).startOpenOcd(project, null, null);
+        } catch (ConfigurationException e) {
+            Messages.showErrorDialog(project, e.getLocalizedMessage(), e.getTitle());
+        }
 
     }
 

@@ -12,6 +12,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.colors.EditorColorsManager;
 import com.intellij.openapi.editor.colors.EditorColorsScheme;
 import com.intellij.openapi.editor.markup.HighlighterLayer;
+import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
@@ -38,7 +39,7 @@ public class OpenOcdComponent {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public void startOpenOcd(Project project, @Nullable File fileToLoad, @Nullable String additionalCommand) {
+    public void startOpenOcd(Project project, @Nullable File fileToLoad, @Nullable String additionalCommand) throws ConfigurationException {
         if (project == null) return;
         GeneralCommandLine commandLine = createOcdCommandLine(project, fileToLoad, additionalCommand, false);
         if (process != null && !process.isProcessTerminated()) {
@@ -69,8 +70,11 @@ public class OpenOcdComponent {
 
     @SuppressWarnings("WeakerAccess")
     @NotNull
-    public static GeneralCommandLine createOcdCommandLine(@NotNull Project project, @Nullable File fileToLoad, @Nullable String additionalCommand, boolean shutdown) {
+    public static GeneralCommandLine createOcdCommandLine(@NotNull Project project, @Nullable File fileToLoad, @Nullable String additionalCommand, boolean shutdown) throws ConfigurationException {
         OpenOcdSettingsState ocdSettings = project.getComponent(OpenOcdSettingsState.class);
+        if(ocdSettings.boardConfigFile == null || "".equals(ocdSettings.boardConfigFile.trim())) {
+            throw new ConfigurationException("Board Config file is not defined.\nPlease open OpenOCD settings and choose one.", "OpenOCD run error");
+        }
         GeneralCommandLine commandLine = new PtyCommandLine()
                 .withWorkDirectory(new File(ocdSettings.openOcdLocation).getParent())
                 .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
