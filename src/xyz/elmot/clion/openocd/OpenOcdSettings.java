@@ -116,7 +116,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         if (basePath != null) {
             URI relativized = basePath.toURI().relativize(file.toURI());
             if (!relativized.isAbsolute()) {
-                    path.setText(relativized.getPath());
+                path.setText(relativized.getPath());
             }
         }
         return file;
@@ -166,21 +166,19 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
             ((GridLayoutManager) getLayout()).setColumnStretch(1, 10);
             openOcdLocation = addFileChooser(0, "OpenOCD Location", null, false, true);
 
-            defaultOpenOcdScriptsLocation = addValueRow(1, "OpenOCD Scripts Default Location", new JBCheckBox("default"));
+            defaultOpenOcdScriptsLocation = addValueRow(1, "OpenOCD Scripts Location", new JBCheckBox("Default"));
 
-            openOcdScriptsLocation = addFileChooser(2, "OpenOCD Scripts Location",
-                    this::findScriptsLocation, true, false);
+            openOcdScriptsLocation = addFileChooser(2, null, this::findScriptsLocation, true, false);
             defaultOpenOcdScriptsLocation.addChangeListener(e -> openOcdScriptsLocation.setEnabled(!defaultOpenOcdScriptsLocation.isSelected()));
 
             boardConfigFile = addFileChooser(3, "Board Config File", this::findBoards, false, false);
 
-            gdbLocation = addFileChooser(4, "Debugger (arm-none-eabi-gdb) Location", null, false, true);
 
-
-            gdbPort = addValueRow(5, "GDB Port", new IntegerField("GDB Port", 1024, 65353));
+            gdbPort = addValueRow(4, "OpenOCD GDB Port", new IntegerField("GDB Port", 1024, 65353));
             gdbPort.setCanBeEmpty(false);
-            telnetPort = addValueRow(6, "Telnet Port", new IntegerField("Telnet Port", 1024, 65353));
+            telnetPort = addValueRow(5, "OpenOCD Telnet Port", new IntegerField("Telnet Port", 1024, 65353));
             telnetPort.setCanBeEmpty(false);
+            gdbLocation = addFileChooser(6, "GDB (arm-none-eabi-gdb)", null, false, true);
             add(new Spacer(), new GridConstraints(7, 0, 1, 1, ANCHOR_CENTER, FILL_NONE,
                     SIZEPOLICY_FIXED, SIZEPOLICY_WANT_GROW, null, null, null));
         }
@@ -201,7 +199,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
             return openOcdLocationFile.getParentFile();
         }
 
-        private TextFieldWithBrowseButton addFileChooser(int row, @NotNull String labelText, @Nullable Supplier<File> baseSupplier, boolean directory, boolean executable) {
+        private TextFieldWithBrowseButton addFileChooser(int row, @Nullable String labelText, @Nullable Supplier<File> baseSupplier, boolean directory, boolean executable) {
             JBTextField jTextField = new JBTextField();
             ActionListener fileClick = e -> {
                 String fileName = jTextField.getText();
@@ -232,13 +230,15 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
             return addValueRow(row, labelText, new TextFieldWithBrowseButton(jTextField, fileClick));
         }
 
-        private <T extends JComponent> T addValueRow(int row, @NotNull String labelText, @NotNull T component) {
-            JLabel label = new JLabel(labelText);
-            add(label, new GridConstraints(row, 0, 1, 1, ANCHOR_WEST, FILL_NONE,
-                    SIZEPOLICY_FIXED, SIZEPOLICY_FIXED, null, null, null));
+        private <T extends JComponent> T addValueRow(int row, @Nullable String labelText, @NotNull T component) {
             add(component, new GridConstraints(row, 1, 1, 1, ANCHOR_WEST,
                     FILL_HORIZONTAL, SIZEPOLICY_WANT_GROW, SIZEPOLICY_FIXED, null, null, null));
-            label.setLabelFor(component);
+            if (labelText != null) {
+                JLabel label = new JLabel(labelText);
+                add(label, new GridConstraints(row, 0, 1, 1, ANCHOR_WEST, FILL_NONE,
+                        SIZEPOLICY_FIXED, SIZEPOLICY_FIXED, null, null, null));
+                label.setLabelFor(component);
+            }
             return component;
         }
 
