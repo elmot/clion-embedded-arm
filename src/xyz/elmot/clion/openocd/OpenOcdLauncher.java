@@ -9,16 +9,20 @@ import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.ui.ExecutionConsole;
 import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.xdebugger.XDebugSession;
 import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
 import com.jetbrains.cidr.cpp.execution.debugger.backend.GDBDriverConfiguration;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import com.jetbrains.cidr.execution.debugger.CidrDebugProcess;
+import com.jetbrains.cidr.execution.debugger.backend.DebuggerCommandException;
+import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriver;
 import com.jetbrains.cidr.execution.debugger.remote.CidrRemoteDebugParameters;
 import com.jetbrains.cidr.execution.debugger.remote.CidrRemoteGDBDebugProcess;
 import com.jetbrains.cidr.execution.testing.CidrLauncher;
@@ -35,6 +39,7 @@ import java.util.concurrent.TimeoutException;
  */
 class OpenOcdLauncher extends CidrLauncher {
 
+    private static final Key<AnAction> RESTART_KEY = Key.create(OpenOcdLauncher.class.getName() + "#restartAction");
     private final OpenOcdConfiguration openOcdConfiguration;
 
     OpenOcdLauncher(OpenOcdConfiguration openOcdConfiguration) {
@@ -89,6 +94,29 @@ class OpenOcdLauncher extends CidrLauncher {
                 findOpenOcdAction(project).stopOpenOcd();
             }
         });
+        debugProcess.getProcessHandler().putUserData(RESTART_KEY,
+                new AnAction("Reset", "MCU Reset", AllIcons.Actions.Reset/*todo own icon*/) {
+                    @Override
+                    public void actionPerformed(AnActionEvent e) {
+                        XDebugSession session = debugProcess.getSession();
+                        session.pause();
+                        debugProcess.postCommand(drv -> {
+                            try {
+                                ProgressManager.getInstance().runProcess(() -> {
+                                    while (drv.getState() != DebuggerDriver.TargetState.SUSPENDED) {
+                                        Thread.yield();
+                                    }
+                                }, null);
+                                drv.executeConsoleCommand("monitor reset");
+                                session.resume();
+                            } catch (DebuggerCommandException exception) {
+                                Informational.showFailedDownloadNotification(e.getProject());
+                            }
+                        });
+                    }
+                }
+        );
+
         return debugProcess;
     }
 
@@ -143,15 +171,18 @@ class OpenOcdLauncher extends CidrLauncher {
         }
     }
 
-    @Override
-    protected void collectAdditionalActions(@NotNull CommandLineState commandLineState, @NotNull ProcessHandler processHandler, @NotNull ExecutionConsole executionConsole, @NotNull List<AnAction> list) throws ExecutionException {
-        super.collectAdditionalActions(commandLineState, processHandler, executionConsole, list);
-    }
-
     private OpenOcdComponent findOpenOcdAction(Project project) {
         return project.getComponent(OpenOcdComponent.class);
     }
 
+    @Override
+    protected void collectAdditionalActions(@NotNull CommandLineState commandLineState, @NotNull ProcessHandler processHandler, @NotNull ExecutionConsole executionConsole, @NotNull List<AnAction> list) throws ExecutionException {
+        super.collectAdditionalActions(commandLineState, processHandler, executionConsole, list);
+        AnAction restart = processHandler.getUserData(RESTART_KEY);
+        if (restart != null) {
+            list.add(restart);
+        }
+    }
 
     @NotNull
     @Override
