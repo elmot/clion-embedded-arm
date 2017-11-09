@@ -80,6 +80,7 @@ class OpenOcdLauncher extends CidrLauncher {
 
         CPPToolchains.Toolchain defaultToolchain = CPPToolchains.getInstance().getDefaultToolchain();
         GDBDriverConfiguration gdbDriverConfiguration = new GDBDriverConfiguration(getProject(), defaultToolchain, new File(ocdSettings.gdbLocation));
+        xDebugSession.stop();
         CidrRemoteGDBDebugProcess debugProcess = new CidrRemoteGDBDebugProcess(gdbDriverConfiguration, remoteDebugParameters, xDebugSession, commandLineState.getConsoleBuilder());
         debugProcess.getProcessHandler().addProcessListener(new ProcessAdapter() {
             @Override
@@ -117,7 +118,9 @@ class OpenOcdLauncher extends CidrLauncher {
         File runFile = findRunFile(commandLineState);
 
         try {
+            xDebugSession.stop();
             OpenOcdComponent openOcdComponent = findOpenOcdAction(commandLineState.getEnvironment().getProject());
+            openOcdComponent.stopOpenOcd();
             Future<OpenOcdComponent.STATUS> downloadResult = openOcdComponent.startOpenOcd(project, runFile, "reset init");
 
             ThrowableComputable<OpenOcdComponent.STATUS, ExecutionException> process = () -> {
