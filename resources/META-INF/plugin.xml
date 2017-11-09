@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>xyz.elmot.clion.armsupport.prj</id>
     <name>OpenOCD + STM32CubeMX support for ARM embedded development</name>
-    <version>0.5.alpha</version>
+    <version>0.6.alpha</version>
     <vendor email="me@elmot.xyz" url="http://elmot.xyz">Elmot</vendor>
 
     <description><![CDATA[
@@ -30,8 +30,9 @@
 
     <change-notes><![CDATA[
         <ul>
-        <li>Compatibility with latest CLion EAP(173.3531)</li>
-        <li>Bug fixes &amp; small improvements</li>
+        <li>Hardware support fixes</li>
+        <li>Telnet port settings</li>
+        <li>No default board config file</li>
         </ul>
     ]]>
     </change-notes>
