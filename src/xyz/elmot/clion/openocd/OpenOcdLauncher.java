@@ -7,9 +7,13 @@ import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessHandler;
+import com.intellij.execution.ui.ExecutionConsole;
+import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.options.ConfigurationException;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.xdebugger.XDebugSession;
 import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
 import com.jetbrains.cidr.cpp.execution.debugger.backend.GDBDriverConfiguration;
@@ -21,6 +25,10 @@ import com.jetbrains.cidr.execution.testing.CidrLauncher;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * (c) elmot on 19.10.2017.
@@ -109,12 +117,32 @@ class OpenOcdLauncher extends CidrLauncher {
         File runFile = findRunFile(commandLineState);
 
         try {
-            findOpenOcdAction(commandLineState.getEnvironment().getProject()).startOpenOcd(project, runFile, "reset halt");
+            OpenOcdComponent openOcdComponent = findOpenOcdAction(commandLineState.getEnvironment().getProject());
+            Future<OpenOcdComponent.STATUS> downloadResult = openOcdComponent.startOpenOcd(project, runFile, "reset init");
+
+            ThrowableComputable<OpenOcdComponent.STATUS, ExecutionException> process = () -> {
+                try {
+                    ProgressManager.getInstance().getProgressIndicator().setIndeterminate(true);
+                     return downloadResult.get(10, TimeUnit.MINUTES);
+                } catch (InterruptedException | TimeoutException | java.util.concurrent.ExecutionException e) {
+                    throw new ExecutionException(e);
+                }
+            };
+            if (ProgressManager.getInstance().runProcessWithProgressSynchronously(
+                    process, "Firmware Download", true, getProject()) != OpenOcdComponent.STATUS.FLASH_SUCCESS) {
+                downloadResult.cancel(true);
+                throw new ExecutionException("OpenOCD cancelled");
+            }
             return super.startDebugProcess(commandLineState, xDebugSession);
         } catch (ConfigurationException e) {
             Messages.showErrorDialog(getProject(), e.getLocalizedMessage(), e.getTitle());
             throw new ExecutionException(e);
         }
+    }
+
+    @Override
+    protected void collectAdditionalActions(@NotNull CommandLineState commandLineState, @NotNull ProcessHandler processHandler, @NotNull ExecutionConsole executionConsole, @NotNull List<AnAction> list) throws ExecutionException {
+        super.collectAdditionalActions(commandLineState, processHandler, executionConsole, list);
     }
 
     private OpenOcdComponent findOpenOcdAction(Project project) {
