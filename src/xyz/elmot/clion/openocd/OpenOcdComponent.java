@@ -6,6 +6,8 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.configurations.PtyCommandLine;
 import com.intellij.execution.filters.Filter;
 import com.intellij.execution.process.OSProcessHandler;
+import com.intellij.execution.process.ProcessEvent;
+import com.intellij.execution.process.ProcessListener;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.execution.util.ExecutionErrorDialog;
 import com.intellij.openapi.diagnostic.Logger;
@@ -15,70 +17,29 @@ import com.intellij.openapi.editor.markup.HighlighterLayer;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Key;
+import com.intellij.util.concurrency.FutureResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 public class OpenOcdComponent {
+
+    private static final String ERROR_PREFIX = "Error: ";
+    private static final String FLASH_FAIL_TEXT = "** Programming Failed **";
+    private static final String FLASH_SUCCESS_TEXT = "** Programming Finished **";
+
     public enum STATUS {
-        NOT_STARTED,
-        CONNECTING,
-        FLASHING,
+        FLASH_NOT_READY,
         FLASH_SUCCESS,
         FLASH_ERROR,
-        ERROR,
-        FINISHED
     }
-
-    ;
 
     private static final Logger LOG = Logger.getInstance(OpenOcdRun.class);
     private final EditorColorsScheme myColorsScheme;
     private OSProcessHandler process;
-    private STATUS status = STATUS.NOT_STARTED;
-
-    public Future<Boolean> downloadSuccess() {
-        //todo make a class and recreate on process restart
-        return new Future<Boolean>() {
-            boolean cancelled = false;
-            @Override
-            public boolean cancel(boolean mayInterruptIfRunning) {
-                switch (status) {
-                    case FINISHED:
-                        return false;
-                    case NOT_STARTED:
-                        return false;
-                }
-                process.destroyProcess();
-                cancelled = true;
-                return true;
-            }
-
-            @Override
-            public boolean isCancelled() {
-                return cancelled;
-            }
-
-            @Override
-            public boolean isDone() {
-                return status!=STATUS.NOT_STARTED && status!= STATUS.FLASHING;
-            }
-
-            @Override
-            public Boolean get() throws InterruptedException, java.util.concurrent.ExecutionException {
-                return null;
-            }
-
-            @Override
-            public Boolean get(long timeout, @NotNull TimeUnit unit) throws InterruptedException, java.util.concurrent.ExecutionException, TimeoutException {
-                return null;
-            }
-        };
-    }
 
     public OpenOcdComponent() {
         myColorsScheme = EditorColorsManager.getInstance().getGlobalScheme();
@@ -94,14 +55,13 @@ public class OpenOcdComponent {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public void startOpenOcd(Project project, @Nullable File fileToLoad, @Nullable String additionalCommand) throws ConfigurationException {
-        if (project == null) return;
+    public Future<STATUS> startOpenOcd(Project project, @Nullable File fileToLoad, @Nullable String additionalCommand) throws ConfigurationException {
+        if (project == null) return new FutureResult<>(STATUS.FLASH_ERROR);
         GeneralCommandLine commandLine = createOcdCommandLine(project, fileToLoad, additionalCommand, false);
         if (process != null && !process.isProcessTerminated()) {
             LOG.info("openOcd is already run");
-            return;
+            return new FutureResult<>(STATUS.FLASH_ERROR);
         }
-
 
         try {
             process = new OSProcessHandler(commandLine) {
@@ -110,6 +70,8 @@ public class OpenOcdComponent {
                     return true;
                 }
             };
+            DownloadFollower downloadFollower = new DownloadFollower();
+            process.addProcessListener(downloadFollower);
             RunContentExecutor openOCDConsole = new RunContentExecutor(project, process)
                     .withTitle("OpenOCD console")
                     .withActivateToolWindow(true)
@@ -118,8 +80,10 @@ public class OpenOcdComponent {
                             () -> !process.isProcessTerminated() && !process.isProcessTerminating());
 
             openOCDConsole.run();
+            return downloadFollower;
         } catch (ExecutionException e) {
             ExecutionErrorDialog.show(e, "OpenOCD start failed", project);
+            return new FutureResult<>(STATUS.FLASH_ERROR);
         }
     }
 
@@ -184,7 +148,7 @@ public class OpenOcdComponent {
         @Nullable
         @Override
         public Result applyFilter(String line, int entireLength) {
-            if (line.startsWith("Error: ") || line.contains("** Programming Failed **")) {
+            if (line.startsWith(ERROR_PREFIX) || line.contains(FLASH_FAIL_TEXT)) {
                 Informational.showFailedDownloadNotification(project);
                 return new Result(0, line.length(), null,
                         myColorsScheme.getAttributes(ConsoleViewContentType.ERROR_OUTPUT_KEY)) {
@@ -193,10 +157,42 @@ public class OpenOcdComponent {
                         return HighlighterLayer.ERROR;
                     }
                 };
-            } else if (line.contains("** Programming Finished **")) {
+            } else if (line.contains(FLASH_SUCCESS_TEXT)) {
                 Informational.showSuccessfulDownloadNotification(project);
             }
             return null;
+        }
+    }
+
+    private class DownloadFollower extends FutureResult<STATUS> implements ProcessListener {
+        @Override
+        public void startNotified(@NotNull ProcessEvent event) {
+        }
+
+        @Override
+        public void processTerminated(@NotNull ProcessEvent event) {
+            try {
+                if (!isDone()) {
+                    set(STATUS.FLASH_ERROR);
+                }
+            } catch (Exception e) {
+                set(STATUS.FLASH_ERROR);
+            }
+        }
+
+        @Override
+        public void processWillTerminate(@NotNull ProcessEvent event, boolean willBeDestroyed) {
+            //nothing to do
+        }
+
+        @Override
+        public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
+            String text = event.getText().trim();
+            if (text.startsWith(ERROR_PREFIX) || text.equals(FLASH_FAIL_TEXT)) {
+                set(STATUS.FLASH_ERROR);
+            } else if (text.equals(FLASH_SUCCESS_TEXT)) {
+                set(STATUS.FLASH_SUCCESS);
+            }
         }
     }
 }

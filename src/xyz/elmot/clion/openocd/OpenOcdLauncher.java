@@ -13,6 +13,7 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.xdebugger.XDebugSession;
 import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
 import com.jetbrains.cidr.cpp.execution.debugger.backend.GDBDriverConfiguration;
@@ -25,6 +26,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * (c) elmot on 19.10.2017.
@@ -113,11 +117,22 @@ class OpenOcdLauncher extends CidrLauncher {
         File runFile = findRunFile(commandLineState);
 
         try {
-            OpenOcdComponent openOcdAction = findOpenOcdAction(commandLineState.getEnvironment().getProject());
-            openOcdAction.startOpenOcd(project, runFile, "reset init");
-            ProgressManager.getInstance().runProcessWithProgressSynchronously(
-                    () -> openOcdAction.process.waitFor(20000)
-                    , "Firmware Download", false, getProject());
+            OpenOcdComponent openOcdComponent = findOpenOcdAction(commandLineState.getEnvironment().getProject());
+            Future<OpenOcdComponent.STATUS> downloadResult = openOcdComponent.startOpenOcd(project, runFile, "reset init");
+
+            ThrowableComputable<OpenOcdComponent.STATUS, ExecutionException> process = () -> {
+                try {
+                    ProgressManager.getInstance().getProgressIndicator().setIndeterminate(true);
+                     return downloadResult.get(10, TimeUnit.MINUTES);
+                } catch (InterruptedException | TimeoutException | java.util.concurrent.ExecutionException e) {
+                    throw new ExecutionException(e);
+                }
+            };
+            if (ProgressManager.getInstance().runProcessWithProgressSynchronously(
+                    process, "Firmware Download", true, getProject()) != OpenOcdComponent.STATUS.FLASH_SUCCESS) {
+                downloadResult.cancel(true);
+                throw new ExecutionException("OpenOCD cancelled");
+            }
             return super.startDebugProcess(commandLineState, xDebugSession);
         } catch (ConfigurationException e) {
             Messages.showErrorDialog(getProject(), e.getLocalizedMessage(), e.getTitle());
