@@ -19,11 +19,66 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class OpenOcdComponent {
+    public enum STATUS {
+        NOT_STARTED,
+        CONNECTING,
+        FLASHING,
+        FLASH_SUCCESS,
+        FLASH_ERROR,
+        ERROR,
+        FINISHED
+    }
+
+    ;
+
     private static final Logger LOG = Logger.getInstance(OpenOcdRun.class);
     private final EditorColorsScheme myColorsScheme;
     private OSProcessHandler process;
+    private STATUS status = STATUS.NOT_STARTED;
+
+    public Future<Boolean> downloadSuccess() {
+        //todo make a class and recreate on process restart
+        return new Future<Boolean>() {
+            boolean cancelled = false;
+            @Override
+            public boolean cancel(boolean mayInterruptIfRunning) {
+                switch (status) {
+                    case FINISHED:
+                        return false;
+                    case NOT_STARTED:
+                        return false;
+                }
+                process.destroyProcess();
+                cancelled = true;
+                return true;
+            }
+
+            @Override
+            public boolean isCancelled() {
+                return cancelled;
+            }
+
+            @Override
+            public boolean isDone() {
+                return status!=STATUS.NOT_STARTED && status!= STATUS.FLASHING;
+            }
+
+            @Override
+            public Boolean get() throws InterruptedException, java.util.concurrent.ExecutionException {
+                return null;
+            }
+
+            @Override
+            public Boolean get(long timeout, @NotNull TimeUnit unit) throws InterruptedException, java.util.concurrent.ExecutionException, TimeoutException {
+                return null;
+            }
+        };
+    }
 
     public OpenOcdComponent() {
         myColorsScheme = EditorColorsManager.getInstance().getGlobalScheme();
@@ -72,7 +127,7 @@ public class OpenOcdComponent {
     @NotNull
     public static GeneralCommandLine createOcdCommandLine(@NotNull Project project, @Nullable File fileToLoad, @Nullable String additionalCommand, boolean shutdown) throws ConfigurationException {
         OpenOcdSettingsState ocdSettings = project.getComponent(OpenOcdSettingsState.class);
-        if(ocdSettings.boardConfigFile == null || "".equals(ocdSettings.boardConfigFile.trim())) {
+        if (ocdSettings.boardConfigFile == null || "".equals(ocdSettings.boardConfigFile.trim())) {
             throw new ConfigurationException("Board Config file is not defined.\nPlease open OpenOCD settings and choose one.", "OpenOCD run error");
         }
         GeneralCommandLine commandLine = new PtyCommandLine()

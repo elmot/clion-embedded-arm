@@ -7,7 +7,10 @@ import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessHandler;
+import com.intellij.execution.ui.ExecutionConsole;
+import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.options.ConfigurationException;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.xdebugger.XDebugSession;
@@ -21,6 +24,7 @@ import com.jetbrains.cidr.execution.testing.CidrLauncher;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * (c) elmot on 19.10.2017.
@@ -109,12 +113,21 @@ class OpenOcdLauncher extends CidrLauncher {
         File runFile = findRunFile(commandLineState);
 
         try {
-            findOpenOcdAction(commandLineState.getEnvironment().getProject()).startOpenOcd(project, runFile, "reset halt");
+            OpenOcdComponent openOcdAction = findOpenOcdAction(commandLineState.getEnvironment().getProject());
+            openOcdAction.startOpenOcd(project, runFile, "reset init");
+            ProgressManager.getInstance().runProcessWithProgressSynchronously(
+                    () -> openOcdAction.process.waitFor(20000)
+                    , "Firmware Download", false, getProject());
             return super.startDebugProcess(commandLineState, xDebugSession);
         } catch (ConfigurationException e) {
             Messages.showErrorDialog(getProject(), e.getLocalizedMessage(), e.getTitle());
             throw new ExecutionException(e);
         }
+    }
+
+    @Override
+    protected void collectAdditionalActions(@NotNull CommandLineState commandLineState, @NotNull ProcessHandler processHandler, @NotNull ExecutionConsole executionConsole, @NotNull List<AnAction> list) throws ExecutionException {
+        super.collectAdditionalActions(commandLineState, processHandler, executionConsole, list);
     }
 
     private OpenOcdComponent findOpenOcdAction(Project project) {
