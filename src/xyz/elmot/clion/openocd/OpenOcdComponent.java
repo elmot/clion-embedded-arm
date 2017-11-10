@@ -189,8 +189,10 @@ public class OpenOcdComponent {
         public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
             String text = event.getText().trim();
             if (text.startsWith(ERROR_PREFIX) || text.equals(FLASH_FAIL_TEXT)) {
+                reset();
                 set(STATUS.FLASH_ERROR);
             } else if (text.equals(FLASH_SUCCESS_TEXT)) {
+                reset();
                 set(STATUS.FLASH_SUCCESS);
             }
         }
