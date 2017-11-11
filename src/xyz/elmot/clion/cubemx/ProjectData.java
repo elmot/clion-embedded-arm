@@ -109,11 +109,6 @@ class ProjectData {
                 "\n mcpu='" + mcpu + '\'';
     }
 
-    public String extraInfo() {
-        return String.format("Project Name: %s\nConfig Name: %s\nLinker Flags: %s",
-                projectName, genericConfigName, linkerFlags);
-    }
-
     public Map<String, String> getAsMap() {
         Map<String, String> map = new HashMap<>();
         map.put("projectName", projectName);

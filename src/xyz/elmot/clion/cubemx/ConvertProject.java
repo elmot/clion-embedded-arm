@@ -1,8 +1,11 @@
 package xyz.elmot.clion.cubemx;
 
+import com.intellij.CommonBundle;
 import com.intellij.execution.RunManager;
 import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.configurations.ConfigurationFactory;
+import com.intellij.icons.AllIcons;
+import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.Application;
@@ -43,6 +46,7 @@ public class ConvertProject extends AnAction {
     private static final String SOURCE_XPATH = CONFIG_DEBUG_XPATH + "//sourceEntries/entry/@name";
     static final String CPROJECT_FILE_NAME = ".cproject";
     private static final String PROJECT_FILE_NAME = ".project";
+    private static final String HELP_URL = "https://github.com/elmot/clion-embedded-arm/blob/master/USAGE.md#project-creation-and-conversion-howto";
 
     private enum STRATEGY {CREATEONLY, OVERWRITE}
 
@@ -117,9 +121,11 @@ public class ConvertProject extends AnAction {
 
                 }
         );
-        Messages.showInfoMessage(project,
-                projectData.shortHtml(),
-                "Project Updated");
+        if (Messages.showDialog(project, projectData.shortHtml(), "Project Updated",
+                new String[]{Messages.OK_BUTTON, CommonBundle.getHelpButtonText()}, 0,
+                AllIcons.General.InformationDialog) == 1) {
+            BrowserUtil.browse(HELP_URL);
+        }
     }
 
     @NotNull
