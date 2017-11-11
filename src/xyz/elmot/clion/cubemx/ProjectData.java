@@ -110,9 +110,8 @@ class ProjectData {
     }
 
     public String extraInfo() {
-        return String.format("Project Name: %s\nConfig Name: %s\nLinker Flags: %s\n" +
-                        "Sources: %s\nIncludes:%s",
-                projectName, genericConfigName,linkerFlags,sources,includes);
+        return String.format("Project Name: %s\nConfig Name: %s\nLinker Flags: %s",
+                projectName, genericConfigName, linkerFlags);
     }
 
     public Map<String, String> getAsMap() {
@@ -131,8 +130,9 @@ class ProjectData {
 
     public String shortHtml() {
         return String.format("<html><table>" +
+                "<tr><td>Project name</td><td><b>%s</b></td></tr>" +
                 "<tr><td>Chip</td><td><b>%s</b></td></tr>" +
-                "<tr><td>CPU</td><td><b>%s</b></td></tr>" +
-                "</table></html>", mcuFamily, mcpu);
+                "<tr><td>Detected CPU</td><td><b>%s</b></td></tr>" +
+                "</table></html>",projectName, mcuFamily, mcpu);
     }
 }
