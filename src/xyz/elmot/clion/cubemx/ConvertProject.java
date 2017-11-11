@@ -1,15 +1,18 @@
 package xyz.elmot.clion.cubemx;
 
+import com.intellij.CommonBundle;
 import com.intellij.execution.RunManager;
 import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.icons.AllIcons;
+import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -20,6 +23,7 @@ import org.jdom.Attribute;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.xpath.XPath;
+import org.jetbrains.annotations.NotNull;
 import xyz.elmot.clion.openocd.OpenOcdConfigurationType;
 
 import java.io.IOException;
@@ -42,8 +46,9 @@ public class ConvertProject extends AnAction {
     private static final String SOURCE_XPATH = CONFIG_DEBUG_XPATH + "//sourceEntries/entry/@name";
     static final String CPROJECT_FILE_NAME = ".cproject";
     private static final String PROJECT_FILE_NAME = ".project";
+    private static final String HELP_URL = "https://github.com/elmot/clion-embedded-arm/blob/master/USAGE.md#project-creation-and-conversion-howto";
 
-    private enum STRATEGY {CREATEONLY, OVERWRITE, MERGE/*todo Not supported yet*/}
+    private enum STRATEGY {CREATEONLY, OVERWRITE}
 
     @SuppressWarnings("WeakerAccess")
     public ConvertProject() {
@@ -77,8 +82,32 @@ public class ConvertProject extends AnAction {
             Messages.showErrorDialog(project, "Xml data error", String.format("XML data retrieval error\n Key: %s ", context.currentKey));
         }
 
-        writeProjectFile(project, "tmpl_CMakeLists.txt", "CMakeLists.txt", projectData, STRATEGY.OVERWRITE);
-        writeProjectFile(project, "tmpl_gitignore.txt", ".gitignore", projectData, STRATEGY.CREATEONLY);
+        Application application = ApplicationManager.getApplication();
+        application.runWriteAction(() -> {
+            String fileName = null;
+            try {
+                fileName = ".gitignore";
+                writeProjectFile(project, () -> FileUtil.loadTextAndClose(ConvertProject.class.getResourceAsStream("tmpl_gitignore.txt")), fileName, projectData, STRATEGY.CREATEONLY);
+
+                fileName = "CMakeLists_template.txt";
+                VirtualFile cmakeTemplate = project.getBaseDir().findOrCreateChildData(project, fileName);
+                String templateText;
+                if (cmakeTemplate.getLength() <= 0) {
+                    templateText = loadCmakeTemplateFromResources();
+                    VfsUtil.saveText(cmakeTemplate, templateText);
+                } else {
+                    templateText = VfsUtil.loadText(cmakeTemplate);
+                }
+                fileName = "CMakeLists.txt";
+                writeProjectFile(project, () -> templateText, fileName, projectData, STRATEGY.OVERWRITE);
+            } catch (IOException e) {
+                String msg = String.format("%s:\n %s ", fileName, e.getLocalizedMessage());
+                application.invokeLater(() ->
+                        Messages.showErrorDialog(project, msg, "File Write Error"));
+            }
+
+        });
+
         CMakeWorkspace cMakeWorkspace = CMakeWorkspace.getInstance(project);
         cMakeWorkspace.scheduleClearGeneratedFilesAndReload();
         ApplicationManager.getApplication().executeOnPooledThread(() ->
@@ -92,33 +121,28 @@ public class ConvertProject extends AnAction {
 
                 }
         );
-        Messages.showDialog(project,
-                projectData.shortHtml(),
-                "Project Updated: " + projectData.getProjectName(),
-                projectData.extraInfo(),
-                new String[]{Messages.OK_BUTTON}, 0, 0, AllIcons.General.InformationDialog);
+        if (Messages.showDialog(project, projectData.shortHtml(), "Project Updated",
+                new String[]{Messages.OK_BUTTON, CommonBundle.getHelpButtonText()}, 0,
+                AllIcons.General.InformationDialog) == 1) {
+            BrowserUtil.browse(HELP_URL);
+        }
     }
 
-    private static void writeProjectFile(Project project, String templateName, String fileName, ProjectData projectData, STRATEGY strategy) {
+    @NotNull
+    private static String loadCmakeTemplateFromResources() throws IOException {
+        return FileUtil.loadTextAndClose(ConvertProject.class.getResourceAsStream("tmpl_CMakeLists.txt"));
+    }
 
-        Application application = ApplicationManager.getApplication();
-        application.runWriteAction(() -> {
-                    try {
-                        VirtualFile projectFile = project.getBaseDir().findChild(fileName);
-                        if (projectFile == null) {
-                            projectFile = project.getBaseDir().createChildData(project, fileName);
-                        } else if (strategy == STRATEGY.CREATEONLY) {
-                            return;
-                        }
-                        String template = FileUtil.loadTextAndClose(ConvertProject.class.getResourceAsStream(templateName));
-                        String text = new StrSubstitutor(projectData.getAsMap()).replace(template);
-                        VfsUtil.saveText(projectFile, text);
-                    } catch (IOException e) {
-                        application.invokeLater(() ->
-                                Messages.showErrorDialog(project, String.format("%s:\n %s ", fileName, e.getLocalizedMessage()), "File Write Error"));
-                    }
-                }
-        );
+    private static void writeProjectFile(Project project, ThrowableComputable<String, IOException> template,
+                                         String fileName, ProjectData projectData, STRATEGY strategy) throws IOException {
+        VirtualFile projectFile = project.getBaseDir().findChild(fileName);
+        if (projectFile == null) {
+            projectFile = project.getBaseDir().createChildData(project, fileName);
+        } else if (strategy == STRATEGY.CREATEONLY) {
+            return;
+        }
+        String text = new StrSubstitutor(projectData.getAsMap()).replace(template.compute());
+        VfsUtil.saveText(projectFile, text);
     }
 
     private static void modifyCMakeConfigs(Project project, ProjectData projectData) {
@@ -131,14 +155,13 @@ public class ConvertProject extends AnAction {
             RunnerAndConfigurationSettings newRunConfig = runManager.createRunConfiguration(name, factory);
             newRunConfig.setSingleton(true);
             ((CMakeAppRunConfiguration) newRunConfig.getConfiguration()).setupDefaultTargetAndExecutable();
-            ApplicationManager.getApplication().invokeLater(() -> {
-                ApplicationManager.getApplication().runWriteAction(() ->
-                {
-                    runManager.addConfiguration(newRunConfig);
-                    runManager.makeStable(newRunConfig);
-                    runManager.setSelectedConfiguration(newRunConfig);
-                });
-            });
+            ApplicationManager.getApplication().invokeLater(() ->
+                    ApplicationManager.getApplication().runWriteAction(() ->
+                    {
+                        runManager.addConfiguration(newRunConfig);
+                        runManager.makeStable(newRunConfig);
+                        runManager.setSelectedConfiguration(newRunConfig);
+                    }));
         }
     }
 

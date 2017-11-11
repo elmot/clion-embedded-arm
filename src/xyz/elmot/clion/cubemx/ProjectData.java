@@ -109,12 +109,6 @@ class ProjectData {
                 "\n mcpu='" + mcpu + '\'';
     }
 
-    public String extraInfo() {
-        return String.format("Project Name: %s\nConfig Name: %s\nLinker Flags: %s\n" +
-                        "Sources: %s\nIncludes:%s",
-                projectName, genericConfigName,linkerFlags,sources,includes);
-    }
-
     public Map<String, String> getAsMap() {
         Map<String, String> map = new HashMap<>();
         map.put("projectName", projectName);
@@ -131,8 +125,9 @@ class ProjectData {
 
     public String shortHtml() {
         return String.format("<html><table>" +
+                "<tr><td>Project name</td><td><b>%s</b></td></tr>" +
                 "<tr><td>Chip</td><td><b>%s</b></td></tr>" +
-                "<tr><td>CPU</td><td><b>%s</b></td></tr>" +
-                "</table></html>", mcuFamily, mcpu);
+                "<tr><td>Detected CPU</td><td><b>%s</b></td></tr>" +
+                "</table></html>",projectName, mcuFamily, mcpu);
     }
 }
