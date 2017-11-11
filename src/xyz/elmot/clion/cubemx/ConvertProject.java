@@ -83,6 +83,7 @@ public class ConvertProject extends AnAction {
         }
 
         Application application = ApplicationManager.getApplication();
+        application.saveAll();
         application.runWriteAction(() -> {
             String fileName = null;
             try {
