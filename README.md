@@ -24,3 +24,15 @@ License
 How To Use
 ---
 See [USAGE.md](USAGE.md).
+
+Donations
+===
+ 
+The plugin is free, but if you like it, you may support my work with a 
+donation. 
+
+[10 EUR](https://paypal.me/elmot/10eur) |
+[5 EUR](https://paypal.me/elmot/5eur) |
+[Other amount](https://paypal.me/elmot)
+
+![PayPal](https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png) 
