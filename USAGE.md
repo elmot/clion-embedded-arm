@@ -57,3 +57,15 @@ code untouched during code regeneration.
  * _CMakeLists.txt_ is always regenerated during project update, so if you make changes to it, they all will be lost. 
  If you need to have _CMakeLists.txt_ changed (i.e. external libraries, FPU support etc.) please 
  change the template, _CMakeLists_template.txt_, and then update the project.
+ 
+Donations
+===
+ 
+The plugin is free, but if you like it, you may support my work with a 
+donation. 
+
+[10 EUR](https://paypal.me/elmot/10eur) |
+[5 EUR](https://paypal.me/elmot/5eur) |
+[Other amount](https://paypal.me/elmot)
+
+![PayPal](https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png) 
