@@ -1,5 +1,8 @@
 out
 community.*
 cubemx-clion.jar
-/.idea/workspace.xml
+.idea/workspace.xml
+.idea/shelf
+.idea/dictionaries/
+.idea/uiDesigner.xml
 /clion-embedded-arm.jar
