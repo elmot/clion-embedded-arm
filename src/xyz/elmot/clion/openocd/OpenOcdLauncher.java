@@ -14,6 +14,7 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.xdebugger.XDebugSession;
@@ -95,7 +96,7 @@ class OpenOcdLauncher extends CidrLauncher {
             }
         });
         debugProcess.getProcessHandler().putUserData(RESTART_KEY,
-                new AnAction("Reset", "MCU Reset", AllIcons.Actions.Reset/*todo own icon*/) {
+                new AnAction("Reset", "MCU Reset", IconLoader.findIcon("reset.png",OpenOcdLauncher.class)) {
                     @Override
                     public void actionPerformed(AnActionEvent e) {
                         XDebugSession session = debugProcess.getSession();
@@ -107,7 +108,7 @@ class OpenOcdLauncher extends CidrLauncher {
                                         Thread.yield();
                                     }
                                 }, null);
-                                drv.executeConsoleCommand("monitor reset");
+                                drv.executeConsoleCommand("monitor reset init");
                                 session.resume();
                             } catch (DebuggerCommandException exception) {
                                 Informational.showFailedDownloadNotification(e.getProject());
@@ -154,7 +155,7 @@ class OpenOcdLauncher extends CidrLauncher {
             ThrowableComputable<OpenOcdComponent.STATUS, ExecutionException> process = () -> {
                 try {
                     ProgressManager.getInstance().getProgressIndicator().setIndeterminate(true);
-                     return downloadResult.get(10, TimeUnit.MINUTES);
+                    return downloadResult.get(10, TimeUnit.MINUTES);
                 } catch (InterruptedException | TimeoutException | java.util.concurrent.ExecutionException e) {
                     throw new ExecutionException(e);
                 }
@@ -171,10 +172,6 @@ class OpenOcdLauncher extends CidrLauncher {
         }
     }
 
-    private OpenOcdComponent findOpenOcdAction(Project project) {
-        return project.getComponent(OpenOcdComponent.class);
-    }
-
     @Override
     protected void collectAdditionalActions(@NotNull CommandLineState commandLineState, @NotNull ProcessHandler processHandler, @NotNull ExecutionConsole executionConsole, @NotNull List<AnAction> list) throws ExecutionException {
         super.collectAdditionalActions(commandLineState, processHandler, executionConsole, list);
@@ -183,6 +180,11 @@ class OpenOcdLauncher extends CidrLauncher {
             list.add(restart);
         }
     }
+
+    private OpenOcdComponent findOpenOcdAction(Project project) {
+        return project.getComponent(OpenOcdComponent.class);
+    }
+
 
     @NotNull
     @Override
