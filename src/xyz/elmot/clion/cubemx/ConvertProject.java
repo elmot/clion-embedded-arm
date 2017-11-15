@@ -64,8 +64,12 @@ public class ConvertProject extends AnAction {
 
     public static void updateProject(Project project) {
         if (project == null) return;
-        Context context = new Context(detectAndLoadFile(project, CPROJECT_FILE_NAME));
+        Element cProject = detectAndLoadFile(project, CPROJECT_FILE_NAME);
         Element dotProject = detectAndLoadFile(project, PROJECT_FILE_NAME);
+        if(dotProject == null || cProject == null) {
+            return;
+        }
+        Context context = new Context(cProject);
         ProjectData projectData = new ProjectData();
         //noinspection ConstantConditions
         projectData.setProjectName(dotProject.getChild("name").getText());
@@ -209,15 +213,17 @@ public class ConvertProject extends AnAction {
     private static Element detectAndLoadFile(Project project, String fileName) {
         VirtualFile child = project.getBaseDir().findChild(fileName);
         if (child == null || !child.exists() || child.isDirectory()) {
-            Messages.showErrorDialog("File not found",
-                    String.format("File %s is not found in the project directory %s", fileName, project.getBasePath()));
+            Messages.showErrorDialog(
+                    String.format("File %s is not found in the project directory %s", fileName, project.getBasePath()),
+                    "File not Found");
             return null;
         }
         try {
             return load(child.getInputStream());
         } catch (IOException | JDOMException e) {
-            Messages.showErrorDialog("File Read error",
-                    String.format("Failed to read %s in project directory %s\n(%s)", fileName, project.getBasePath(), e.getLocalizedMessage()));
+            Messages.showErrorDialog(
+                    String.format("Failed to read %s in project directory %s\n(%s)", fileName, project.getBasePath(), e.getLocalizedMessage()),
+                    "File Read Error");
             return null;
         }
     }
