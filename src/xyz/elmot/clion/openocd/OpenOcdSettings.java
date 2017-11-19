@@ -60,13 +60,15 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
     @Override
     public boolean isModified() {
         OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
-        return !(Objects.equals(panel.boardConfigFile.getText(), state.boardConfigFile) &&
+        return !(
+                Objects.equals(panel.boardConfigFile.getText(), state.boardConfigFile) &&
                 Objects.equals(panel.openOcdLocation.getText(), state.openOcdLocation) &&
                 Objects.equals(panel.gdbLocation.getText(), state.gdbLocation) &&
-                Objects.equals(panel.gdbPort.getValue(), state.gdbPort) &&
-                Objects.equals(panel.telnetPort.getValue(), state.telnetPort) &&
+                (panel.gdbPort.getValue() == state.gdbPort) &&
+                (panel.telnetPort.getValue() == state.telnetPort) &&
                 Objects.equals(panel.openOcdScriptsLocation.getText(), state.openOcdScriptsLocation) &&
-                Objects.equals(panel.defaultOpenOcdScriptsLocation.isSelected(), state.defaultOpenOcdScriptsLocation));
+                panel.defaultOpenOcdScriptsLocation.isSelected() == state.defaultOpenOcdScriptsLocation &&
+                panel.shippedGdb.isSelected() == state.shippedGdb);
     }
 
     @Override
@@ -85,6 +87,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         state.boardConfigFile = panel.boardConfigFile.getText();
         state.openOcdLocation = panel.openOcdLocation.getText();
         state.gdbLocation = panel.gdbLocation.getText();
+        state.shippedGdb= panel.shippedGdb.isSelected();
         state.defaultOpenOcdScriptsLocation = panel.defaultOpenOcdScriptsLocation.isSelected();
         state.openOcdScriptsLocation = panel.openOcdScriptsLocation.getText();
     }
@@ -144,6 +147,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         panel.openOcdLocation.setText(state.openOcdLocation);
         panel.openOcdScriptsLocation.setText(state.openOcdScriptsLocation);
         panel.defaultOpenOcdScriptsLocation.setSelected(state.defaultOpenOcdScriptsLocation);
+        panel.shippedGdb.setSelected(state.shippedGdb);
         panel.openOcdScriptsLocation.setEnabled(!state.defaultOpenOcdScriptsLocation);
         panel.gdbLocation.setText(state.gdbLocation);
     }
@@ -157,12 +161,13 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         private final TextFieldWithBrowseButton openOcdLocation;
         private final TextFieldWithBrowseButton openOcdScriptsLocation;
         private final JBCheckBox defaultOpenOcdScriptsLocation;
+        private final JBCheckBox shippedGdb;
         private final TextFieldWithBrowseButton gdbLocation;
         private final IntegerField gdbPort;
         private final IntegerField telnetPort;
 
         public OpenOcdSettingsPanel() {
-            super(new GridLayoutManager(8, 3), true);
+            super(new GridLayoutManager(9, 3), true);
             ((GridLayoutManager) getLayout()).setColumnStretch(1, 10);
             openOcdLocation = addFileChooser(0, "OpenOCD Location", null, false, true);
 
@@ -178,8 +183,10 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
             gdbPort.setCanBeEmpty(false);
             telnetPort = addValueRow(5, "OpenOCD Telnet Port", new IntegerField("Telnet Port", 1024, 65353));
             telnetPort.setCanBeEmpty(false);
-            gdbLocation = addFileChooser(6, "GDB (arm-none-eabi-gdb)", null, false, true);
-            add(new Spacer(), new GridConstraints(7, 0, 1, 1, ANCHOR_CENTER, FILL_NONE,
+            shippedGdb = addValueRow(6, "GDB (arm-none-eabi-gdb)", new JBCheckBox("Use shipped with CLion"));
+            gdbLocation = addFileChooser(7, "GDB Location", null, false, true);
+            shippedGdb.addChangeListener(e -> gdbLocation.setEnabled(!shippedGdb.isSelected()));
+            add(new Spacer(), new GridConstraints(8, 0, 1, 1, ANCHOR_CENTER, FILL_NONE,
                     SIZEPOLICY_FIXED, SIZEPOLICY_WANT_GROW, null, null, null));
         }
 
