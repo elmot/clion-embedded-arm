@@ -10,12 +10,14 @@ import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.ui.ExecutionConsole;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.util.Key;
+import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.xdebugger.XDebugSession;
 import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
@@ -85,7 +87,8 @@ class OpenOcdLauncher extends CidrLauncher {
         remoteDebugParameters.setRemoteCommand("tcp:localhost:" + ocdSettings.gdbPort);
 
         CPPToolchains.Toolchain defaultToolchain = CPPToolchains.getInstance().getDefaultToolchain();
-        GDBDriverConfiguration gdbDriverConfiguration = new GDBDriverConfiguration(getProject(), defaultToolchain, new File(ocdSettings.gdbLocation));
+        GDBDriverConfiguration gdbDriverConfiguration = new GDBDriverConfiguration(getProject(), defaultToolchain,
+                findGdb(ocdSettings));
         xDebugSession.stop();
         CidrRemoteGDBDebugProcess debugProcess = new CidrRemoteGDBDebugProcess(gdbDriverConfiguration, remoteDebugParameters, xDebugSession, commandLineState.getConsoleBuilder());
         debugProcess.getProcessHandler().addProcessListener(new ProcessAdapter() {
@@ -96,7 +99,7 @@ class OpenOcdLauncher extends CidrLauncher {
             }
         });
         debugProcess.getProcessHandler().putUserData(RESTART_KEY,
-                new AnAction("Reset", "MCU Reset", IconLoader.findIcon("reset.png",OpenOcdLauncher.class)) {
+                new AnAction("Reset", "MCU Reset", IconLoader.findIcon("reset.png", OpenOcdLauncher.class)) {
                     @Override
                     public void actionPerformed(AnActionEvent e) {
                         XDebugSession session = debugProcess.getSession();
@@ -119,6 +122,15 @@ class OpenOcdLauncher extends CidrLauncher {
         );
 
         return debugProcess;
+    }
+
+    @NotNull
+    private File findGdb(OpenOcdSettingsState ocdSettings) {
+        if (ocdSettings.shippedGdb) {
+            String binaryName = SystemInfo.isWindows ? "gdb.exe" : "gdb";
+            return new File(PathManager.getBinPath(), "gdb" + File.separator + "bin" + File.separator + binaryName);
+        }
+        return new File(ocdSettings.gdbLocation);
     }
 
     @NotNull

@@ -26,6 +26,7 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
         openOcdLocation = "/usr/bin/openocd";
         gdbLocation = "arm-none-eabi-gdb";
         defaultOpenOcdScriptsLocation = true;
+        shippedGdb = true;
         gdbPort = DEF_GDB_PORT;
         telnetPort = DEF_TELNET_PORT;
     }
@@ -45,6 +46,7 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
         telnetPort = state.telnetPort;
         openOcdScriptsLocation = state.openOcdScriptsLocation;
         defaultOpenOcdScriptsLocation = state.defaultOpenOcdScriptsLocation;
+        shippedGdb = state.shippedGdb;
     }
 
     @Override
@@ -80,6 +82,7 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
     public String openOcdScriptsLocation;
     public boolean defaultOpenOcdScriptsLocation;
     public String gdbLocation;
+    public boolean shippedGdb;
     public int gdbPort;
     public int telnetPort;
 }
