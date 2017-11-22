@@ -127,7 +127,7 @@ class OpenOcdLauncher extends CidrLauncher {
     @NotNull
     private File findGdb(OpenOcdSettingsState ocdSettings) {
         if (ocdSettings.shippedGdb) {
-            String binaryName = SystemInfo.isWindows ? "dgb.exe" : "gdb";
+            String binaryName = SystemInfo.isWindows ? "gdb.exe" : "gdb";
             return new File(PathManager.getBinPath(), "gdb" + File.separator + "bin" + File.separator + binaryName);
         }
         return new File(ocdSettings.gdbLocation);
