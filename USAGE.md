@@ -26,6 +26,10 @@ You will need following tolls being installed and configured:
  to download MCU support library for your MCU. See _Help -> Install new libraries_ there.
  * **(Windows only)** [MinGW](http://www.mingw.org/)
 
+Install Plugin 
+===
+In CLion, go to **File  ->  Settings ... ->  Plugins  ->  Browse repositories ...** and install the plugin **"OpenOCD + STM32CubeMX support for ARM embedded"**.
+
 Project creation and conversion HowTo
 ===
  1. Run _STM32CubeMX_ and:
