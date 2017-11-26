@@ -6,7 +6,7 @@ the plugin are STM32 developers.
 
 The plugin is able to:
 ---
- * Convert a project made in *[STM32CubeMX](http://www.st.com/en/development-tools/stm32cubemx.html)* into a  *[CLion](https://www.jetbrains.com/clion/)* project. The project tested against CLion 2017.3 EAP.
+ * Convert a project made in *[STM32CubeMX](http://www.st.com/en/development-tools/stm32cubemx.html)* into a  *[CLion](https://www.jetbrains.com/clion/)* project. The project tested against CLion 2017.3 RC.
  project
  * Download project binaries into compatible MCU using *[OpenOCD](http://openocd.org/)*
  * Debug project on chip
