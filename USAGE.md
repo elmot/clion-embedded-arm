@@ -62,11 +62,17 @@ code untouched during code regeneration.
  If you need to have _CMakeLists.txt_ changed (i.e. external libraries, FPU support etc.) please 
  change the template, _CMakeLists_template.txt_, and then update the project.
  
-Donations
+Bugs, Feature requests, Questions, and Contribution
 ===
- 
-The plugin is free, but if you like it, you may support my work with a 
-donation. 
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md)
+
+Likes and Donations
+===
+
+If you like the plugin, you may :star: the project at github (button at top-right of the page) and at [jetbrains plugins repository](https://plugins.jetbrains.com/plugin/10115).
+
+The plugin is free, but you can support my work with a donation. 
 
 [10 EUR](https://paypal.me/elmot/10eur) |
 [5 EUR](https://paypal.me/elmot/5eur) |

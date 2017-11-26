@@ -20,16 +20,16 @@ See above. Please note that formatting fixes may merged, or may be rejected with
 
 #### **Do you intend to add a new feature or change an existing one?**
 
-* Open an issue on GitHub, add `feature request` label to it.
+* [Open an issue](https://github.com/elmot/clion-embedded-arm/issues/new) on GitHub, add `feature request` label to it.
 
 #### **Do you have questions about the source code?**
 
-* Open an issue on GitHub, add `question` label to it.
+* [Open an issue](https://github.com/elmot/clion-embedded-arm/issues/new) on GitHub, add `question` label to it.
 
 #### **Do you want to contribute to the documentation?**
 
-This is the best contribution to the project. Go right ahead, open a pull request!
+This is the best contribution to the project. Go right ahead, open a pull request! You can do it [online](//help.github.com/articles/editing-files-in-another-user-s-repository/)
 
-Thanks! :heart: :heart: :heart:
+Thanks! :heartbeat: 
 
 Elmot
