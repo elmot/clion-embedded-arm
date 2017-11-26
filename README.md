@@ -25,6 +25,10 @@ How To Use
 ---
 See [USAGE.md](USAGE.md).
 
+Contributions
+===
+First of all, please have a look at our [code of conduct](CODE_OF_CONDUCT.txt). Well, it's standard stuff, I believe you won't do wrong things. Then read our [contribution guide](CONTRIBUTING.md) and you can start. 
+
 Donations
 ===
  
