@@ -1,15 +1,12 @@
 package xyz.elmot.clion.openocd;
 
-import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.RoamingType;
-import com.intellij.openapi.components.State;
-import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.components.StoragePathMacros;
-import com.intellij.util.EnvironmentUtil;
+import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
+import com.intellij.openapi.components.*;
+import com.intellij.openapi.util.SystemInfo;
+import org.jdesktop.swingx.util.OS;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.StringTokenizer;
 
 /**
  * (c) elmot on 21.10.2017.
@@ -20,12 +17,17 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
 
     public static final int DEF_GDB_PORT = 3333;
     public static final int DEF_TELNET_PORT = 4444;
+    public String boardConfigFile;
+    public String openOcdHome;
+    public String gdbLocation;
+    public boolean shippedGdb;
+    public int gdbPort;
+    public int telnetPort;
 
     public OpenOcdSettingsState() {
         boardConfigFile = "";
-        openOcdLocation = "/usr/bin/openocd";
+        openOcdHome = "/usr";
         gdbLocation = "arm-none-eabi-gdb";
-        defaultOpenOcdScriptsLocation = true;
         shippedGdb = true;
         gdbPort = DEF_GDB_PORT;
         telnetPort = DEF_TELNET_PORT;
@@ -39,50 +41,43 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
 
     @Override
     public void loadState(OpenOcdSettingsState state) {
+        openOcdHome = state.openOcdHome;
         boardConfigFile = state.boardConfigFile;
-        openOcdLocation = state.openOcdLocation;
         gdbLocation = state.gdbLocation;
         gdbPort = state.gdbPort;
         telnetPort = state.telnetPort;
-        openOcdScriptsLocation = state.openOcdScriptsLocation;
-        defaultOpenOcdScriptsLocation = state.defaultOpenOcdScriptsLocation;
         shippedGdb = state.shippedGdb;
     }
 
     @Override
     public void noStateLoaded() {
-        String path = EnvironmentUtil.getValue("PATH");
-        if (path == null) return;
-        File openocd = findExecutableInPath(path, "openocd");
+        openOcdHome = OS.isWindows() ? "C:\\" : "/usr";
+        File openocd = findExecutableInPath("openocd");
         if (openocd != null) {
-            openOcdLocation = openocd.getAbsolutePath();
-            openOcdScriptsLocation = OpenOcdSettings.openOcdDefScriptsLocation(openocd).getAbsolutePath();
+            File folder = openocd.getParentFile();
+            if (folder != null) {
+                folder = folder.getParentFile();
+                if (folder != null) {
+                    openOcdHome = folder.getAbsolutePath();
+                }
+            }
         }
-        File gdb = findExecutableInPath(path, "arm-none-eabi-gdb");
+        File gdb = findExecutableInPath("arm-none-eabi-gdb");
         if (gdb != null) {
             gdbLocation = gdb.getAbsolutePath();
         }
-
     }
 
     @Nullable
-    private File findExecutableInPath(String path, String name) {
-        for (StringTokenizer stringTokenizer = new StringTokenizer(path, File.pathSeparator); stringTokenizer.hasMoreTokens(); ) {
-            String pathElement = stringTokenizer.nextToken();
-            File pretender = new File(pathElement, name);
-            if (pretender.canExecute()) {
-                return pretender;
+    private File findExecutableInPath(String name) {
+        if (SystemInfo.isWindows) {
+            for (String ext : PathEnvironmentVariableUtil.getWindowsExecutableFileExtensions()) {
+                File file = PathEnvironmentVariableUtil.findInPath(name + ext);
+                if (file != null) return null;
             }
+            return null;
+        } else {
+            return PathEnvironmentVariableUtil.findInPath(name);
         }
-        return null;
     }
-
-    public String boardConfigFile;
-    public String openOcdLocation;
-    public String openOcdScriptsLocation;
-    public boolean defaultOpenOcdScriptsLocation;
-    public String gdbLocation;
-    public boolean shippedGdb;
-    public int gdbPort;
-    public int telnetPort;
 }

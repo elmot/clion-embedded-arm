@@ -1,19 +1,11 @@
 package xyz.elmot.clion.openocd;
 
 import com.intellij.openapi.components.ProjectComponent;
-import com.intellij.openapi.fileChooser.FileChooser;
-import com.intellij.openapi.fileChooser.FileChooserDescriptor;
-import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.TextFieldWithBrowseButton;
-import com.intellij.openapi.util.SystemInfo;
-import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.ui.TextAccessor;
+import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.ui.components.JBCheckBox;
-import com.intellij.ui.components.JBTextField;
 import com.intellij.ui.components.fields.IntegerField;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
@@ -22,28 +14,18 @@ import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.swing.*;
-import java.awt.event.ActionListener;
-import java.io.File;
-import java.net.URI;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import java.util.Objects;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
 
-import static com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER;
-import static com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST;
-import static com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL;
-import static com.intellij.uiDesigner.core.GridConstraints.FILL_NONE;
-import static com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED;
-import static com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW;
+import static com.intellij.uiDesigner.core.GridConstraints.*;
 
 /**
  * (c) elmot on 20.10.2017.
  */
 @SuppressWarnings("WeakerAccess")
-
 public class OpenOcdSettings implements ProjectComponent, Configurable {
-    public static final String OPENOCD_SCRIPTS_SUBFOLDER = "share/openocd/scripts";
     private final Project project;
     private OpenOcdSettingsPanel panel = null;
 
@@ -62,67 +44,30 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
         return !(
                 Objects.equals(panel.boardConfigFile.getText(), state.boardConfigFile) &&
-                Objects.equals(panel.openOcdLocation.getText(), state.openOcdLocation) &&
-                Objects.equals(panel.gdbLocation.getText(), state.gdbLocation) &&
-                (panel.gdbPort.getValue() == state.gdbPort) &&
-                (panel.telnetPort.getValue() == state.telnetPort) &&
-                Objects.equals(panel.openOcdScriptsLocation.getText(), state.openOcdScriptsLocation) &&
-                panel.defaultOpenOcdScriptsLocation.isSelected() == state.defaultOpenOcdScriptsLocation &&
-                panel.shippedGdb.isSelected() == state.shippedGdb);
+                        Objects.equals(panel.openOcdHome.getText(), state.openOcdHome) &&
+                        Objects.equals(panel.gdbLocation.getText(), state.gdbLocation) &&
+                        (panel.gdbPort.getValue() == state.gdbPort) &&
+                        (panel.telnetPort.getValue() == state.telnetPort) &&
+                        panel.shippedGdb.isSelected() == state.shippedGdb);
     }
 
     @Override
     public void apply() throws ConfigurationException {
         panel.gdbPort.validateContent();
-        File projectFile = project.getBasePath() == null ? null : new File(project.getBasePath());
-        File ocdFile = checkFileExistenceAndCorrect(projectFile, panel.openOcdLocation, File::canExecute);
-        checkFileExistenceAndCorrect(projectFile, panel.gdbLocation, File::canExecute);
-        checkFileExistenceAndCorrect(openOcdDefScriptsLocation(ocdFile), panel.boardConfigFile, File::canRead);
-        if (!panel.defaultOpenOcdScriptsLocation.isSelected()) {
-            checkFileExistenceAndCorrect(ocdFile.getParentFile(), panel.openOcdScriptsLocation, File::isDirectory);
+        panel.telnetPort.validateContent();
+        if (!panel.shippedGdb.isSelected()) {
+            panel.gdbLocation.validateContent();
         }
+        panel.openOcdHome.validateContent();
+        panel.boardConfigFile.validateContent();
+
         OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
         state.gdbPort = panel.gdbPort.getValue();
         state.telnetPort = panel.telnetPort.getValue();
         state.boardConfigFile = panel.boardConfigFile.getText();
-        state.openOcdLocation = panel.openOcdLocation.getText();
+        state.openOcdHome = panel.openOcdHome.getText();
         state.gdbLocation = panel.gdbLocation.getText();
-        state.shippedGdb= panel.shippedGdb.isSelected();
-        state.defaultOpenOcdScriptsLocation = panel.defaultOpenOcdScriptsLocation.isSelected();
-        state.openOcdScriptsLocation = panel.openOcdScriptsLocation.getText();
-    }
-
-    @NotNull
-    static File openOcdDefScriptsLocation(File ocdFile) {
-        return new File(ocdFile.getParentFile().getParentFile(), OPENOCD_SCRIPTS_SUBFOLDER);
-    }
-
-    private File checkFileExistenceAndCorrect(@Nullable File basePath, TextAccessor path, Predicate<File> checkFile) throws ConfigurationException {
-        String text = path.getText().trim();
-        File file = new File(text);
-        if (!file.isAbsolute()) {
-            file = new File(basePath, text);
-        }
-        if (!file.exists()) {
-            throw new ConfigurationException("File " + text + " does not exist.");
-        }
-        if (!checkFile.test(file)) {
-            if (!file.canExecute()) {
-                throw new ConfigurationException("File " + text + " is invalid");
-            }
-        } else {
-            if (!file.canRead()) {
-                throw new ConfigurationException("File " + text + " is not readable");
-            }
-
-        }
-        if (basePath != null) {
-            URI relativized = basePath.toURI().relativize(file.toURI());
-            if (!relativized.isAbsolute()) {
-                path.setText(relativized.getPath());
-            }
-        }
-        return file;
+        state.shippedGdb = panel.shippedGdb.isSelected();
     }
 
     @Override
@@ -143,12 +88,9 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
         panel.gdbPort.setValue(state.gdbPort);
         panel.telnetPort.setValue(state.telnetPort);
+        panel.openOcdHome.setText(state.openOcdHome);
         panel.boardConfigFile.setText(state.boardConfigFile);
-        panel.openOcdLocation.setText(state.openOcdLocation);
-        panel.openOcdScriptsLocation.setText(state.openOcdScriptsLocation);
-        panel.defaultOpenOcdScriptsLocation.setSelected(state.defaultOpenOcdScriptsLocation);
         panel.shippedGdb.setSelected(state.shippedGdb);
-        panel.openOcdScriptsLocation.setEnabled(!state.defaultOpenOcdScriptsLocation);
         panel.gdbLocation.setText(state.gdbLocation);
     }
 
@@ -157,86 +99,37 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
      */
     public static class OpenOcdSettingsPanel extends JPanel {
 
-        private final TextFieldWithBrowseButton boardConfigFile;
-        private final TextFieldWithBrowseButton openOcdLocation;
-        private final TextFieldWithBrowseButton openOcdScriptsLocation;
-        private final JBCheckBox defaultOpenOcdScriptsLocation;
+        private final FileChooseInput boardConfigFile;
+        private final FileChooseInput openOcdHome;
         private final JBCheckBox shippedGdb;
-        private final TextFieldWithBrowseButton gdbLocation;
+        private final FileChooseInput gdbLocation;
         private final IntegerField gdbPort;
         private final IntegerField telnetPort;
 
         public OpenOcdSettingsPanel() {
-            super(new GridLayoutManager(9, 3), true);
+            super(new GridLayoutManager(8, 3), true);
             ((GridLayoutManager) getLayout()).setColumnStretch(1, 10);
-            openOcdLocation = addFileChooser(0, "OpenOCD Location", null, false, true);
+            openOcdHome = addValueRow(0,  new FileChooseInput.OpenOcdHome("OpenOCD Home", VfsUtil.getUserHomeDir()));
 
-            defaultOpenOcdScriptsLocation = addValueRow(1, "OpenOCD Scripts Location", new JBCheckBox("Default"));
+            boardConfigFile = addValueRow(1, new FileChooseInput.BoardCfg("Board Config File",
+                    VfsUtil.getUserHomeDir(), openOcdHome::getText));
 
-            openOcdScriptsLocation = addFileChooser(2, null, this::findScriptsLocation, true, false);
-            defaultOpenOcdScriptsLocation.addChangeListener(e -> openOcdScriptsLocation.setEnabled(!defaultOpenOcdScriptsLocation.isSelected()));
-
-            boardConfigFile = addFileChooser(3, "Board Config File", this::findBoards, false, false);
-
-
-            gdbPort = addValueRow(4, "OpenOCD GDB Port", new IntegerField("GDB Port", 1024, 65353));
+            gdbPort = addValueRow(2, "OpenOCD GDB Port", new IntegerField("GDB Port", 1024, 65353));
             gdbPort.setCanBeEmpty(false);
-            telnetPort = addValueRow(5, "OpenOCD Telnet Port", new IntegerField("Telnet Port", 1024, 65353));
+            telnetPort = addValueRow(3, "OpenOCD Telnet Port", new IntegerField("Telnet Port", 1024, 65353));
             telnetPort.setCanBeEmpty(false);
-            shippedGdb = addValueRow(6, "GDB (arm-none-eabi-gdb)", new JBCheckBox("Use shipped with CLion"));
-            gdbLocation = addFileChooser(7, "GDB Location", null, false, true);
+            shippedGdb = addValueRow(5, "GDB (arm-none-eabi-gdb)", new JBCheckBox("Use shipped with CLion"));
+
+            gdbLocation = addValueRow(6, new FileChooseInput.ExeFile("GDB Location", VfsUtil.getUserHomeDir()));
+
             shippedGdb.addChangeListener(e -> gdbLocation.setEnabled(!shippedGdb.isSelected()));
-            add(new Spacer(), new GridConstraints(8, 0, 1, 1, ANCHOR_CENTER, FILL_NONE,
+            add(new Spacer(), new GridConstraints(7, 0, 1, 1, ANCHOR_CENTER, FILL_NONE,
                     SIZEPOLICY_FIXED, SIZEPOLICY_WANT_GROW, null, null, null));
         }
 
-        private File findBoards() {
-            if (defaultOpenOcdScriptsLocation.isSelected()) {
-                return openOcdDefScriptsLocation(new File(openOcdLocation.getText()));
-            } else {
-                return new File(openOcdScriptsLocation.getText());
-            }
+        private <T extends FileChooseInput> T addValueRow(int row, @NotNull T component) {
+            return addValueRow(row,component.getValueName(),component);
         }
-
-        private File findScriptsLocation() {
-            File openOcdLocationFile = new File(openOcdLocation.getText());
-            if (!openOcdLocationFile.exists()) return null;
-            File defLocation = openOcdDefScriptsLocation(openOcdLocationFile);
-            if (defLocation.exists()) return defLocation;
-            return openOcdLocationFile.getParentFile();
-        }
-
-        private TextFieldWithBrowseButton addFileChooser(int row, @Nullable String labelText, @Nullable Supplier<File> baseSupplier, boolean directory, boolean executable) {
-            JBTextField jTextField = new JBTextField();
-            ActionListener fileClick = e -> {
-                String fileName = jTextField.getText();
-                File selected = new File(fileName);
-                if (!selected.isAbsolute() && baseSupplier != null) {
-                    File base = baseSupplier.get();
-                    selected = new File(base, fileName);
-                    if (!selected.exists()) {
-                        selected = base;
-                    }
-                }
-                FileChooserDescriptor fileDescriptor;
-                if (directory) {
-                    fileDescriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor();
-                } else {
-                    if (SystemInfo.isWindows && executable) {
-                        fileDescriptor = FileChooserDescriptorFactory.createSingleFileDescriptor("exe");
-                    } else {
-                        fileDescriptor = FileChooserDescriptorFactory.createSingleLocalFileDescriptor();
-                    }
-                }
-                VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByIoFile(selected);
-                VirtualFile chosenFile = FileChooser.chooseFile(fileDescriptor, null, virtualFile);
-                if (chosenFile != null) {
-                    jTextField.setText(chosenFile.getCanonicalPath());
-                }
-            };
-            return addValueRow(row, labelText, new TextFieldWithBrowseButton(jTextField, fileClick));
-        }
-
         private <T extends JComponent> T addValueRow(int row, @Nullable String labelText, @NotNull T component) {
             add(component, new GridConstraints(row, 1, 1, 1, ANCHOR_WEST,
                     FILL_HORIZONTAL, SIZEPOLICY_WANT_GROW, SIZEPOLICY_FIXED, null, null, null));
@@ -248,7 +141,5 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
             }
             return component;
         }
-
-
     }
 }

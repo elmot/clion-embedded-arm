@@ -18,7 +18,7 @@ class ProjectData {
     private String sources;
     private String mcpu;
 
-    void setProjectName(String projectName) {
+    public void setProjectName(String projectName) {
         this.projectName = projectName;
     }
 
@@ -26,12 +26,12 @@ class ProjectData {
         this.linkerFlags = linkerFlags;
     }
 
-    void setLinkerScript(String linkerScript) {
+    public void setLinkerScript(String linkerScript) {
         this.linkerScript = linkerScript;
         genericConfigName = linkerScript.replace(".ld", "");
     }
 
-    void setMcuFamily(String mcuFamily) {
+    public void setMcuFamily(String mcuFamily) {
         this.mcuFamily = mcuFamily;
         switch (mcuFamily.substring(0, 7).toUpperCase()) {
             case "STM32F0":
@@ -84,15 +84,15 @@ class ProjectData {
         return mcpu;
     }
 
-    void setDefines(String defines) {
+    public void setDefines(String defines) {
         this.defines = defines;
     }
 
-    void setIncludes(String includes) {
+    public void setIncludes(String includes) {
         this.includes = includes;
     }
 
-    void setSources(String sources) {
+    public void setSources(String sources) {
         this.sources = sources;
     }
 

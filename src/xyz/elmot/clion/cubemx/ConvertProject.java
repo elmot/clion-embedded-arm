@@ -44,7 +44,7 @@ public class ConvertProject extends AnAction {
     private static final String INCLUDES_KEY = "gnu.c.compiler.option.include.paths";
     private static final String INCLUDES_XPATH = CONFIG_DEBUG_XPATH + "//*[@superClass='" + INCLUDES_KEY + "']/listOptionValue/@value";
     private static final String SOURCE_XPATH = CONFIG_DEBUG_XPATH + "//sourceEntries/entry/@name";
-    static final String CPROJECT_FILE_NAME = ".cproject";
+    protected static final String CPROJECT_FILE_NAME = ".cproject";
     private static final String PROJECT_FILE_NAME = ".project";
     private static final String HELP_URL = "https://github.com/elmot/clion-embedded-arm/blob/master/USAGE.md#project-creation-and-conversion-howto";
 
@@ -229,8 +229,8 @@ public class ConvertProject extends AnAction {
     }
 
     private static class Context {
-        final Element cProjectElement;
-        String currentKey;
+        private final Element cProjectElement;
+        private String currentKey;
 
         Context(Element cProjectElement) {
             this.cProjectElement = cProjectElement;

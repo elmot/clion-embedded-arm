@@ -3,6 +3,7 @@ package xyz.elmot.clion.openocd;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.RunContentExecutor;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
 import com.intellij.execution.configurations.PtyCommandLine;
 import com.intellij.execution.filters.Filter;
 import com.intellij.execution.process.OSProcessHandler;
@@ -19,10 +20,13 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.util.concurrency.FutureResult;
+import org.jdesktop.swingx.util.OS;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Future;
 
 public class OpenOcdComponent {
@@ -30,19 +34,70 @@ public class OpenOcdComponent {
     private static final String ERROR_PREFIX = "Error: ";
     private static final String FLASH_FAIL_TEXT = "** Programming Failed **";
     private static final String FLASH_SUCCESS_TEXT = "** Programming Finished **";
-
-    public enum STATUS {
-        FLASH_NOT_READY,
-        FLASH_SUCCESS,
-        FLASH_ERROR,
-    }
-
     private static final Logger LOG = Logger.getInstance(OpenOcdRun.class);
     private final EditorColorsScheme myColorsScheme;
     private OSProcessHandler process;
 
     public OpenOcdComponent() {
         myColorsScheme = EditorColorsManager.getInstance().getGlobalScheme();
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    @NotNull
+    public static GeneralCommandLine createOcdCommandLine(@NotNull Project project, @Nullable File fileToLoad, @Nullable String additionalCommand, boolean shutdown) throws ConfigurationException {
+        OpenOcdSettingsState ocdSettings = project.getComponent(OpenOcdSettingsState.class);
+        if (ocdSettings.boardConfigFile == null || "".equals(ocdSettings.boardConfigFile.trim())) {
+            throw new ConfigurationException("Board Config file is not defined.\nPlease open OpenOCD settings and choose one.", "OpenOCD run error");
+        }
+        File openOcdBinFolder = new File(ocdSettings.openOcdHome, "bin");
+        if (!openOcdBinFolder.exists() || !openOcdBinFolder.isDirectory()) {
+            openOcdNotFound();
+        }
+        File openOcdExe = null;
+        List<String> extensions = OS.isWindows() ? PathEnvironmentVariableUtil.getWindowsExecutableFileExtensions() : Collections.singletonList("");
+        for (String ext : extensions) {
+            File exePretender = new File(openOcdBinFolder, "openocd" + ext);
+            if (exePretender.canExecute()) {
+                openOcdExe = exePretender;
+                break;
+            }
+        }
+        if (openOcdExe == null) {
+            return openOcdNotFound();
+        }
+        GeneralCommandLine commandLine = new PtyCommandLine()
+                .withWorkDirectory(openOcdBinFolder)
+                .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+                .withParameters("-c", "tcl_port disabled")
+                .withExePath(openOcdExe.getAbsolutePath());
+
+        commandLine.addParameters("-s", ocdSettings.openOcdHome +
+                File.separator + "share" + File.separator + "openocd" + File.separator + "scripts");
+        if (ocdSettings.gdbPort != OpenOcdSettingsState.DEF_GDB_PORT) {
+            commandLine.addParameters("-c", "gdb_port " + ocdSettings.gdbPort);
+        }
+        if (ocdSettings.telnetPort != OpenOcdSettingsState.DEF_TELNET_PORT) {
+            commandLine.addParameters("-c", "telnet_port " + ocdSettings.telnetPort);
+        }
+        commandLine.addParameters("-f", ocdSettings.boardConfigFile);
+        String command = "";
+        if (fileToLoad != null) {
+            command += "program \"" + fileToLoad.getAbsolutePath().replace(File.separatorChar, '/') + "\";";
+        }
+        if (additionalCommand != null) {
+            command += additionalCommand + ";";
+        }
+        if (shutdown) {
+            command += "shutdown";
+        }
+        if (!command.isEmpty()) {
+            commandLine.addParameters("-c", command);
+        }
+        return commandLine;
+    }
+
+    private static GeneralCommandLine openOcdNotFound() throws ConfigurationException {
+        throw new ConfigurationException("Please open settings dialog and fix OpenOCD home", "OpenOCD config error");
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -87,48 +142,14 @@ public class OpenOcdComponent {
         }
     }
 
-    @SuppressWarnings("WeakerAccess")
-    @NotNull
-    public static GeneralCommandLine createOcdCommandLine(@NotNull Project project, @Nullable File fileToLoad, @Nullable String additionalCommand, boolean shutdown) throws ConfigurationException {
-        OpenOcdSettingsState ocdSettings = project.getComponent(OpenOcdSettingsState.class);
-        if (ocdSettings.boardConfigFile == null || "".equals(ocdSettings.boardConfigFile.trim())) {
-            throw new ConfigurationException("Board Config file is not defined.\nPlease open OpenOCD settings and choose one.", "OpenOCD run error");
-        }
-        GeneralCommandLine commandLine = new PtyCommandLine()
-                .withWorkDirectory(new File(ocdSettings.openOcdLocation).getParent())
-                .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
-                .withExePath(ocdSettings.openOcdLocation);
-
-        if (!ocdSettings.defaultOpenOcdScriptsLocation) {
-            commandLine.addParameters("-s", ocdSettings.openOcdScriptsLocation);
-        }
-        if (ocdSettings.gdbPort != OpenOcdSettingsState.DEF_GDB_PORT) {
-            commandLine.addParameters("-c", "gdb_port " + ocdSettings.gdbPort);
-        }
-        if (ocdSettings.telnetPort != OpenOcdSettingsState.DEF_TELNET_PORT) {
-            commandLine.addParameters("-c", "telnet_port " + ocdSettings.telnetPort);
-        }
-        commandLine.addParameters("-f", ocdSettings.boardConfigFile);
-        String command = "";
-        if (fileToLoad != null) {
-            command += "program \"" + fileToLoad.getAbsolutePath().replace(File.separatorChar, '/') + "\";";
-        }
-        if (additionalCommand != null) {
-            command += additionalCommand + ";";
-        }
-        if (shutdown) {
-            command += "shutdown";
-        }
-        if (!command.isEmpty()) {
-            commandLine.addParameters("-c", command);
-        }
-        return commandLine;
-    }
-
     public boolean isRun() {
         return process != null && !process.isProcessTerminated();
     }
 
+    public enum STATUS {
+        FLASH_SUCCESS,
+        FLASH_ERROR,
+    }
 
     private class ErrorFilter implements Filter {
         private final Project project;
