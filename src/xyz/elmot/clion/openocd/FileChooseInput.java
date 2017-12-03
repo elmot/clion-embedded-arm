@@ -75,7 +75,7 @@ public abstract class FileChooseInput extends TextFieldWithBrowseButton {
 
     public static class BoardCfg extends FileChooseInput {
 
-        static final String SCRIPTS_PATH = "share/openocd/scripts";
+        public static final String SCRIPTS_PATH = "share/openocd/scripts";
         private final Supplier<String> ocdHome;
 
         public BoardCfg(String valueName, VirtualFile defValue, Supplier<String> ocdHome) {
