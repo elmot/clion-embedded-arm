@@ -147,7 +147,6 @@ public class OpenOcdComponent {
     }
 
     public enum STATUS {
-        FLASH_NOT_READY,
         FLASH_SUCCESS,
         FLASH_ERROR,
     }

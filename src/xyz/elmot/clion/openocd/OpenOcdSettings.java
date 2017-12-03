@@ -25,7 +25,6 @@ import static com.intellij.uiDesigner.core.GridConstraints.*;
  * (c) elmot on 20.10.2017.
  */
 @SuppressWarnings("WeakerAccess")
-
 public class OpenOcdSettings implements ProjectComponent, Configurable {
     private final Project project;
     private OpenOcdSettingsPanel panel = null;

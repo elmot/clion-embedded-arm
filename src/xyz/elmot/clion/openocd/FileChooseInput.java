@@ -20,10 +20,10 @@ import java.util.function.Supplier;
 
 public abstract class FileChooseInput extends TextFieldWithBrowseButton {
 
-    final TextFieldValueEditor<VirtualFile> editor;
+    protected final TextFieldValueEditor<VirtualFile> editor;
     private final FileChooserDescriptor fileDescriptor;
 
-    FileChooseInput(String valueName, VirtualFile defValue) {
+    protected FileChooseInput(String valueName, VirtualFile defValue) {
         super(new JBTextField());
 
         editor = new FileTextFieldValueEditor(valueName, defValue);
@@ -78,7 +78,7 @@ public abstract class FileChooseInput extends TextFieldWithBrowseButton {
         static final String SCRIPTS_PATH = "share/openocd/scripts";
         private final Supplier<String> ocdHome;
 
-        BoardCfg(String valueName, VirtualFile defValue, Supplier<String> ocdHome) {
+        public BoardCfg(String valueName, VirtualFile defValue, Supplier<String> ocdHome) {
             super(valueName, defValue);
             this.ocdHome = ocdHome;
         }
@@ -149,7 +149,7 @@ public abstract class FileChooseInput extends TextFieldWithBrowseButton {
     }
 
     public static class ExeFile extends FileChooseInput {
-        ExeFile(String valueName, VirtualFile defValue) {
+        public ExeFile(String valueName, VirtualFile defValue) {
             super(valueName, defValue);
         }
 
@@ -169,7 +169,7 @@ public abstract class FileChooseInput extends TextFieldWithBrowseButton {
     }
 
     public static class OpenOcdHome extends FileChooseInput {
-        OpenOcdHome(String valueName, VirtualFile defValue) {
+        public OpenOcdHome(String valueName, VirtualFile defValue) {
             super(valueName, defValue);
         }
 
