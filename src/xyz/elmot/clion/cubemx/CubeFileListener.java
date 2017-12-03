@@ -19,8 +19,6 @@ import java.util.List;
  * (c) elmot on 29.10.2017.
  */
 public class CubeFileListener implements ApplicationComponent, BulkFileListener {
-    public CubeFileListener() {
-    }
 
     @Override
     public void initComponent() {
