@@ -3,10 +3,11 @@ ARM MCU development plugin for JetBrains CLion
 
 Potentially you can use the plugin to work with any kind of MCU supported by GCC and OpenOCD, but major auditory for 
 the plugin are STM32 developers. 
+![Screenshot](screen1.png)
 
 The plugin is able to:
 ---
- * Convert a project made in *[STM32CubeMX](http://www.st.com/en/development-tools/stm32cubemx.html)* into a  *[CLion](https://www.jetbrains.com/clion/)* project. The project tested against CLion 2017.3 RC.
+ * Convert a project made in *[STM32CubeMX](http://www.st.com/en/development-tools/stm32cubemx.html)* into a  *[CLion](https://www.jetbrains.com/clion/)* project. The project tested against CLion 2017.3.
  project
  * Download project binaries into compatible MCU using *[OpenOCD](http://openocd.org/)*
  * Debug project on chip
