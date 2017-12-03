@@ -68,10 +68,11 @@ public class OpenOcdComponent {
         GeneralCommandLine commandLine = new PtyCommandLine()
                 .withWorkDirectory(openOcdBinFolder)
                 .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+                .withParameters("-c", "tcl_port disabled")
                 .withExePath(openOcdExe.getAbsolutePath());
 
         commandLine.addParameters("-s", ocdSettings.openOcdHome +
-                File.pathSeparator + "share" + File.pathSeparator + "openocd" + File.pathSeparator + "scripts");
+                File.separator + "share" + File.separator + "openocd" + File.separator + "scripts");
         if (ocdSettings.gdbPort != OpenOcdSettingsState.DEF_GDB_PORT) {
             commandLine.addParameters("-c", "gdb_port " + ocdSettings.gdbPort);
         }
