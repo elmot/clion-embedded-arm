@@ -41,8 +41,8 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
 
     @Override
     public void loadState(OpenOcdSettingsState state) {
-        boardConfigFile = state.boardConfigFile;
         openOcdHome = state.openOcdHome;
+        boardConfigFile = state.boardConfigFile;
         gdbLocation = state.gdbLocation;
         gdbPort = state.gdbPort;
         telnetPort = state.telnetPort;
@@ -61,10 +61,10 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
                     openOcdHome = folder.getAbsolutePath();
                 }
             }
-            File gdb = findExecutableInPath("arm-none-eabi-gdb");
-            if (gdb != null) {
-                gdbLocation = gdb.getAbsolutePath();
-            }
+        }
+        File gdb = findExecutableInPath("arm-none-eabi-gdb");
+        if (gdb != null) {
+            gdbLocation = gdb.getAbsolutePath();
         }
     }
 
