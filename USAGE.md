@@ -14,10 +14,10 @@ responsibility in case of any direct or indirect damages or losses.
 
 Prerequisites
 ===
-You will need following tolls being installed and configured:
+You will need following tools being installed and configured:
 
  * Compatible hardware, virtually any of [STM32 development boards](http://www.st.com/en/evaluation-tools/stm32-mcu-eval-tools.html)
- * [CLion](https://www.jetbrains.com/clion/). The project tested against CLion 2017.3 EAP.
+ * [CLion](https://www.jetbrains.com/clion/). The project tested against CLion 2017.3.
  * [GNU Arm Embedded Toolchain](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm) 
  * [OpenOCD](http://openocd.org/)
  * **(Windows only)** ST-LINK/V2 driver. May be downloaded from 
@@ -39,15 +39,19 @@ Project creation and conversion HowTo
     1. In project settings, select **SW4STM32** as a toolchain.
     1. Click **Generate Code**. This will generate Eclipse-style project stub with libraries and sources. 
  1. Run _Clion_ and:
-    1. Open the result folder of the previous step as a project. Ignore all the errors shown.
+    1. Open or import the result folder of the previous step as a project. Ignore all the errors shown.
+    1. Go to **File -\> Settings...  -\> Build, Execution, Deployment -\> OpenOCD support** and configure tools locations and tcp ports.
+    1. In the same dialog, select your board config file. OpenOCD is shipped with a set of board config files located at 
+    */usr/share/openocd/scripts/board* folder, in case of Windows *\<openocd_home\>/share/openocd/scripts/board*. Those files are 
+    _OpenOCD_ predefined ones and they are quite obviously named, for instance *st_nucleo_f4.cfg* is the config file for any *STM32 Nucleo* boards based on
+      STM32F4 MCU family. If there is no suitable config among existing, you can write your own *.cfg* file and use it. 
+      Refer to OpenOCD documentation for more details. 
     1. Select **Tools -\> Update CMake project with STM32CubeMX project**. This will regenerate project files and reload _cmake_ configs.
-    1. Go to **File -\> Settings...  -\> Build, Execution, Deployment -\> OpenOCD support** and configure all the 
-    required tools locations and setting, including your board config file. If there is no suitable config among existing, 
-    _OpenOCD_ predefined ones, write your own one and use that.
 
-Now you can connect your board and start the run config. The code should be compiled and downloaded to the chip. 
-Also you are able to debug your project using the same run config.
-
+Now you can connect your board, compile and start the firmware. The plugin creates special run configuration, 
+if you run it, the compiled firmware will be downloaded to the target board, and then the chip will be reset. 
+If **Debug** button is pressed, then firmware will be downloaded, chip chip will be reset, and then remote debugger will be attached 
+to the MCU, you can use breakpoints and watches to verify how your firmware works on-chip.
  
     
 While code writing    
