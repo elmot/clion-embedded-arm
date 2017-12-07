@@ -3,7 +3,9 @@ package xyz.elmot.clion.openocd;
 import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.util.SystemInfo;
+import com.intellij.openapi.vfs.VfsUtil;
 import org.jdesktop.swingx.util.OS;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -26,7 +28,7 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
 
     public OpenOcdSettingsState() {
         boardConfigFile = "";
-        openOcdHome = "/usr";
+        openOcdHome = defOpenOcdLocation();
         gdbLocation = "arm-none-eabi-gdb";
         shippedGdb = true;
         gdbPort = DEF_GDB_PORT;
@@ -51,7 +53,7 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
 
     @Override
     public void noStateLoaded() {
-        openOcdHome = OS.isWindows() ? "C:\\" : "/usr";
+        openOcdHome = defOpenOcdLocation();
         File openocd = findExecutableInPath("openocd");
         if (openocd != null) {
             File folder = openocd.getParentFile();
@@ -66,6 +68,11 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
         if (gdb != null) {
             gdbLocation = gdb.getAbsolutePath();
         }
+    }
+
+    @NotNull
+    protected String defOpenOcdLocation() {
+        return OS.isWindows() ? VfsUtil.getUserHomeDir().getPath() : "/usr";
     }
 
     @Nullable
