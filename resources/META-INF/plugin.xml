@@ -36,8 +36,7 @@ The plugin is free, but if you like it, you may support my work with a PayPal do
 
     <change-notes><![CDATA[
         <ul>
-        <li><i>Reset MCU</i> button in debugger</li>
-        <li>CMakeLists.txt is now customizable via template</li>
+        <li>New settings screen</li>
         <li>Bug fixes</li>
         </ul>
     ]]>
