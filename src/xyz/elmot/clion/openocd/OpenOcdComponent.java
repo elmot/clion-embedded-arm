@@ -32,6 +32,7 @@ import java.util.concurrent.Future;
 public class OpenOcdComponent {
 
     private static final String ERROR_PREFIX = "Error: ";
+    private static final String ERROR_DOUBLE_FAULT = "clearing lockup after double fault";
     private static final String FLASH_FAIL_TEXT = "** Programming Failed **";
     private static final String FLASH_SUCCESS_TEXT = "** Programming Finished **";
     private static final Logger LOG = Logger.getInstance(OpenOcdRun.class);
@@ -209,7 +210,7 @@ public class OpenOcdComponent {
         @Override
         public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
             String text = event.getText().trim();
-            if (text.startsWith(ERROR_PREFIX) || text.equals(FLASH_FAIL_TEXT)) {
+            if ((text.startsWith(ERROR_PREFIX) && !text.contains(ERROR_DOUBLE_FAULT)) || text.equals(FLASH_FAIL_TEXT)) {
                 reset();
                 set(STATUS.FLASH_ERROR);
             } else if (text.equals(FLASH_SUCCESS_TEXT)) {
