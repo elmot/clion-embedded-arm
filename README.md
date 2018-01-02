@@ -49,3 +49,4 @@ The plugin is free, but you can support my work with a donation.
 ![PayPal](https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png)
 
 [Hall of Donators](DONATIONS.md)
+--
