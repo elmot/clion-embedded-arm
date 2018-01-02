@@ -46,4 +46,6 @@ The plugin is free, but you can support my work with a donation.
 [5 EUR](https://paypal.me/elmot/5eur) |
 [Other amount](https://paypal.me/elmot)
 
-![PayPal](https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png) 
+![PayPal](https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png)
+
+[Hall of Donators](DONATIONS.md)
