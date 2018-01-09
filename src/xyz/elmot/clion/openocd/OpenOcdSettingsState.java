@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 
-import static xyz.elmot.clion.openocd.OpenOcdComponent.SCRIPTS_PATH_LONG_SLASH;
+import static xyz.elmot.clion.openocd.OpenOcdComponent.SCRIPTS_PATH_LONG;
 import static xyz.elmot.clion.openocd.OpenOcdComponent.SCRIPTS_PATH_SHORT;
 
 /**
@@ -42,7 +42,7 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
     public static VirtualFile findOcdScripts(VirtualFile ocdHomeVFile) {
         VirtualFile ocdScripts = null;
         if (ocdHomeVFile != null) {
-            ocdScripts = ocdHomeVFile.findFileByRelativePath(SCRIPTS_PATH_LONG_SLASH);
+            ocdScripts = ocdHomeVFile.findFileByRelativePath(SCRIPTS_PATH_LONG);
             if (ocdScripts == null) {
                 ocdScripts = ocdHomeVFile.findFileByRelativePath(SCRIPTS_PATH_SHORT);
             }
@@ -87,7 +87,13 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
 
     @NotNull
     protected String defOpenOcdLocation() {
-        return OS.isWindows() ? VfsUtil.getUserHomeDir().getPath() : "/usr";
+
+        if(! OS.isWindows()) return "/usr";
+        VirtualFile defDir = VfsUtil.getUserHomeDir();
+        if(defDir != null) {
+            return defDir.getPath();
+        }
+        return "C:\\";
     }
 
     @Nullable

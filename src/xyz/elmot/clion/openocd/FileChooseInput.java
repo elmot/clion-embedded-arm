@@ -12,7 +12,6 @@ import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.ui.components.fields.valueEditors.TextFieldValueEditor;
-import org.jdesktop.swingx.util.OS;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,10 +30,15 @@ public abstract class FileChooseInput extends TextFieldWithBrowseButton {
         fileDescriptor = createFileChooserDescriptor().withFileFilter(this::validateFile);
         installPathCompletion(fileDescriptor);
         addActionListener(e -> {
-            VirtualFile virtualFile;
+            VirtualFile virtualFile = null;
+            String text = getTextField().getText();
+            if(text != null && !text.isEmpty())
             try {
-                virtualFile = parseTextToFile(getTextField().getText());
+                virtualFile = parseTextToFile(text);
             } catch (InvalidDataException ignored) {
+                virtualFile = LocalFileSystem.getInstance().findFileByPath(text);
+            }
+            if(virtualFile == null) {
                 virtualFile = getDefaultLocation();
             }
             VirtualFile chosenFile = FileChooser.chooseFile(fileDescriptor, null, virtualFile);
@@ -180,9 +184,7 @@ public abstract class FileChooseInput extends TextFieldWithBrowseButton {
         @Override
         public boolean validateFile(VirtualFile virtualFile) {
             if (!virtualFile.isDirectory()) return false;
-            String binPath = "bin/openocd";
-            if (OS.isWindows()) binPath += ".exe";
-            VirtualFile openOcdBinary = virtualFile.findFileByRelativePath(binPath);
+            VirtualFile openOcdBinary = virtualFile.findFileByRelativePath(OpenOcdComponent.BIN_OPENOCD);
             if (openOcdBinary == null || openOcdBinary.isDirectory()
                     || !VfsUtil.virtualToIoFile(openOcdBinary).canExecute()) return false;
             VirtualFile ocdScripts = OpenOcdSettingsState.findOcdScripts(virtualFile);
