@@ -4,11 +4,15 @@ import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import org.jdesktop.swingx.util.OS;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+
+import static xyz.elmot.clion.openocd.OpenOcdComponent.SCRIPTS_PATH_LONG_SLASH;
+import static xyz.elmot.clion.openocd.OpenOcdComponent.SCRIPTS_PATH_SHORT;
 
 /**
  * (c) elmot on 21.10.2017.
@@ -33,6 +37,17 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
         shippedGdb = true;
         gdbPort = DEF_GDB_PORT;
         telnetPort = DEF_TELNET_PORT;
+    }
+
+    public static VirtualFile findOcdScripts(VirtualFile ocdHomeVFile) {
+        VirtualFile ocdScripts = null;
+        if (ocdHomeVFile != null) {
+            ocdScripts = ocdHomeVFile.findFileByRelativePath(SCRIPTS_PATH_LONG_SLASH);
+            if (ocdScripts == null) {
+                ocdScripts = ocdHomeVFile.findFileByRelativePath(SCRIPTS_PATH_SHORT);
+            }
+        }
+        return ocdScripts;
     }
 
     @Nullable

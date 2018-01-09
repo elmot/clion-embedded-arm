@@ -20,6 +20,7 @@ import java.util.function.Supplier;
 
 public abstract class FileChooseInput extends TextFieldWithBrowseButton {
 
+    public static final String BOARD_FOLDER = "board";
     protected final TextFieldValueEditor<VirtualFile> editor;
     private final FileChooserDescriptor fileDescriptor;
 
@@ -75,7 +76,6 @@ public abstract class FileChooseInput extends TextFieldWithBrowseButton {
 
     public static class BoardCfg extends FileChooseInput {
 
-        public static final String SCRIPTS_PATH = "share/openocd/scripts";
         private final Supplier<String> ocdHome;
 
         public BoardCfg(String valueName, VirtualFile defValue, Supplier<String> ocdHome) {
@@ -85,11 +85,11 @@ public abstract class FileChooseInput extends TextFieldWithBrowseButton {
 
         @Override
         protected VirtualFile getDefaultLocation() {
-            VirtualFile openOcdHome = getOpenOcdHome();
-            if (openOcdHome != null) {
-                VirtualFile scriptLocation = openOcdHome.findFileByRelativePath(SCRIPTS_PATH + "/board");
-                if (scriptLocation != null) {
-                    return scriptLocation;
+            VirtualFile ocdScripts = findOcdScripts();
+            if (ocdScripts != null) {
+                VirtualFile ocdBoards = ocdScripts.findFileByRelativePath(BOARD_FOLDER);
+                if (ocdBoards != null) {
+                    return ocdBoards;
                 }
             }
             return super.getDefaultLocation();
@@ -104,9 +104,9 @@ public abstract class FileChooseInput extends TextFieldWithBrowseButton {
             } else {
                 file = LocalFileSystem.getInstance().findFileByPath(text);
                 if (file == null) {
-                    VirtualFile openOcdVHome = getOpenOcdHome();
-                    if (openOcdVHome != null) {
-                        file = openOcdVHome.findFileByRelativePath(SCRIPTS_PATH + "/" + text);
+                    VirtualFile ocdScripts = findOcdScripts();
+                    if (ocdScripts != null) {
+                        file = ocdScripts.findFileByRelativePath(text);
                     }
                 }
             }
@@ -133,22 +133,25 @@ public abstract class FileChooseInput extends TextFieldWithBrowseButton {
         @Override
         protected String fileToTextValue(VirtualFile file) {
             String completeFileName = super.fileToTextValue(file);
-
-            VirtualFile ocdHomeVFile = getOpenOcdHome();
-            if (ocdHomeVFile != null) {
-                VirtualFile ocdScripts = ocdHomeVFile.findFileByRelativePath(SCRIPTS_PATH);
-                if (ocdScripts != null) {
-                    String relativePath = VfsUtil.getRelativePath(file, ocdScripts);
-                    if (relativePath != null) {
-                        return relativePath;
-                    }
+            VirtualFile ocdScripts = findOcdScripts();
+            if (ocdScripts != null) {
+                String relativePath = VfsUtil.getRelativePath(file, ocdScripts);
+                if (relativePath != null) {
+                    return relativePath;
                 }
             }
             return completeFileName;
         }
+
+        @Nullable
+        private VirtualFile findOcdScripts() {
+            return OpenOcdSettingsState.findOcdScripts(getOpenOcdHome());
+        }
+
     }
 
     public static class ExeFile extends FileChooseInput {
+        @SuppressWarnings("WeakerAccess")
         public ExeFile(String valueName, VirtualFile defValue) {
             super(valueName, defValue);
         }
@@ -169,6 +172,7 @@ public abstract class FileChooseInput extends TextFieldWithBrowseButton {
     }
 
     public static class OpenOcdHome extends FileChooseInput {
+        @SuppressWarnings("WeakerAccess")
         public OpenOcdHome(String valueName, VirtualFile defValue) {
             super(valueName, defValue);
         }
@@ -181,8 +185,12 @@ public abstract class FileChooseInput extends TextFieldWithBrowseButton {
             VirtualFile openOcdBinary = virtualFile.findFileByRelativePath(binPath);
             if (openOcdBinary == null || openOcdBinary.isDirectory()
                     || !VfsUtil.virtualToIoFile(openOcdBinary).canExecute()) return false;
-            VirtualFile scriptsDirectory = virtualFile.findFileByRelativePath("share/openocd/scripts/board");
-            return scriptsDirectory != null && scriptsDirectory.isDirectory();
+            VirtualFile ocdScripts = OpenOcdSettingsState.findOcdScripts(virtualFile);
+            if(ocdScripts!=null) {
+                VirtualFile ocdBoard = ocdScripts.findFileByRelativePath(BOARD_FOLDER);
+                return ocdBoard != null && ocdBoard.isDirectory();
+            }
+            return false;
         }
 
         @Override

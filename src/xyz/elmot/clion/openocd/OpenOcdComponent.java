@@ -36,6 +36,9 @@ public class OpenOcdComponent {
     private static final String FLASH_FAIL_TEXT = "** Programming Failed **";
     private static final String FLASH_SUCCESS_TEXT = "** Programming Finished **";
     private static final Logger LOG = Logger.getInstance(OpenOcdRun.class);
+    public static final String SCRIPTS_PATH_SHORT = "scripts";
+    public static final String SCRIPTS_PATH_LONG_SLASH = "share/openocd/" +SCRIPTS_PATH_SHORT;
+    public static final String SCRIPTS_PATH_LONG = "share" + File.separator + "openocd" + File.separator + SCRIPTS_PATH_SHORT;
     private final EditorColorsScheme myColorsScheme;
     private OSProcessHandler process;
 
@@ -72,8 +75,14 @@ public class OpenOcdComponent {
                 .withParameters("-c", "tcl_port disabled")
                 .withExePath(openOcdExe.getAbsolutePath());
 
-        commandLine.addParameters("-s", ocdSettings.openOcdHome +
-                File.separator + "share" + File.separator + "openocd" + File.separator + "scripts");
+
+        String scriptsLocation = ocdSettings.openOcdHome +
+                File.separator + SCRIPTS_PATH_LONG;
+        if(!new File(scriptsLocation).exists() ) {
+            scriptsLocation = ocdSettings.openOcdHome +
+                    File.separator + SCRIPTS_PATH_SHORT;
+        }
+        commandLine.addParameters("-s", scriptsLocation);
         if (ocdSettings.gdbPort != OpenOcdSettingsState.DEF_GDB_PORT) {
             commandLine.addParameters("-c", "gdb_port " + ocdSettings.gdbPort);
         }
