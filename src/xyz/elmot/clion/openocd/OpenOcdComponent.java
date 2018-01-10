@@ -3,7 +3,6 @@ package xyz.elmot.clion.openocd;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.RunContentExecutor;
 import com.intellij.execution.configurations.GeneralCommandLine;
-import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
 import com.intellij.execution.configurations.PtyCommandLine;
 import com.intellij.execution.filters.Filter;
 import com.intellij.execution.process.OSProcessHandler;
@@ -19,23 +18,32 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.concurrency.FutureResult;
 import org.jdesktop.swingx.util.OS;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.Future;
 
 public class OpenOcdComponent {
 
+    public static final String SCRIPTS_PATH_SHORT = "scripts";
+    public static final String SCRIPTS_PATH_LONG = "share/openocd/" + SCRIPTS_PATH_SHORT;
+    public static final String BIN_OPENOCD;
     private static final String ERROR_PREFIX = "Error: ";
     private static final String ERROR_DOUBLE_FAULT = "clearing lockup after double fault";
     private static final String FLASH_FAIL_TEXT = "** Programming Failed **";
     private static final String FLASH_SUCCESS_TEXT = "** Programming Finished **";
     private static final Logger LOG = Logger.getInstance(OpenOcdRun.class);
+
+    static {
+        BIN_OPENOCD = "bin/openocd" + (OS.isWindows() ? ".exe" : "");
+    }
+
     private final EditorColorsScheme myColorsScheme;
     private OSProcessHandler process;
 
@@ -50,30 +58,17 @@ public class OpenOcdComponent {
         if (ocdSettings.boardConfigFile == null || "".equals(ocdSettings.boardConfigFile.trim())) {
             throw new ConfigurationException("Board Config file is not defined.\nPlease open OpenOCD settings and choose one.", "OpenOCD run error");
         }
-        File openOcdBinFolder = new File(ocdSettings.openOcdHome, "bin");
-        if (!openOcdBinFolder.exists() || !openOcdBinFolder.isDirectory()) {
-            openOcdNotFound();
-        }
-        File openOcdExe = null;
-        List<String> extensions = OS.isWindows() ? PathEnvironmentVariableUtil.getWindowsExecutableFileExtensions() : Collections.singletonList("");
-        for (String ext : extensions) {
-            File exePretender = new File(openOcdBinFolder, "openocd" + ext);
-            if (exePretender.canExecute()) {
-                openOcdExe = exePretender;
-                break;
-            }
-        }
-        if (openOcdExe == null) {
-            return openOcdNotFound();
-        }
+        VirtualFile ocdHome = require(LocalFileSystem.getInstance().findFileByPath(ocdSettings.openOcdHome));
+        VirtualFile ocdBinary = require(ocdHome.findFileByRelativePath(BIN_OPENOCD));
+        File ocdBinaryIo = VfsUtil.virtualToIoFile(ocdBinary);
         GeneralCommandLine commandLine = new PtyCommandLine()
-                .withWorkDirectory(openOcdBinFolder)
+                .withWorkDirectory(ocdBinaryIo.getParentFile())
                 .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
                 .withParameters("-c", "tcl_port disabled")
-                .withExePath(openOcdExe.getAbsolutePath());
+                .withExePath(ocdBinaryIo.getAbsolutePath());
 
-        commandLine.addParameters("-s", ocdSettings.openOcdHome +
-                File.separator + "share" + File.separator + "openocd" + File.separator + "scripts");
+        VirtualFile ocdScripts = require(OpenOcdSettingsState.findOcdScripts(ocdHome));
+        commandLine.addParameters("-s", VfsUtil.virtualToIoFile(ocdScripts).getAbsolutePath());
         if (ocdSettings.gdbPort != OpenOcdSettingsState.DEF_GDB_PORT) {
             commandLine.addParameters("-c", "gdb_port " + ocdSettings.gdbPort);
         }
@@ -97,7 +92,14 @@ public class OpenOcdComponent {
         return commandLine;
     }
 
-    private static GeneralCommandLine openOcdNotFound() throws ConfigurationException {
+    @NotNull
+    private static VirtualFile require(VirtualFile fileToCheck) throws ConfigurationException {
+        if(fileToCheck == null) {
+            openOcdNotFound();
+        }
+        return fileToCheck;
+    }
+    private static void openOcdNotFound() throws ConfigurationException {
         throw new ConfigurationException("Please open settings dialog and fix OpenOCD home", "OpenOCD config error");
     }
 
