@@ -9,3 +9,5 @@ These donations is a very pleasant sign of the community support. My great thank
 
 **Jong Sub Yun** 10,00 EUR
 >	Thanks for the great tool. I'm so excited to be able to use Clion for stm32 projects.
+
+**Reibl János Dáneil** 10,00 EUR
