@@ -13,3 +13,7 @@ These donations is a very pleasant sign of the community support. My great thank
 
 **Lobaro UG** 50,00 EUR
 >	Thank you for your great CLion OpenOCD Integration. Greetings from Hamburg, Germany.
+
+**Radoslaw Szambelan** 10,00 EUR
+> Great job on the plugin. Looking forward to more of the good stuff!
+
