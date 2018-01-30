@@ -226,11 +226,9 @@ public class OpenOcdComponent {
             } else if (text.equals(FLASH_SUCCESS_TEXT)) {
                 reset();
                 set(STATUS.FLASH_SUCCESS);
-            } else if (text.startsWith(ERROR_PREFIX)) {
-                if (!containsOneOf(text, IGNORED_STRINGS)) {
-                    reset();
-                    set(STATUS.FLASH_WARNING);
-                }
+            } else if (text.startsWith(ERROR_PREFIX) && !containsOneOf(text, IGNORED_STRINGS)) {
+                reset();
+                set(STATUS.FLASH_WARNING);
             }
         }
     }
