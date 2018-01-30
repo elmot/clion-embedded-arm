@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>xyz.elmot.clion.armsupport.prj</id>
     <name>OpenOCD + STM32CubeMX support for ARM embedded development</name>
-    <version>1.0.beta2</version>
+    <version>1.0.beta3</version>
     <vendor email="me@elmot.xyz" url="http://elmot.xyz">Elmot</vendor>
 
     <description><![CDATA[

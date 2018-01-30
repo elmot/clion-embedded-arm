@@ -35,7 +35,9 @@ public class OpenOcdComponent {
     public static final String SCRIPTS_PATH_LONG = "share/openocd/" + SCRIPTS_PATH_SHORT;
     public static final String BIN_OPENOCD;
     private static final String ERROR_PREFIX = "Error: ";
-    private static final String ERROR_DOUBLE_FAULT = "clearing lockup after double fault";
+    private static final String[] IGNORED_ERRORS = {
+            "clearing lockup after double fault",
+    "LIB_USB_NOT_SUPPORTED"};
     private static final String FLASH_FAIL_TEXT = "** Programming Failed **";
     private static final String FLASH_SUCCESS_TEXT = "** Programming Finished **";
     private static final Logger LOG = Logger.getInstance(OpenOcdRun.class);
@@ -94,18 +96,20 @@ public class OpenOcdComponent {
 
     @NotNull
     private static VirtualFile require(VirtualFile fileToCheck) throws ConfigurationException {
-        if(fileToCheck == null) {
+        if (fileToCheck == null) {
             openOcdNotFound();
         }
         return fileToCheck;
     }
+
     private static void openOcdNotFound() throws ConfigurationException {
         throw new ConfigurationException("Please open settings dialog and fix OpenOCD home", "OpenOCD config error");
     }
 
     @SuppressWarnings("WeakerAccess")
     public void stopOpenOcd() {
-        if (process == null || process.isProcessTerminated() || process.isProcessTerminating()) return;
+        if (process == null || process.isProcessTerminated() || process.isProcessTerminating())
+            return;
         ProgressManager.getInstance().executeNonCancelableSection(() -> {
             process.destroyProcess();
             process.waitFor(1000);
@@ -189,6 +193,7 @@ public class OpenOcdComponent {
     }
 
     private class DownloadFollower extends FutureResult<STATUS> implements ProcessListener {
+
         @Override
         public void startNotified(@NotNull ProcessEvent event) {
         }
@@ -212,13 +217,22 @@ public class OpenOcdComponent {
         @Override
         public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
             String text = event.getText().trim();
-            if ((text.startsWith(ERROR_PREFIX) && !text.contains(ERROR_DOUBLE_FAULT)) || text.equals(FLASH_FAIL_TEXT)) {
+            if (containsError(text)) {
                 reset();
                 set(STATUS.FLASH_ERROR);
             } else if (text.equals(FLASH_SUCCESS_TEXT)) {
                 reset();
                 set(STATUS.FLASH_SUCCESS);
             }
+        }
+
+        protected boolean containsError(String text) {
+            if(FLASH_FAIL_TEXT.equals(text)) return true;
+            if(!text.startsWith(ERROR_PREFIX)) return false;
+            for (String ignoredError : IGNORED_ERRORS) {
+                if(text.contains(ignoredError)) return false;
+            }
+            return true;
         }
     }
 }
