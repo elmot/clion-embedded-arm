@@ -35,10 +35,12 @@ public class OpenOcdComponent {
     public static final String SCRIPTS_PATH_LONG = "share/openocd/" + SCRIPTS_PATH_SHORT;
     public static final String BIN_OPENOCD;
     private static final String ERROR_PREFIX = "Error: ";
-    private static final String[] IGNORED_ERRORS = {
+    private static final String[] IGNORED_STRINGS = { //todo take into use
             "clearing lockup after double fault",
-    "LIB_USB_NOT_SUPPORTED"};
-    private static final String FLASH_FAIL_TEXT = "** Programming Failed **";
+            "LIB_USB_NOT_SUPPORTED"};
+
+    private final static String[] FAIL_STRINGS = {
+            "** Programming Failed **", "communication failure", "** OpenOCD init failed **"};
     private static final String FLASH_SUCCESS_TEXT = "** Programming Finished **";
     private static final Logger LOG = Logger.getInstance(OpenOcdRun.class);
 
@@ -155,6 +157,7 @@ public class OpenOcdComponent {
 
     public enum STATUS {
         FLASH_SUCCESS,
+        FLASH_WARNING,
         FLASH_ERROR,
     }
 
@@ -176,7 +179,7 @@ public class OpenOcdComponent {
         @Nullable
         @Override
         public Result applyFilter(String line, int entireLength) {
-            if (line.startsWith(ERROR_PREFIX) || line.contains(FLASH_FAIL_TEXT)) {
+            if (containsOneOf(line, FAIL_STRINGS)) {
                 Informational.showFailedDownloadNotification(project);
                 return new Result(0, line.length(), null,
                         myColorsScheme.getAttributes(ConsoleViewContentType.ERROR_OUTPUT_KEY)) {
@@ -217,22 +220,29 @@ public class OpenOcdComponent {
         @Override
         public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
             String text = event.getText().trim();
-            if (containsError(text)) {
+            if (containsOneOf(text, FAIL_STRINGS)) {
                 reset();
                 set(STATUS.FLASH_ERROR);
             } else if (text.equals(FLASH_SUCCESS_TEXT)) {
                 reset();
                 set(STATUS.FLASH_SUCCESS);
+            } else if (text.startsWith(ERROR_PREFIX)) {
+                if (!containsOneOf(text, IGNORED_STRINGS)) {
+                    reset();
+                    set(STATUS.FLASH_WARNING);
+                }
             }
         }
+    }
 
-        protected boolean containsError(String text) {
-            if(FLASH_FAIL_TEXT.equals(text)) return true;
-            if(!text.startsWith(ERROR_PREFIX)) return false;
-            for (String ignoredError : IGNORED_ERRORS) {
-                if(text.contains(ignoredError)) return false;
-            }
-            return true;
+    private boolean containsOneOf(String text, String[] sampleStrings) {
+        if (text == null || text.isEmpty()) {
+            return false;
         }
+        for (String sampleString : sampleStrings) {
+            if (text.contains(sampleString)) return true;
+        }
+        return false;
+
     }
 }

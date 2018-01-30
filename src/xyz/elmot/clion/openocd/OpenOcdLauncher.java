@@ -28,6 +28,7 @@ import com.jetbrains.cidr.execution.debugger.remote.CidrRemoteDebugParameters;
 import com.jetbrains.cidr.execution.debugger.remote.CidrRemoteGDBDebugProcess;
 import com.jetbrains.cidr.execution.testing.CidrLauncher;
 import org.jetbrains.annotations.NotNull;
+import xyz.elmot.clion.openocd.OpenOcdComponent.STATUS;
 
 import java.io.File;
 import java.util.List;
@@ -155,9 +156,9 @@ class OpenOcdLauncher extends CidrLauncher {
             xDebugSession.stop();
             OpenOcdComponent openOcdComponent = findOpenOcdAction(commandLineState.getEnvironment().getProject());
             openOcdComponent.stopOpenOcd();
-            Future<OpenOcdComponent.STATUS> downloadResult = openOcdComponent.startOpenOcd(project, runFile, "reset init");
+            Future<STATUS> downloadResult = openOcdComponent.startOpenOcd(project, runFile, "reset init");
 
-            ThrowableComputable<OpenOcdComponent.STATUS, ExecutionException> process = () -> {
+            ThrowableComputable<STATUS, ExecutionException> process = () -> {
                 try {
                     ProgressManager.getInstance().getProgressIndicator().setIndeterminate(true);
                     return downloadResult.get(10, TimeUnit.MINUTES);
@@ -165,8 +166,9 @@ class OpenOcdLauncher extends CidrLauncher {
                     throw new ExecutionException(e);
                 }
             };
-            if (ProgressManager.getInstance().runProcessWithProgressSynchronously(
-                    process, "Firmware Download", true, getProject()) != OpenOcdComponent.STATUS.FLASH_SUCCESS) {
+            STATUS downloadStatus = ProgressManager.getInstance().runProcessWithProgressSynchronously(
+                    process, "Firmware Download", true, getProject());
+            if (downloadStatus == STATUS.FLASH_ERROR) {
                 downloadResult.cancel(true);
                 throw new ExecutionException("OpenOCD cancelled");
             }
