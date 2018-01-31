@@ -10,14 +10,12 @@ import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.ui.ExecutionConsole;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.util.Key;
-import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.xdebugger.XDebugSession;
 import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
@@ -30,6 +28,7 @@ import com.jetbrains.cidr.execution.debugger.remote.CidrRemoteDebugParameters;
 import com.jetbrains.cidr.execution.debugger.remote.CidrRemoteGDBDebugProcess;
 import com.jetbrains.cidr.execution.testing.CidrLauncher;
 import org.jetbrains.annotations.NotNull;
+import xyz.elmot.clion.openocd.OpenOcdComponent.STATUS;
 
 import java.io.File;
 import java.util.List;
@@ -86,9 +85,13 @@ class OpenOcdLauncher extends CidrLauncher {
         remoteDebugParameters.setSymbolFile(findRunFile(commandLineState).getAbsolutePath());
         remoteDebugParameters.setRemoteCommand("tcp:localhost:" + ocdSettings.gdbPort);
 
-        CPPToolchains.Toolchain defaultToolchain = CPPToolchains.getInstance().getDefaultToolchain();
-        GDBDriverConfiguration gdbDriverConfiguration = new GDBDriverConfiguration(getProject(), defaultToolchain,
-                findGdb(ocdSettings));
+        CPPToolchains.Toolchain toolchain = CPPToolchains.getInstance().getDefaultToolchain();
+        if (toolchain != null && !ocdSettings.shippedGdb) {
+            toolchain = toolchain.copy();
+            toolchain.setDebuggerKind(CPPToolchains.DebuggerKind.CUSTOM_GDB);
+            toolchain.setCustomGDBExecutablePath(ocdSettings.gdbLocation);
+        }
+        GDBDriverConfiguration gdbDriverConfiguration = new GDBDriverConfiguration(getProject(), toolchain);
         xDebugSession.stop();
         CidrRemoteGDBDebugProcess debugProcess = new CidrRemoteGDBDebugProcess(gdbDriverConfiguration, remoteDebugParameters, xDebugSession, commandLineState.getConsoleBuilder());
         debugProcess.getProcessHandler().addProcessListener(new ProcessAdapter() {
@@ -125,15 +128,6 @@ class OpenOcdLauncher extends CidrLauncher {
     }
 
     @NotNull
-    private File findGdb(OpenOcdSettingsState ocdSettings) {
-        if (ocdSettings.shippedGdb) {
-            String binaryName = SystemInfo.isWindows ? "gdb.exe" : "gdb";
-            return new File(PathManager.getBinPath(), "gdb" + File.separator + "bin" + File.separator + binaryName);
-        }
-        return new File(ocdSettings.gdbLocation);
-    }
-
-    @NotNull
     private File findRunFile(CommandLineState commandLineState) throws ExecutionException {
         String targetProfileName = commandLineState.getExecutionTarget().getDisplayName();
         CMakeAppRunConfiguration.BuildAndRunConfigurations runConfigurations = openOcdConfiguration.getBuildAndRunConfigurations(targetProfileName);
@@ -162,9 +156,9 @@ class OpenOcdLauncher extends CidrLauncher {
             xDebugSession.stop();
             OpenOcdComponent openOcdComponent = findOpenOcdAction(commandLineState.getEnvironment().getProject());
             openOcdComponent.stopOpenOcd();
-            Future<OpenOcdComponent.STATUS> downloadResult = openOcdComponent.startOpenOcd(project, runFile, "reset init");
+            Future<STATUS> downloadResult = openOcdComponent.startOpenOcd(project, runFile, "reset init");
 
-            ThrowableComputable<OpenOcdComponent.STATUS, ExecutionException> process = () -> {
+            ThrowableComputable<STATUS, ExecutionException> process = () -> {
                 try {
                     ProgressManager.getInstance().getProgressIndicator().setIndeterminate(true);
                     return downloadResult.get(10, TimeUnit.MINUTES);
@@ -172,8 +166,9 @@ class OpenOcdLauncher extends CidrLauncher {
                     throw new ExecutionException(e);
                 }
             };
-            if (ProgressManager.getInstance().runProcessWithProgressSynchronously(
-                    process, "Firmware Download", true, getProject()) != OpenOcdComponent.STATUS.FLASH_SUCCESS) {
+            STATUS downloadStatus = ProgressManager.getInstance().runProcessWithProgressSynchronously(
+                    process, "Firmware Download", true, getProject());
+            if (downloadStatus == STATUS.FLASH_ERROR) {
                 downloadResult.cancel(true);
                 throw new ExecutionException("OpenOCD cancelled");
             }
