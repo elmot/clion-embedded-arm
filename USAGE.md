@@ -36,7 +36,7 @@ Project creation and conversion HowTo
     1. Choose your hardware
     1. Configure it
     1. In project settings, select name and location for the project.
-    1. In project settings, select **SW4STM32** as a toolchain.
+    1. In project settings, select **SW4STM32** as a toolchain and keep **Generate Under Root** checked.
     1. Click **Generate Code**. This will generate Eclipse-style project stub with libraries and sources. 
  1. Run _Clion_ and:
     1. Open or import the result folder of the previous step as a project. Ignore all the errors shown.
