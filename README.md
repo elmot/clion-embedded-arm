@@ -43,7 +43,7 @@ If you like the plugin, you may :star: the project at github (button at top-righ
 The plugin is free, but you can support my work with a donation. 
 
 [10 EUR](https://paypal.me/elmot/10eur) |
-[5 EUR](https://paypal.me/elmot/5eur) |
+[20 EUR](https://paypal.me/elmot/20eur) |
 [Other amount](https://paypal.me/elmot)
 
 ![PayPal](https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png)
