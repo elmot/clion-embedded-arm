@@ -53,17 +53,7 @@ public class OpenOcdConfigurationType extends CMakeRunConfigurationType {
 
     @Override
     public SettingsEditor<? extends CMakeAppRunConfiguration> createEditor(@NotNull Project project) {
-        return new CMakeAppRunConfigurationSettingsEditor(project,getHelper(project)) {
-            @Override
-            protected void createEditorInner(JPanel jPanel, GridBag gridBag) {
-                super.createEditorInner(jPanel, gridBag);
-                for (Component component : jPanel.getComponents()) {
-                    if(component instanceof CommonProgramParametersPanel) {
-                        component.setVisible(false);//todo get rid of this hack
-                    }
-                }
-            }
-        };
+        return new OpenOcdConfigurationEditor(project, getHelper(project));
     }
 
     @NotNull

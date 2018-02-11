@@ -54,7 +54,7 @@ class OpenOcdLauncher extends CidrLauncher {
         findOpenOcdAction(commandLineState.getEnvironment().getProject()).stopOpenOcd();
         try {
             GeneralCommandLine commandLine = OpenOcdComponent.createOcdCommandLine(commandLineState.getEnvironment().getProject(),
-                    runFile, "reset", true);
+                    openOcdConfiguration, runFile, "reset", true);
             OSProcessHandler osProcessHandler = new OSProcessHandler(commandLine);
             osProcessHandler.addProcessListener(new ProcessAdapter() {
                 @Override
@@ -83,7 +83,9 @@ class OpenOcdLauncher extends CidrLauncher {
         CidrRemoteDebugParameters remoteDebugParameters = new CidrRemoteDebugParameters();
 
         remoteDebugParameters.setSymbolFile(findRunFile(commandLineState).getAbsolutePath());
-        remoteDebugParameters.setRemoteCommand("tcp:localhost:" + ocdSettings.gdbPort);
+
+        int gdbPort = OpenOcdConfiguration.actualGdbPort(openOcdConfiguration, ocdSettings);
+        remoteDebugParameters.setRemoteCommand("tcp:localhost:" + gdbPort);
 
         CPPToolchains.Toolchain toolchain = CPPToolchains.getInstance().getDefaultToolchain();
         if (toolchain != null && !ocdSettings.shippedGdb) {
@@ -156,7 +158,7 @@ class OpenOcdLauncher extends CidrLauncher {
             xDebugSession.stop();
             OpenOcdComponent openOcdComponent = findOpenOcdAction(commandLineState.getEnvironment().getProject());
             openOcdComponent.stopOpenOcd();
-            Future<STATUS> downloadResult = openOcdComponent.startOpenOcd(project, runFile, "reset init");
+            Future<STATUS> downloadResult = openOcdComponent.startOpenOcd(project, openOcdConfiguration, runFile, "reset init");
 
             ThrowableComputable<STATUS, ExecutionException> process = () -> {
                 try {

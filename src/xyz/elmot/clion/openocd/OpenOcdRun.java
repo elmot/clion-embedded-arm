@@ -1,5 +1,7 @@
 package xyz.elmot.clion.openocd;
 
+import com.intellij.execution.RunManager;
+import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.options.ConfigurationException;
@@ -21,7 +23,14 @@ public class OpenOcdRun extends AnAction {
     public void actionPerformed(AnActionEvent event) {
         Project project = event.getProject();
         try {
-            getOpenOcdComponent(project).startOpenOcd(project, null, null);
+            RunnerAndConfigurationSettings selectedConfiguration = RunManager.getInstance(project).getSelectedConfiguration();
+            OpenOcdConfiguration configuration = null;
+
+            if (selectedConfiguration != null && selectedConfiguration.getConfiguration() instanceof OpenOcdConfiguration) {
+                configuration = (OpenOcdConfiguration) selectedConfiguration.getConfiguration();
+            }
+
+            getOpenOcdComponent(project).startOpenOcd(project, configuration, null, null);
         } catch (ConfigurationException e) {
             Messages.showErrorDialog(project, e.getLocalizedMessage(), e.getTitle());
         }
