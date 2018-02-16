@@ -57,11 +57,19 @@ public class OpenOcdComponent {
 
     @SuppressWarnings("WeakerAccess")
     @NotNull
-    public static GeneralCommandLine createOcdCommandLine(@NotNull Project project, @Nullable File fileToLoad, @Nullable String additionalCommand, boolean shutdown) throws ConfigurationException {
+    public static GeneralCommandLine createOcdCommandLine(@NotNull Project project,
+                                                          @Nullable OpenOcdConfiguration configuration,
+                                                          @Nullable File fileToLoad,
+                                                          @Nullable String additionalCommand,
+                                                          boolean shutdown) throws ConfigurationException
+    {
         OpenOcdSettingsState ocdSettings = project.getComponent(OpenOcdSettingsState.class);
-        if (ocdSettings.boardConfigFile == null || "".equals(ocdSettings.boardConfigFile.trim())) {
+
+        String boardConfigFile = OpenOcdConfiguration.actualBoardFile(configuration, ocdSettings);
+        if (boardConfigFile == null || "".equals(boardConfigFile.trim())) {
             throw new ConfigurationException("Board Config file is not defined.\nPlease open OpenOCD settings and choose one.", "OpenOCD run error");
         }
+
         VirtualFile ocdHome = require(LocalFileSystem.getInstance().findFileByPath(ocdSettings.openOcdHome));
         VirtualFile ocdBinary = require(ocdHome.findFileByRelativePath(BIN_OPENOCD));
         File ocdBinaryIo = VfsUtil.virtualToIoFile(ocdBinary);
@@ -73,13 +81,18 @@ public class OpenOcdComponent {
 
         VirtualFile ocdScripts = require(OpenOcdSettingsState.findOcdScripts(ocdHome));
         commandLine.addParameters("-s", VfsUtil.virtualToIoFile(ocdScripts).getAbsolutePath());
-        if (ocdSettings.gdbPort != OpenOcdSettingsState.DEF_GDB_PORT) {
-            commandLine.addParameters("-c", "gdb_port " + ocdSettings.gdbPort);
+
+        int gdbPort = OpenOcdConfiguration.actualGdbPort(configuration, ocdSettings);
+        if (gdbPort != OpenOcdSettingsState.DEF_GDB_PORT) {
+            commandLine.addParameters("-c", "gdb_port " + gdbPort);
         }
-        if (ocdSettings.telnetPort != OpenOcdSettingsState.DEF_TELNET_PORT) {
-            commandLine.addParameters("-c", "telnet_port " + ocdSettings.telnetPort);
+
+        int telnetPort = OpenOcdConfiguration.actualTelnetPort(configuration, ocdSettings);
+        if (telnetPort != OpenOcdSettingsState.DEF_TELNET_PORT) {
+            commandLine.addParameters("-c", "telnet_port " + telnetPort);
         }
-        commandLine.addParameters("-f", ocdSettings.boardConfigFile);
+
+        commandLine.addParameters("-f", boardConfigFile);
         String command = "";
         if (fileToLoad != null) {
             command += "program \"" + fileToLoad.getAbsolutePath().replace(File.separatorChar, '/') + "\";";
@@ -119,9 +132,10 @@ public class OpenOcdComponent {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public Future<STATUS> startOpenOcd(Project project, @Nullable File fileToLoad, @Nullable String additionalCommand) throws ConfigurationException {
+    public Future<STATUS> startOpenOcd(Project project, @Nullable OpenOcdConfiguration configuration,
+                                       @Nullable File fileToLoad, @Nullable String additionalCommand) throws ConfigurationException {
         if (project == null) return new FutureResult<>(STATUS.FLASH_ERROR);
-        GeneralCommandLine commandLine = createOcdCommandLine(project, fileToLoad, additionalCommand, false);
+        GeneralCommandLine commandLine = createOcdCommandLine(project, configuration, fileToLoad, additionalCommand, false);
         if (process != null && !process.isProcessTerminated()) {
             LOG.info("openOcd is already run");
             return new FutureResult<>(STATUS.FLASH_ERROR);
