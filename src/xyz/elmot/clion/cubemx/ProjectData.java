@@ -43,6 +43,10 @@ class ProjectData {
             case "STM32L1":
                 mcpu = "cortex-m3";
                 break;
+            case "STM32F7":
+            case "STM32H7":
+                mcpu = "cortex-m7";
+                break;
             default:
                 mcpu = "cortex-m4";
         }
