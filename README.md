@@ -1,6 +1,8 @@
 ARM MCU development plugin for JetBrains CLion 
 ====
 
+[![Join the chat at https://gitter.im/clion-embedded-arm/Lobby](https://badges.gitter.im/clion-embedded-arm/Lobby.svg)](https://gitter.im/clion-embedded-arm/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Potentially you can use the plugin to work with any kind of MCU supported by GCC and OpenOCD, but major auditory for 
 the plugin are STM32 developers. 
 
