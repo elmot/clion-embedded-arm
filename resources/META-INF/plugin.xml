@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>xyz.elmot.clion.armsupport.prj</id>
     <name>OpenOCD + STM32CubeMX support for ARM embedded development</name>
-    <version>1.0.beta3</version>
+    <version>1.0.beta4</version>
     <vendor email="me@elmot.xyz" url="http://elmot.xyz">Elmot</vendor>
 
     <description><![CDATA[
@@ -36,8 +36,9 @@ The plugin is free, but if you like it, you may support my work with a PayPal do
 
     <change-notes><![CDATA[
         <ul>
-        <li>Better support for OpenOCD/Windows</li>
-        <li>Support CLion 2018.1 EAP</li>
+        <li>Compatibility to CLion 2017.3.4</li>
+        <li>Removed CLion 2018.1 EAP Support</li>
+        <li>Cortex-M7 support</li>
         </ul>
     ]]>
     </change-notes>
