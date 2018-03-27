@@ -80,18 +80,15 @@ public class OpenOcdComponent {
             commandLine.addParameters("-c", "telnet_port " + ocdSettings.telnetPort);
         }
         commandLine.addParameters("-f", ocdSettings.boardConfigFile);
-        String command = "";
         if (fileToLoad != null) {
-            command += "program \"" + fileToLoad.getAbsolutePath().replace(File.separatorChar, '/') + "\";";
+            String command = "program \"" + fileToLoad.getAbsolutePath().replace(File.separatorChar, '/') + "\"";
+            commandLine.addParameters("-c", command);
         }
-        if (additionalCommand != null) {
-            command += additionalCommand + ";";
+        if (additionalCommand != null && !additionalCommand.isEmpty()) {
+            commandLine.addParameters("-c", additionalCommand);
         }
         if (shutdown) {
-            command += "shutdown";
-        }
-        if (!command.isEmpty()) {
-            commandLine.addParameters("-c", command);
+            commandLine.addParameters("-c", "shutdown");
         }
         return commandLine;
     }

@@ -86,12 +86,14 @@ class OpenOcdLauncher extends CidrLauncher {
         remoteDebugParameters.setRemoteCommand("tcp:localhost:" + ocdSettings.gdbPort);
 
         CPPToolchains.Toolchain toolchain = CPPToolchains.getInstance().getDefaultToolchain();
+        File customGDB = null;
         if (toolchain != null && !ocdSettings.shippedGdb) {
             toolchain = toolchain.copy();
             toolchain.setDebuggerKind(CPPToolchains.DebuggerKind.CUSTOM_GDB);
             toolchain.setCustomGDBExecutablePath(ocdSettings.gdbLocation);
+            customGDB = new File(ocdSettings.gdbLocation);
         }
-        GDBDriverConfiguration gdbDriverConfiguration = new GDBDriverConfiguration(getProject(), toolchain);
+        GDBDriverConfiguration gdbDriverConfiguration = new GDBDriverConfiguration(getProject(), toolchain, customGDB);
         xDebugSession.stop();
         CidrRemoteGDBDebugProcess debugProcess = new CidrRemoteGDBDebugProcess(gdbDriverConfiguration, remoteDebugParameters, xDebugSession, commandLineState.getConsoleBuilder());
         debugProcess.getProcessHandler().addProcessListener(new ProcessAdapter() {
