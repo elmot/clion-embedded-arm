@@ -26,6 +26,7 @@ import static com.intellij.uiDesigner.core.GridConstraints.*;
  */
 @SuppressWarnings("WeakerAccess")
 public class OpenOcdSettings implements ProjectComponent, Configurable {
+    public static final OpenOcdSettingsState DEFAULT = new OpenOcdSettingsState();
     private final Project project;
     private OpenOcdSettingsPanel panel = null;
 
@@ -42,6 +43,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
     @Override
     public boolean isModified() {
         OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
+        if(state == null) return true;
         return !(
                 Objects.equals(panel.boardConfigFile.getText(), state.boardConfigFile) &&
                         Objects.equals(panel.openOcdHome.getText(), state.openOcdHome) &&
@@ -85,7 +87,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
 
     @Override
     public void reset() {
-        OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
+        OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class, DEFAULT);
         panel.gdbPort.setValue(state.gdbPort);
         panel.telnetPort.setValue(state.telnetPort);
         panel.openOcdHome.setText(state.openOcdHome);
