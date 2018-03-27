@@ -10,6 +10,7 @@ import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.ui.ExecutionConsole;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
@@ -27,6 +28,7 @@ import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriver;
 import com.jetbrains.cidr.execution.debugger.remote.CidrRemoteDebugParameters;
 import com.jetbrains.cidr.execution.debugger.remote.CidrRemoteGDBDebugProcess;
 import com.jetbrains.cidr.execution.testing.CidrLauncher;
+import org.jdesktop.swingx.util.OS;
 import org.jetbrains.annotations.NotNull;
 import xyz.elmot.clion.openocd.OpenOcdComponent.STATUS;
 
@@ -86,7 +88,7 @@ class OpenOcdLauncher extends CidrLauncher {
         remoteDebugParameters.setRemoteCommand("tcp:localhost:" + ocdSettings.gdbPort);
 
         CPPToolchains.Toolchain toolchain = CPPToolchains.getInstance().getDefaultToolchain();
-        File customGDB = null;
+        File customGDB = PathManager.findBinFile("gdb/bin/gdb" + (OS.isWindows() ? ".exe" : ""));
         if (toolchain != null && !ocdSettings.shippedGdb) {
             toolchain = toolchain.copy();
             toolchain.setDebuggerKind(CPPToolchains.DebuggerKind.CUSTOM_GDB);
