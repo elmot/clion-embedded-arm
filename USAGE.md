@@ -35,7 +35,7 @@ Project creation and conversion HowTo
  1. Run _STM32CubeMX_ and:
     1. Choose your hardware
     1. Configure it
-    1. In project settings, select name and location for the project.
+    1. In project settings, select name and location for the project. Please do not use spaces, non-latin letters or any special symbols for the location and for the name.
     1. In project settings, select **SW4STM32** as a toolchain and keep **Generate Under Root** checked.
     1. Click **Generate Code**. This will generate Eclipse-style project stub with libraries and sources. 
  1. Run _Clion_ and:
