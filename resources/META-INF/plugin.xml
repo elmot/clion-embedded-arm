@@ -36,9 +36,7 @@ The plugin is free, but if you like it, you may support my work with a PayPal do
 
     <change-notes><![CDATA[
         <ul>
-        <li>Compatibility to CLion 2017.3.4</li>
-        <li>Removed CLion 2018.1 EAP Support</li>
-        <li>Cortex-M7 support</li>
+        <li>Minimal CLion 2018.1(CL-181.4203.505) Support</li>
         </ul>
     ]]>
     </change-notes>
