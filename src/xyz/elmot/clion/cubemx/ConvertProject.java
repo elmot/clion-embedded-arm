@@ -114,6 +114,9 @@ public class ConvertProject extends AnAction {
         });
 
         CMakeWorkspace cMakeWorkspace = CMakeWorkspace.getInstance(project);
+        if(cMakeWorkspace.getCMakeFiles().isEmpty()){
+            cMakeWorkspace.selectProjectDir(VfsUtil.virtualToIoFile(project.getBaseDir()));
+        }
         cMakeWorkspace.scheduleClearGeneratedFilesAndReload();
         ApplicationManager.getApplication().executeOnPooledThread(() ->
                 {
