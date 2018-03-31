@@ -1,8 +1,15 @@
 package xyz.elmot.clion.openocd;
 
+import java.io.File;
+import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.CommandLineState;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.filters.Filter;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.execution.process.ProcessEvent;
@@ -21,6 +28,7 @@ import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.xdebugger.XDebugSession;
 import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
 import com.jetbrains.cidr.cpp.execution.debugger.backend.GDBDriverConfiguration;
+import com.jetbrains.cidr.cpp.toolchains.CPPDebugger;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import com.jetbrains.cidr.execution.debugger.CidrDebugProcess;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerCommandException;
@@ -31,12 +39,6 @@ import com.jetbrains.cidr.execution.testing.CidrLauncher;
 import org.jdesktop.swingx.util.OS;
 import org.jetbrains.annotations.NotNull;
 import xyz.elmot.clion.openocd.OpenOcdComponent.STATUS;
-
-import java.io.File;
-import java.util.List;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * (c) elmot on 19.10.2017.
@@ -88,16 +90,26 @@ class OpenOcdLauncher extends CidrLauncher {
         remoteDebugParameters.setRemoteCommand("tcp:localhost:" + ocdSettings.gdbPort);
 
         CPPToolchains.Toolchain toolchain = CPPToolchains.getInstance().getDefaultToolchain();
-        File customGDB = PathManager.findBinFile("gdb/bin/gdb" + (OS.isWindows() ? ".exe" : ""));
-        if (toolchain != null && !ocdSettings.shippedGdb) {
-            toolchain = toolchain.copy();
-            toolchain.setDebuggerKind(CPPToolchains.DebuggerKind.CUSTOM_GDB);
-            toolchain.setCustomGDBExecutablePath(ocdSettings.gdbLocation);
-            customGDB = new File(ocdSettings.gdbLocation);
+        if (toolchain == null) {
+            throw new ExecutionException("Project toolchain is not defined. Please define it in the project settings.");
         }
-        GDBDriverConfiguration gdbDriverConfiguration = new GDBDriverConfiguration(getProject(), toolchain, customGDB);
+        String gdbPath;
+        toolchain = toolchain.copy();
+        if (ocdSettings.shippedGdb) {
+            gdbPath = PathManager.findBinFile("gdb/bin/gdb" + (OS.isWindows() ? ".exe" : "")).getAbsolutePath();
+        } else {
+            gdbPath = ocdSettings.gdbLocation;
+        }
+        CPPDebugger cppDebugger = CPPDebugger.create(CPPDebugger.Kind.CUSTOM_GDB, gdbPath);
+        toolchain.setDebugger(cppDebugger);
+        GDBDriverConfiguration gdbDriverConfiguration = new GDBDriverConfiguration(getProject(), toolchain);
         xDebugSession.stop();
-        CidrRemoteGDBDebugProcess debugProcess = new CidrRemoteGDBDebugProcess(gdbDriverConfiguration, remoteDebugParameters, xDebugSession, commandLineState.getConsoleBuilder());
+        CidrRemoteGDBDebugProcess debugProcess =
+                new CidrRemoteGDBDebugProcess(gdbDriverConfiguration,
+                        remoteDebugParameters,
+                        xDebugSession,
+                        commandLineState.getConsoleBuilder(),
+                        project1 -> new Filter[0]);
         debugProcess.getProcessHandler().addProcessListener(new ProcessAdapter() {
             @Override
             public void processWillTerminate(@NotNull ProcessEvent event, boolean willBeDestroyed) {
