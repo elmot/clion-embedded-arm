@@ -128,10 +128,9 @@ class ProjectData {
     }
 
     public String shortHtml() {
-        return String.format("<html><table>" +
-                "<tr><td>Project name</td><td><b>%s</b></td></tr>" +
+        return String.format("<table>" +
                 "<tr><td>Chip</td><td><b>%s</b></td></tr>" +
                 "<tr><td>Detected CPU</td><td><b>%s</b></td></tr>" +
-                "</table></html>",projectName, mcuFamily, mcpu);
+                "</table>", mcuFamily, mcpu);
     }
 }

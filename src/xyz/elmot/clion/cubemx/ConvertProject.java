@@ -1,16 +1,14 @@
 package xyz.elmot.clion.cubemx;
 
-import com.intellij.CommonBundle;
 import com.intellij.execution.RunManager;
 import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.configurations.ConfigurationFactory;
-import com.intellij.icons.AllIcons;
-import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.openapi.util.io.FileUtil;
@@ -24,6 +22,7 @@ import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.xpath.XPath;
 import org.jetbrains.annotations.NotNull;
+import xyz.elmot.clion.openocd.Informational;
 import xyz.elmot.clion.openocd.OpenOcdConfigurationType;
 
 import java.io.IOException;
@@ -38,35 +37,26 @@ import static com.intellij.openapi.util.JDOMUtil.load;
  */
 public class ConvertProject extends AnAction {
 
+    protected static final String CPROJECT_FILE_NAME = ".cproject";
     private static final String DEFINES_KEY = "gnu.c.compiler.option.preprocessor.def.symbols";
     private static final String CONFIG_DEBUG_XPATH = ".//configuration[@artifactExtension='elf' and @name='Debug']";
     private static final String DEFINES_XPATH = CONFIG_DEBUG_XPATH + "//*[@superClass='" + DEFINES_KEY + "']/listOptionValue/@value";
     private static final String INCLUDES_KEY = "gnu.c.compiler.option.include.paths";
     private static final String INCLUDES_XPATH = CONFIG_DEBUG_XPATH + "//*[@superClass='" + INCLUDES_KEY + "']/listOptionValue/@value";
     private static final String SOURCE_XPATH = CONFIG_DEBUG_XPATH + "//sourceEntries/entry/@name";
-    protected static final String CPROJECT_FILE_NAME = ".cproject";
     private static final String PROJECT_FILE_NAME = ".project";
     private static final String HELP_URL = "https://github.com/elmot/clion-embedded-arm/blob/master/USAGE.md#project-creation-and-conversion-howto";
-
-    private enum STRATEGY {CREATEONLY, OVERWRITE}
 
     @SuppressWarnings("WeakerAccess")
     public ConvertProject() {
         super("Update CMake project with STM32CubeMX project");
     }
 
-    @Override
-    public void actionPerformed(AnActionEvent event) {
-
-        Project project = getEventProject(event);
-        updateProject(project);
-    }
-
     public static void updateProject(Project project) {
         if (project == null) return;
         Element cProject = detectAndLoadFile(project, CPROJECT_FILE_NAME);
         Element dotProject = detectAndLoadFile(project, PROJECT_FILE_NAME);
-        if(dotProject == null || cProject == null) {
+        if (dotProject == null || cProject == null) {
             return;
         }
         Context context = new Context(cProject);
@@ -114,7 +104,7 @@ public class ConvertProject extends AnAction {
         });
 
         CMakeWorkspace cMakeWorkspace = CMakeWorkspace.getInstance(project);
-        if(cMakeWorkspace.getCMakeFiles().isEmpty()){
+        if (cMakeWorkspace.getCMakeFiles().isEmpty()) {
             cMakeWorkspace.selectProjectDir(VfsUtil.virtualToIoFile(project.getBaseDir()));
         }
         cMakeWorkspace.scheduleClearGeneratedFilesAndReload();
@@ -129,11 +119,18 @@ public class ConvertProject extends AnAction {
 
                 }
         );
-        if (Messages.showDialog(project, projectData.shortHtml(), "Project Updated",
+
+        Informational.showMessage(project, MessageType.INFO,
+                "<strong>Project Updated</strong>" + projectData.shortHtml() +
+                        "<br>Plugin <a href=\"" + HELP_URL + "\">documentation is located here</a>"
+        );
+/*
+        if (Messages.showDialog(project, projectData.shortHtml(), "",
                 new String[]{Messages.OK_BUTTON, CommonBundle.getHelpButtonText()}, 0,
                 AllIcons.General.InformationDialog) == 1) {
             BrowserUtil.browse(HELP_URL);
         }
+*/
     }
 
     @NotNull
@@ -230,6 +227,15 @@ public class ConvertProject extends AnAction {
             return null;
         }
     }
+
+    @Override
+    public void actionPerformed(AnActionEvent event) {
+
+        Project project = getEventProject(event);
+        updateProject(project);
+    }
+
+    private enum STRATEGY {CREATEONLY, OVERWRITE}
 
     private static class Context {
         private final Element cProjectElement;

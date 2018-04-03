@@ -8,7 +8,6 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.MessageType;
-import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.wm.ToolWindowId;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.HyperlinkAdapter;
@@ -29,13 +28,13 @@ public class Informational {
         showMessage(project, MessageType.INFO, "Firmware Download Success");
     }
 
-    private static void showMessage(Project project, MessageType messageType, String message) {
+    public static void showMessage(Project project, MessageType messageType, String message) {
         ApplicationManager.getApplication().invokeLater(() ->
                 {
                     ToolWindowManager toolWindowManager = ToolWindowManager.getInstance(project);
                     if (toolWindowManager.canShowNotification(ToolWindowId.RUN)) {
                         toolWindowManager.notifyByBalloon(ToolWindowId.RUN, messageType, message,
-                                IconLoader.findIcon("ocd_run.png", OpenOcdConfigurationType.class),
+                                OpenOcdConfigurationType.getPluginIcon(),
                                 new HyperlinkHandler(project)
                         );
                     }
