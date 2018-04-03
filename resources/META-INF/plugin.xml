@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>xyz.elmot.clion.armsupport.prj</id>
     <name>OpenOCD + STM32CubeMX support for ARM embedded development</name>
-    <version>1.1.alpha1</version>
+    <version>1.1.alpha2</version>
     <vendor email="me@elmot.xyz" url="http://elmot.xyz">Elmot</vendor>
 
     <description><![CDATA[
@@ -37,12 +37,14 @@ The plugin is free, but if you like it, you may support my work with a PayPal do
     <change-notes><![CDATA[
         <ul>
         <li>Minimal CLion 2018.1(CL-181.4203.505) Support</li>
+        <li>Diagnostics UX improved</li>
+        <li>"Do not ask option" for cmake update</li>
         </ul>
     ]]>
     </change-notes>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-    <idea-version since-build="173.3531" until-build="181.*"/>
+    <idea-version since-build="181.4203" until-build="181.*"/>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
          on how to target different products -->
