@@ -5,6 +5,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -12,6 +13,7 @@ import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.newvfs.BulkFileListener;
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent;
 import org.jetbrains.annotations.NotNull;
+import xyz.elmot.clion.openocd.OpenOcdSettingsState;
 
 import java.util.List;
 
@@ -47,8 +49,23 @@ public class CubeFileListener implements ApplicationComponent, BulkFileListener 
     }
 
     private void askProjectUpdate(Project openProject) {
-        int update = Messages.showYesNoDialog(openProject, "Update CMake files?", "STM32CubeMX Project Changed", AllIcons.General.QuestionDialog);
-        if (update == Messages.YES) {
+        OpenOcdSettingsState ocdSettings = openProject.getComponent(OpenOcdSettingsState.class);
+        boolean autoUpdateCmake = ocdSettings != null && ocdSettings.autoUpdateCmake;
+        int update = -1;
+        if(!autoUpdateCmake) {
+            update = Messages.showYesNoDialog(openProject, "Update CMake files?",
+                    "STM32CubeMX Project Changed",
+                    AllIcons.General.QuestionDialog,
+                    new DialogWrapper.DoNotAskOption.Adapter() {
+                        @Override
+                        public void rememberChoice(boolean isSelected, int exitCode) {
+                            if(ocdSettings!=null) {
+                                ocdSettings.autoUpdateCmake = isSelected;
+                            }
+                        }
+                    });
+        }
+        if (autoUpdateCmake || update == Messages.YES) {
             ConvertProject.updateProject(openProject);
         }
     }
