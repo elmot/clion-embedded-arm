@@ -124,13 +124,6 @@ public class ConvertProject extends AnAction {
                 "<strong>Project Updated</strong>" + projectData.shortHtml() +
                         "<br>Plugin <a href=\"" + HELP_URL + "\">documentation is located here</a>"
         );
-/*
-        if (Messages.showDialog(project, projectData.shortHtml(), "",
-                new String[]{Messages.OK_BUTTON, CommonBundle.getHelpButtonText()}, 0,
-                AllIcons.General.InformationDialog) == 1) {
-            BrowserUtil.browse(HELP_URL);
-        }
-*/
     }
 
     @NotNull
