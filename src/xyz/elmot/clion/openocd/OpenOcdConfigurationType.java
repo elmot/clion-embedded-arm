@@ -31,7 +31,7 @@ public class OpenOcdConfigurationType extends CMakeRunConfigurationType {
                 FACTORY_ID,
                 "OpenOCD Download & Run",
                 "Downloads and Runs Embedded Applications using OpenOCD",
-                IconLoader.findIcon("ocd_run.png",OpenOcdConfigurationType.class));
+                getPluginIcon());
         factory = new ConfigurationFactoryEx(this) {
             @NotNull
             @Override
@@ -51,14 +51,18 @@ public class OpenOcdConfigurationType extends CMakeRunConfigurationType {
         };
     }
 
+    public static Icon getPluginIcon() {
+        return IconLoader.findIcon("ocd_run.png", OpenOcdConfigurationType.class);
+    }
+
     @Override
     public SettingsEditor<? extends CMakeAppRunConfiguration> createEditor(@NotNull Project project) {
-        return new CMakeAppRunConfigurationSettingsEditor(project,getHelper(project)) {
+        return new CMakeAppRunConfigurationSettingsEditor(project, getHelper(project)) {
             @Override
             protected void createEditorInner(JPanel jPanel, GridBag gridBag) {
                 super.createEditorInner(jPanel, gridBag);
                 for (Component component : jPanel.getComponents()) {
-                    if(component instanceof CommonProgramParametersPanel) {
+                    if (component instanceof CommonProgramParametersPanel) {
                         component.setVisible(false);//todo get rid of this hack
                     }
                 }
