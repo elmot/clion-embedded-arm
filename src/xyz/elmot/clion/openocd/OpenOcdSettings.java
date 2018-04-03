@@ -48,9 +48,10 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
                 Objects.equals(panel.boardConfigFile.getText(), state.boardConfigFile) &&
                         Objects.equals(panel.openOcdHome.getText(), state.openOcdHome) &&
                         Objects.equals(panel.gdbLocation.getText(), state.gdbLocation) &&
-                        (panel.gdbPort.getValue() == state.gdbPort) &&
-                        (panel.telnetPort.getValue() == state.telnetPort) &&
-                        panel.shippedGdb.isSelected() == state.shippedGdb);
+                        panel.gdbPort.getValue() == state.gdbPort &&
+                        panel.telnetPort.getValue() == state.telnetPort &&
+                        panel.shippedGdb.isSelected() == state.shippedGdb &&
+                        panel.autoUpdateCmake.isSelected() == state.autoUpdateCmake);
     }
 
     @Override
@@ -70,6 +71,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         state.openOcdHome = panel.openOcdHome.getText();
         state.gdbLocation = panel.gdbLocation.getText();
         state.shippedGdb = panel.shippedGdb.isSelected();
+        state.autoUpdateCmake = panel.autoUpdateCmake.isSelected();
     }
 
     @Override
@@ -94,6 +96,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         panel.boardConfigFile.setText(state.boardConfigFile);
         panel.shippedGdb.setSelected(state.shippedGdb);
         panel.gdbLocation.setText(state.gdbLocation);
+        panel.autoUpdateCmake.setSelected(state.autoUpdateCmake);
     }
 
     /**
@@ -107,9 +110,10 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         private final FileChooseInput gdbLocation;
         private final IntegerField gdbPort;
         private final IntegerField telnetPort;
+        private final JBCheckBox autoUpdateCmake;
 
         public OpenOcdSettingsPanel() {
-            super(new GridLayoutManager(8, 3), true);
+            super(new GridLayoutManager(10, 3), true);
             ((GridLayoutManager) getLayout()).setColumnStretch(1, 10);
             openOcdHome = addValueRow(0,  new FileChooseInput.OpenOcdHome("OpenOCD Home", VfsUtil.getUserHomeDir()));
 
@@ -124,8 +128,10 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
 
             gdbLocation = addValueRow(6, new FileChooseInput.ExeFile("GDB Location", VfsUtil.getUserHomeDir()));
 
+            autoUpdateCmake = addValueRow(8, "CMake Project Update", new JBCheckBox("Automatic"));
+
             shippedGdb.addChangeListener(e -> gdbLocation.setEnabled(!shippedGdb.isSelected()));
-            add(new Spacer(), new GridConstraints(7, 0, 1, 1, ANCHOR_CENTER, FILL_NONE,
+            add(new Spacer(), new GridConstraints(9, 0, 1, 1, ANCHOR_CENTER, FILL_NONE,
                     SIZEPOLICY_FIXED, SIZEPOLICY_WANT_GROW, null, null, null));
         }
 

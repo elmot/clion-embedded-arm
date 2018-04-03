@@ -29,6 +29,7 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
     public boolean shippedGdb;
     public int gdbPort;
     public int telnetPort;
+    public boolean autoUpdateCmake;
 
     public OpenOcdSettingsState() {
         boardConfigFile = "";
@@ -37,6 +38,7 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
         shippedGdb = true;
         gdbPort = DEF_GDB_PORT;
         telnetPort = DEF_TELNET_PORT;
+        autoUpdateCmake = false;
     }
 
     public static VirtualFile findOcdScripts(VirtualFile ocdHomeVFile) {
@@ -57,13 +59,14 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
     }
 
     @Override
-    public void loadState(OpenOcdSettingsState state) {
+    public void loadState(@NotNull OpenOcdSettingsState state) {
         openOcdHome = state.openOcdHome;
         boardConfigFile = state.boardConfigFile;
         gdbLocation = state.gdbLocation;
         gdbPort = state.gdbPort;
         telnetPort = state.telnetPort;
         shippedGdb = state.shippedGdb;
+        autoUpdateCmake = state.autoUpdateCmake;
     }
 
     @Override
