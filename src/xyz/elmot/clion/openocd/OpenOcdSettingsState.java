@@ -18,7 +18,7 @@ import static xyz.elmot.clion.openocd.OpenOcdComponent.SCRIPTS_PATH_SHORT;
  * (c) elmot on 21.10.2017.
  */
 @SuppressWarnings("WeakerAccess")
-@State(name = "elmot.OpenOcdPlugin", storages = @Storage(value = StoragePathMacros.WORKSPACE_FILE, roamingType = RoamingType.PER_OS))
+@State(name = "elmot.OpenOcdPlugin")
 public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSettingsState> {
 
     public static final int DEF_GDB_PORT = 3333;
