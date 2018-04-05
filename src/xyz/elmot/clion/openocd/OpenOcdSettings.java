@@ -43,7 +43,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
     @Override
     public boolean isModified() {
         OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
-        if(state == null) return true;
+        if (state == null) return true;
         return !(
                 Objects.equals(panel.boardConfigFile.getText(), state.boardConfigFile) &&
                         Objects.equals(panel.openOcdHome.getText(), state.openOcdHome) &&
@@ -65,13 +65,15 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         panel.boardConfigFile.validateContent();
 
         OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
-        state.gdbPort = panel.gdbPort.getValue();
-        state.telnetPort = panel.telnetPort.getValue();
-        state.boardConfigFile = panel.boardConfigFile.getText();
-        state.openOcdHome = panel.openOcdHome.getText();
-        state.gdbLocation = panel.gdbLocation.getText();
-        state.shippedGdb = panel.shippedGdb.isSelected();
-        state.autoUpdateCmake = panel.autoUpdateCmake.isSelected();
+        if (state != null) {
+            state.gdbPort = panel.gdbPort.getValue();
+            state.telnetPort = panel.telnetPort.getValue();
+            state.boardConfigFile = panel.boardConfigFile.getText();
+            state.openOcdHome = panel.openOcdHome.getText();
+            state.gdbLocation = panel.gdbLocation.getText();
+            state.shippedGdb = panel.shippedGdb.isSelected();
+            state.autoUpdateCmake = panel.autoUpdateCmake.isSelected();
+        }
     }
 
     @Override
@@ -115,7 +117,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         public OpenOcdSettingsPanel() {
             super(new GridLayoutManager(10, 3), true);
             ((GridLayoutManager) getLayout()).setColumnStretch(1, 10);
-            openOcdHome = addValueRow(0,  new FileChooseInput.OpenOcdHome("OpenOCD Home", VfsUtil.getUserHomeDir()));
+            openOcdHome = addValueRow(0, new FileChooseInput.OpenOcdHome("OpenOCD Home", VfsUtil.getUserHomeDir()));
 
             boardConfigFile = addValueRow(1, new FileChooseInput.BoardCfg("Board Config File",
                     VfsUtil.getUserHomeDir(), openOcdHome::getText));
@@ -136,8 +138,9 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         }
 
         private <T extends FileChooseInput> T addValueRow(int row, @NotNull T component) {
-            return addValueRow(row,component.getValueName(),component);
+            return addValueRow(row, component.getValueName(), component);
         }
+
         private <T extends JComponent> T addValueRow(int row, @Nullable String labelText, @NotNull T component) {
             add(component, new GridConstraints(row, 1, 1, 1, ANCHOR_WEST,
                     FILL_HORIZONTAL, SIZEPOLICY_WANT_GROW, SIZEPOLICY_FIXED, null, null, null));
