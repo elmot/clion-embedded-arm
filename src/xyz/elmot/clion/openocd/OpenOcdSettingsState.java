@@ -25,7 +25,6 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
     public static final int DEF_TELNET_PORT = 4444;
     public String boardConfigFile;
     public String openOcdHome;
-    public String gdbLocation;
     public boolean shippedGdb;
     public int gdbPort;
     public int telnetPort;
@@ -34,7 +33,6 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
     public OpenOcdSettingsState() {
         boardConfigFile = "";
         openOcdHome = defOpenOcdLocation();
-        gdbLocation = "arm-none-eabi-gdb";
         shippedGdb = true;
         gdbPort = DEF_GDB_PORT;
         telnetPort = DEF_TELNET_PORT;
@@ -62,7 +60,6 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
     public void loadState(@NotNull OpenOcdSettingsState state) {
         openOcdHome = state.openOcdHome;
         boardConfigFile = state.boardConfigFile;
-        gdbLocation = state.gdbLocation;
         gdbPort = state.gdbPort;
         telnetPort = state.telnetPort;
         shippedGdb = state.shippedGdb;
@@ -81,10 +78,6 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
                     openOcdHome = folder.getAbsolutePath();
                 }
             }
-        }
-        File gdb = findExecutableInPath("arm-none-eabi-gdb");
-        if (gdb != null) {
-            gdbLocation = gdb.getAbsolutePath();
         }
     }
 

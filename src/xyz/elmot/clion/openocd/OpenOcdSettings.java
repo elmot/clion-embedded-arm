@@ -47,7 +47,6 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         return !(
                 Objects.equals(panel.boardConfigFile.getText(), state.boardConfigFile) &&
                         Objects.equals(panel.openOcdHome.getText(), state.openOcdHome) &&
-                        Objects.equals(panel.gdbLocation.getText(), state.gdbLocation) &&
                         panel.gdbPort.getValue() == state.gdbPort &&
                         panel.telnetPort.getValue() == state.telnetPort &&
                         panel.shippedGdb.isSelected() == state.shippedGdb &&
@@ -58,9 +57,6 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
     public void apply() throws ConfigurationException {
         panel.gdbPort.validateContent();
         panel.telnetPort.validateContent();
-        if (!panel.shippedGdb.isSelected()) {
-            panel.gdbLocation.validateContent();
-        }
         panel.openOcdHome.validateContent();
         panel.boardConfigFile.validateContent();
 
@@ -70,7 +66,6 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
             state.telnetPort = panel.telnetPort.getValue();
             state.boardConfigFile = panel.boardConfigFile.getText();
             state.openOcdHome = panel.openOcdHome.getText();
-            state.gdbLocation = panel.gdbLocation.getText();
             state.shippedGdb = panel.shippedGdb.isSelected();
             state.autoUpdateCmake = panel.autoUpdateCmake.isSelected();
         }
@@ -97,7 +92,6 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         panel.openOcdHome.setText(state.openOcdHome);
         panel.boardConfigFile.setText(state.boardConfigFile);
         panel.shippedGdb.setSelected(state.shippedGdb);
-        panel.gdbLocation.setText(state.gdbLocation);
         panel.autoUpdateCmake.setSelected(state.autoUpdateCmake);
     }
 
@@ -109,7 +103,6 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         private final FileChooseInput boardConfigFile;
         private final FileChooseInput openOcdHome;
         private final JBCheckBox shippedGdb;
-        private final FileChooseInput gdbLocation;
         private final IntegerField gdbPort;
         private final IntegerField telnetPort;
         private final JBCheckBox autoUpdateCmake;
@@ -128,11 +121,8 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
             telnetPort.setCanBeEmpty(false);
             shippedGdb = addValueRow(5, "GDB (arm-none-eabi-gdb)", new JBCheckBox("Use shipped with CLion"));
 
-            gdbLocation = addValueRow(6, new FileChooseInput.ExeFile("GDB Location", VfsUtil.getUserHomeDir()));
-
             autoUpdateCmake = addValueRow(8, "CMake Project Update", new JBCheckBox("Automatic"));
 
-            shippedGdb.addChangeListener(e -> gdbLocation.setEnabled(!shippedGdb.isSelected()));
             add(new Spacer(), new GridConstraints(9, 0, 1, 1, ANCHOR_CENTER, FILL_NONE,
                     SIZEPOLICY_FIXED, SIZEPOLICY_WANT_GROW, null, null, null));
         }
