@@ -65,6 +65,7 @@ The plugin is free, but if you like it, you may support my work with a PayPal do
     </actions>
     <project-components>
         <component>
+            <loadForDefaultProject>true</loadForDefaultProject>
             <implementation-class>xyz.elmot.clion.openocd.OpenOcdSettingsState</implementation-class>
         </component>
         <component>
