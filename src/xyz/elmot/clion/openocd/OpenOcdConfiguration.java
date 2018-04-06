@@ -15,6 +15,11 @@ import org.jetbrains.annotations.Nullable;
  */
 @SuppressWarnings("WeakerAccess")
 public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements CidrExecutableDataHolder {
+    public static final int DEF_GDB_PORT = 3333;
+    public static final int DEF_TELNET_PORT = 4444;
+    public int gdbPort = DEF_GDB_PORT;
+    public int telnetPort = DEF_TELNET_PORT;
+    public String boardConfigFile;
 
 
     @SuppressWarnings("WeakerAccess")

@@ -21,21 +21,13 @@ import static xyz.elmot.clion.openocd.OpenOcdComponent.SCRIPTS_PATH_SHORT;
 @State(name = "elmot.OpenOcdPlugin")
 public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSettingsState> {
 
-    public static final int DEF_GDB_PORT = 3333;
-    public static final int DEF_TELNET_PORT = 4444;
-    public String boardConfigFile;
     public String openOcdHome;
     public boolean shippedGdb;
-    public int gdbPort;
-    public int telnetPort;
     public boolean autoUpdateCmake;
 
     public OpenOcdSettingsState() {
-        boardConfigFile = "";
         openOcdHome = defOpenOcdLocation();
         shippedGdb = true;
-        gdbPort = DEF_GDB_PORT;
-        telnetPort = DEF_TELNET_PORT;
         autoUpdateCmake = false;
     }
 
@@ -59,9 +51,6 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
     @Override
     public void loadState(@NotNull OpenOcdSettingsState state) {
         openOcdHome = state.openOcdHome;
-        boardConfigFile = state.boardConfigFile;
-        gdbPort = state.gdbPort;
-        telnetPort = state.telnetPort;
         shippedGdb = state.shippedGdb;
         autoUpdateCmake = state.autoUpdateCmake;
     }

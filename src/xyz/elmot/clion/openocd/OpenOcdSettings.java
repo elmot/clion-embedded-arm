@@ -46,10 +46,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
         if (state == null) return true;
         return !(
-                Objects.equals(panel.boardConfigFile.getText(), state.boardConfigFile) &&
                         Objects.equals(panel.openOcdHome.getText(), state.openOcdHome) &&
-                        panel.gdbPort.getValue() == state.gdbPort &&
-                        panel.telnetPort.getValue() == state.telnetPort &&
                         panel.shippedRadioButton.isSelected() == state.shippedGdb &&
                         panel.autoUpdateCmake.isSelected() == state.autoUpdateCmake);
     }
@@ -59,13 +56,10 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         panel.gdbPort.validateContent();
         panel.telnetPort.validateContent();
         panel.openOcdHome.validateContent();
-        panel.boardConfigFile.validateContent();
+//        panel.boardConfigFile.validateContent();
 
         OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
         if (state != null) {
-            state.gdbPort = panel.gdbPort.getValue();
-            state.telnetPort = panel.telnetPort.getValue();
-            state.boardConfigFile = panel.boardConfigFile.getText();
             state.openOcdHome = panel.openOcdHome.getText();
             state.shippedGdb = panel.shippedRadioButton.isSelected();
             state.autoUpdateCmake = panel.autoUpdateCmake.isSelected();
@@ -88,10 +82,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
     @Override
     public void reset() {
         OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class, DEFAULT);
-        panel.gdbPort.setValue(state.gdbPort);
-        panel.telnetPort.setValue(state.telnetPort);
         panel.openOcdHome.setText(state.openOcdHome);
-        panel.boardConfigFile.setText(state.boardConfigFile);
         panel.shippedRadioButton.setSelected(state.shippedGdb);
         panel.toolchainRadioButton.setSelected(!state.shippedGdb);
         panel.updateToolchainGdbName();
@@ -103,7 +94,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
      */
     public static class OpenOcdSettingsPanel extends JPanel {
 
-        private final FileChooseInput boardConfigFile;
+//        private final FileChooseInput boardConfigFile;
         private final FileChooseInput openOcdHome;
         private final IntegerField gdbPort;
         private final IntegerField telnetPort;
@@ -116,9 +107,9 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
             ((GridLayoutManager) getLayout()).setColumnStretch(1, 10);
             openOcdHome = addValueRow(0, new FileChooseInput.OpenOcdHome("OpenOCD Home", VfsUtil.getUserHomeDir()));
 
-            boardConfigFile = addValueRow(1, new FileChooseInput.BoardCfg("Board Config File",
-                    VfsUtil.getUserHomeDir(), openOcdHome::getText));
-
+//            boardConfigFile = addValueRow(1, new FileChooseInput.BoardCfg("Board Config File",
+//                    VfsUtil.getUserHomeDir(), openOcdHome::getText));
+//
             gdbPort = addValueRow(2, "OpenOCD GDB Port", new IntegerField("GDB Port", 1024, 65353));
             gdbPort.setCanBeEmpty(false);
             telnetPort = addValueRow(3, "OpenOCD Telnet Port", new IntegerField("Telnet Port", 1024, 65353));

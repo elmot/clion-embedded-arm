@@ -59,7 +59,7 @@ The plugin is free, but if you like it, you may support my work with a PayPal do
                text="ARM MCU">
 
             <action id="elmot.embedded.stm32cubemx.import" class="xyz.elmot.clion.cubemx.ConvertProject"/>
-            <action id="elmot.embedded.openocd.run" class="xyz.elmot.clion.openocd.OpenOcdRun" text="Run OpenOCD"/>
+            <!--<action id="elmot.embedded.openocd.run" class="xyz.elmot.clion.openocd.OpenOcdRun" text="Run OpenOCD"/>-->
             <add-to-group group-id="ToolsMenu" anchor="after" relative-to-action="CMake.ToolsMenu"/>
         </group>
     </actions>
