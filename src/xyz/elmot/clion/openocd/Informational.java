@@ -66,6 +66,7 @@ public class Informational {
             case 2:
                 BrowserUtil.browse(HELP_URL);
                 break;
+            default://nothing to do
         }
     }
 
