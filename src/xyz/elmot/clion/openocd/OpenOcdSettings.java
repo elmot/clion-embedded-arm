@@ -6,17 +6,17 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.ui.components.JBCheckBox;
-import com.intellij.ui.components.fields.IntegerField;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
 import java.util.Objects;
 
 import static com.intellij.uiDesigner.core.GridConstraints.*;
@@ -27,7 +27,7 @@ import static com.intellij.uiDesigner.core.GridConstraints.*;
 @SuppressWarnings("WeakerAccess")
 public class OpenOcdSettings implements ProjectComponent, Configurable {
     public static final OpenOcdSettingsState DEFAULT = new OpenOcdSettingsState();
-    private final Project project;
+    protected final Project project;
     private OpenOcdSettingsPanel panel = null;
 
     public OpenOcdSettings(Project project) {
@@ -45,33 +45,19 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
         OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
         if (state == null) return true;
         return !(
-                Objects.equals(panel.boardConfigFile.getText(), state.boardConfigFile) &&
                         Objects.equals(panel.openOcdHome.getText(), state.openOcdHome) &&
-                        Objects.equals(panel.gdbLocation.getText(), state.gdbLocation) &&
-                        panel.gdbPort.getValue() == state.gdbPort &&
-                        panel.telnetPort.getValue() == state.telnetPort &&
-                        panel.shippedGdb.isSelected() == state.shippedGdb &&
+                        panel.shippedRadioButton.isSelected() == state.shippedGdb &&
                         panel.autoUpdateCmake.isSelected() == state.autoUpdateCmake);
     }
 
     @Override
     public void apply() throws ConfigurationException {
-        panel.gdbPort.validateContent();
-        panel.telnetPort.validateContent();
-        if (!panel.shippedGdb.isSelected()) {
-            panel.gdbLocation.validateContent();
-        }
         panel.openOcdHome.validateContent();
-        panel.boardConfigFile.validateContent();
 
         OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
         if (state != null) {
-            state.gdbPort = panel.gdbPort.getValue();
-            state.telnetPort = panel.telnetPort.getValue();
-            state.boardConfigFile = panel.boardConfigFile.getText();
             state.openOcdHome = panel.openOcdHome.getText();
-            state.gdbLocation = panel.gdbLocation.getText();
-            state.shippedGdb = panel.shippedGdb.isSelected();
+            state.shippedGdb = panel.shippedRadioButton.isSelected();
             state.autoUpdateCmake = panel.autoUpdateCmake.isSelected();
         }
     }
@@ -92,12 +78,10 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
     @Override
     public void reset() {
         OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class, DEFAULT);
-        panel.gdbPort.setValue(state.gdbPort);
-        panel.telnetPort.setValue(state.telnetPort);
         panel.openOcdHome.setText(state.openOcdHome);
-        panel.boardConfigFile.setText(state.boardConfigFile);
-        panel.shippedGdb.setSelected(state.shippedGdb);
-        panel.gdbLocation.setText(state.gdbLocation);
+        panel.shippedRadioButton.setSelected(state.shippedGdb);
+        panel.toolchainRadioButton.setSelected(!state.shippedGdb);
+        panel.updateToolchainGdbName();
         panel.autoUpdateCmake.setSelected(state.autoUpdateCmake);
     }
 
@@ -106,37 +90,54 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
      */
     public static class OpenOcdSettingsPanel extends JPanel {
 
-        private final FileChooseInput boardConfigFile;
+//        private final FileChooseInput boardConfigFile;
         private final FileChooseInput openOcdHome;
-        private final JBCheckBox shippedGdb;
-        private final FileChooseInput gdbLocation;
-        private final IntegerField gdbPort;
-        private final IntegerField telnetPort;
         private final JBCheckBox autoUpdateCmake;
+        private JRadioButton toolchainRadioButton;
+        private JRadioButton shippedRadioButton;
 
         public OpenOcdSettingsPanel() {
-            super(new GridLayoutManager(10, 3), true);
+            super(new GridLayoutManager(6, 3), true);
             ((GridLayoutManager) getLayout()).setColumnStretch(1, 10);
             openOcdHome = addValueRow(0, new FileChooseInput.OpenOcdHome("OpenOCD Home", VfsUtil.getUserHomeDir()));
 
-            boardConfigFile = addValueRow(1, new FileChooseInput.BoardCfg("Board Config File",
-                    VfsUtil.getUserHomeDir(), openOcdHome::getText));
+            addValueRow(2, "Use GDB", setupGdbButtonGroup());
 
-            gdbPort = addValueRow(2, "OpenOCD GDB Port", new IntegerField("GDB Port", 1024, 65353));
-            gdbPort.setCanBeEmpty(false);
-            telnetPort = addValueRow(3, "OpenOCD Telnet Port", new IntegerField("Telnet Port", 1024, 65353));
-            telnetPort.setCanBeEmpty(false);
-            shippedGdb = addValueRow(5, "GDB (arm-none-eabi-gdb)", new JBCheckBox("Use shipped with CLion"));
+            autoUpdateCmake = addValueRow(4, "CMake Project Update", new JBCheckBox("Automatic"));
 
-            gdbLocation = addValueRow(6, new FileChooseInput.ExeFile("GDB Location", VfsUtil.getUserHomeDir()));
-
-            autoUpdateCmake = addValueRow(8, "CMake Project Update", new JBCheckBox("Automatic"));
-
-            shippedGdb.addChangeListener(e -> gdbLocation.setEnabled(!shippedGdb.isSelected()));
-            add(new Spacer(), new GridConstraints(9, 0, 1, 1, ANCHOR_CENTER, FILL_NONE,
+            add(new Spacer(), new GridConstraints(5, 0, 1, 1, ANCHOR_CENTER, FILL_NONE,
                     SIZEPOLICY_FIXED, SIZEPOLICY_WANT_GROW, null, null, null));
         }
 
+        @NotNull
+        protected JPanel setupGdbButtonGroup() {
+            shippedRadioButton = new JRadioButton("Shipped with CLion");
+
+            toolchainRadioButton = new JRadioButton();
+            updateToolchainGdbName();
+            ButtonGroup buttonGroup = new ButtonGroup();
+            buttonGroup.add(shippedRadioButton);
+            buttonGroup.add(toolchainRadioButton);
+            JPanel gdbPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
+
+            gdbPanel.add(shippedRadioButton);
+            gdbPanel.add(toolchainRadioButton);
+            return gdbPanel;
+        }
+
+        private void updateToolchainGdbName() {
+            CPPToolchains.Toolchain toolchain = CPPToolchains.getInstance().getDefaultToolchain();
+            File debugger = toolchain == null ? null: toolchain.getDebugger().getGdbExecutable();
+            if(debugger == null){
+                toolchainRadioButton.setText("From Toolchain");
+                toolchainRadioButton.setToolTipText(null);
+            }else {
+                toolchainRadioButton.setText(String.format("From Toolchain (%s)",debugger.getName()));
+                toolchainRadioButton.setToolTipText(debugger.getAbsolutePath());
+            }
+        }
+
+        @SuppressWarnings("SameParameterValue")
         private <T extends FileChooseInput> T addValueRow(int row, @NotNull T component) {
             return addValueRow(row, component.getValueName(), component);
         }

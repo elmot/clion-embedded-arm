@@ -1,11 +1,12 @@
 <idea-plugin>
     <id>xyz.elmot.clion.armsupport.prj</id>
     <name>OpenOCD + STM32CubeMX support for ARM embedded development</name>
-    <version>1.1.alpha2</version>
+    <version>1.1.alpha3</version>
     <vendor email="me@elmot.xyz" url="http://elmot.xyz">Elmot</vendor>
 
     <description><![CDATA[
 ARM MCU development plugin
+
 <br>
 <ul>
     <li>Convert a project made in <i>STM32CubeMX</i> into a <i>CLion</i> project</li>
@@ -39,6 +40,8 @@ The plugin is free, but if you like it, you may support my work with a PayPal do
         <li>Minimal CLion 2018.1(CL-181.4203.505) Support</li>
         <li>Diagnostics UX improved</li>
         <li>"Do not ask option" for cmake update</li>
+        <li>Board and ports settings moved to <i>Run Configuration</i></li>
+        <li>Custom GDB support is done through CLion <i>Toolchains</i></li>
         </ul>
     ]]>
     </change-notes>
@@ -59,7 +62,6 @@ The plugin is free, but if you like it, you may support my work with a PayPal do
                text="ARM MCU">
 
             <action id="elmot.embedded.stm32cubemx.import" class="xyz.elmot.clion.cubemx.ConvertProject"/>
-            <action id="elmot.embedded.openocd.run" class="xyz.elmot.clion.openocd.OpenOcdRun" text="Run OpenOCD"/>
             <add-to-group group-id="ToolsMenu" anchor="after" relative-to-action="CMake.ToolsMenu"/>
         </group>
     </actions>

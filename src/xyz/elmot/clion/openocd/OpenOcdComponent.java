@@ -18,6 +18,7 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -42,7 +43,7 @@ public class OpenOcdComponent {
     private final static String[] FAIL_STRINGS = {
             "** Programming Failed **", "communication failure", "** OpenOCD init failed **"};
     private static final String FLASH_SUCCESS_TEXT = "** Programming Finished **";
-    private static final Logger LOG = Logger.getInstance(OpenOcdRun.class);
+    private static final Logger LOG = Logger.getInstance(OpenOcdComponent.class);
 
     static {
         BIN_OPENOCD = "bin/openocd" + (OS.isWindows() ? ".exe" : "");
@@ -57,10 +58,11 @@ public class OpenOcdComponent {
 
     @SuppressWarnings("WeakerAccess")
     @NotNull
-    public static GeneralCommandLine createOcdCommandLine(@NotNull Project project, @Nullable File fileToLoad, @Nullable String additionalCommand, boolean shutdown) throws ConfigurationException {
+    public static GeneralCommandLine createOcdCommandLine(OpenOcdConfiguration config, File fileToLoad,@Nullable String additionalCommand, boolean shutdown) throws ConfigurationException {
+        Project project = config.getProject();
         OpenOcdSettingsState ocdSettings = project.getComponent(OpenOcdSettingsState.class);
-        if (ocdSettings.boardConfigFile == null || "".equals(ocdSettings.boardConfigFile.trim())) {
-            throw new ConfigurationException("Board Config file is not defined.\nPlease open OpenOCD settings and choose one.", "OpenOCD run error");
+        if (StringUtil.isEmpty(config.getBoardConfigFile())) {
+            throw new ConfigurationException("Board Config file is not defined.", "OpenOCD run error");
         }
         VirtualFile ocdHome = require(LocalFileSystem.getInstance().findFileByPath(ocdSettings.openOcdHome));
         VirtualFile ocdBinary = require(ocdHome.findFileByRelativePath(BIN_OPENOCD));
@@ -73,13 +75,13 @@ public class OpenOcdComponent {
 
         VirtualFile ocdScripts = require(OpenOcdSettingsState.findOcdScripts(ocdHome));
         commandLine.addParameters("-s", VfsUtil.virtualToIoFile(ocdScripts).getAbsolutePath());
-        if (ocdSettings.gdbPort != OpenOcdSettingsState.DEF_GDB_PORT) {
-            commandLine.addParameters("-c", "gdb_port " + ocdSettings.gdbPort);
+        if (config.getGdbPort() != OpenOcdConfiguration.DEF_GDB_PORT) {
+            commandLine.addParameters("-c", "gdb_port " + config.getGdbPort());
         }
-        if (ocdSettings.telnetPort != OpenOcdSettingsState.DEF_TELNET_PORT) {
-            commandLine.addParameters("-c", "telnet_port " + ocdSettings.telnetPort);
+        if (config.getTelnetPort() != OpenOcdConfiguration.DEF_TELNET_PORT) {
+            commandLine.addParameters("-c", "telnet_port " + config.getTelnetPort());
         }
-        commandLine.addParameters("-f", ocdSettings.boardConfigFile);
+        commandLine.addParameters("-f", config.getBoardConfigFile());
         if (fileToLoad != null) {
             String command = "program \"" + fileToLoad.getAbsolutePath().replace(File.separatorChar, '/') + "\"";
             commandLine.addParameters("-c", command);
@@ -116,14 +118,15 @@ public class OpenOcdComponent {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public Future<STATUS> startOpenOcd(Project project, @Nullable File fileToLoad, @Nullable String additionalCommand) throws ConfigurationException {
-        if (project == null) return new FutureResult<>(STATUS.FLASH_ERROR);
-        GeneralCommandLine commandLine = createOcdCommandLine(project, fileToLoad, additionalCommand, false);
+    public Future<STATUS> startOpenOcd(OpenOcdConfiguration config, @Nullable File fileToLoad, @Nullable String additionalCommand) throws ConfigurationException {
+        if (config == null) return new FutureResult<>(STATUS.FLASH_ERROR);
+        GeneralCommandLine commandLine = createOcdCommandLine(config, fileToLoad, additionalCommand, false);
         if (process != null && !process.isProcessTerminated()) {
             LOG.info("openOcd is already run");
             return new FutureResult<>(STATUS.FLASH_ERROR);
         }
 
+        Project project = config.getProject();
         try {
             process = new OSProcessHandler(commandLine) {
                 @Override
