@@ -124,6 +124,7 @@ class ProjectData {
         map.put("includes", includes);
         map.put("sources", sources);
         map.put("mcpu", mcpu);
+        map.put("templateWarning", "THIS FILE IS AUTO GENERATED FROM THE TEMPLATE! DO NOT CHANGE!");
         return map;
     }
 
