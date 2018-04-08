@@ -88,7 +88,7 @@ class OpenOcdLauncher extends CidrLauncher {
         CidrRemoteDebugParameters remoteDebugParameters = new CidrRemoteDebugParameters();
 
         remoteDebugParameters.setSymbolFile(findRunFile(commandLineState).getAbsolutePath());
-        remoteDebugParameters.setRemoteCommand("tcp:localhost:" + openOcdConfiguration.gdbPort);
+        remoteDebugParameters.setRemoteCommand("tcp:localhost:" + openOcdConfiguration.getGdbPort());
 
         CPPToolchains.Toolchain toolchain = CPPToolchains.getInstance().getDefaultToolchain();
         if (toolchain == null) {
@@ -97,7 +97,11 @@ class OpenOcdLauncher extends CidrLauncher {
         String gdbPath;
         if (ocdSettings.shippedGdb) {
             toolchain = toolchain.copy();
-            gdbPath = PathManager.findBinFile("gdb/bin/gdb" + (OS.isWindows() ? ".exe" : "")).getAbsolutePath();
+            File gdbFile = PathManager.findBinFile("gdb/bin/gdb" + (OS.isWindows() ? ".exe" : ""));
+            if (gdbFile == null) {
+                throw new ExecutionException("Shipped gdb is not found. Please check your CLion install");
+            }
+            gdbPath = gdbFile.getAbsolutePath();
             CPPDebugger cppDebugger = CPPDebugger.create(CPPDebugger.Kind.CUSTOM_GDB, gdbPath);
             toolchain.setDebugger(cppDebugger);
         }
@@ -165,7 +169,6 @@ class OpenOcdLauncher extends CidrLauncher {
     @Override
     public CidrDebugProcess startDebugProcess(@NotNull CommandLineState commandLineState,
                                               @NotNull XDebugSession xDebugSession) throws ExecutionException {
-        Project project = commandLineState.getEnvironment().getProject();
 
         File runFile = findRunFile(commandLineState);
 

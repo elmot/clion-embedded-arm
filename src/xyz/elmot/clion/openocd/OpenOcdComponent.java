@@ -18,6 +18,7 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -60,7 +61,7 @@ public class OpenOcdComponent {
     public static GeneralCommandLine createOcdCommandLine(OpenOcdConfiguration config, File fileToLoad,@Nullable String additionalCommand, boolean shutdown) throws ConfigurationException {
         Project project = config.getProject();
         OpenOcdSettingsState ocdSettings = project.getComponent(OpenOcdSettingsState.class);
-        if (config.boardConfigFile == null || "".equals(config.boardConfigFile.trim())) {
+        if (StringUtil.isEmpty(config.getBoardConfigFile())) {
             throw new ConfigurationException("Board Config file is not defined.", "OpenOCD run error");
         }
         VirtualFile ocdHome = require(LocalFileSystem.getInstance().findFileByPath(ocdSettings.openOcdHome));
@@ -74,13 +75,13 @@ public class OpenOcdComponent {
 
         VirtualFile ocdScripts = require(OpenOcdSettingsState.findOcdScripts(ocdHome));
         commandLine.addParameters("-s", VfsUtil.virtualToIoFile(ocdScripts).getAbsolutePath());
-        if (config.gdbPort != OpenOcdConfiguration.DEF_GDB_PORT) {
-            commandLine.addParameters("-c", "gdb_port " + config.gdbPort);
+        if (config.getGdbPort() != OpenOcdConfiguration.DEF_GDB_PORT) {
+            commandLine.addParameters("-c", "gdb_port " + config.getGdbPort());
         }
-        if (config.telnetPort != OpenOcdConfiguration.DEF_TELNET_PORT) {
-            commandLine.addParameters("-c", "telnet_port " + config.telnetPort);
+        if (config.getTelnetPort() != OpenOcdConfiguration.DEF_TELNET_PORT) {
+            commandLine.addParameters("-c", "telnet_port " + config.getTelnetPort());
         }
-        commandLine.addParameters("-f", config.boardConfigFile);
+        commandLine.addParameters("-f", config.getBoardConfigFile());
         if (fileToLoad != null) {
             String command = "program \"" + fileToLoad.getAbsolutePath().replace(File.separatorChar, '/') + "\"";
             commandLine.addParameters("-c", command);
