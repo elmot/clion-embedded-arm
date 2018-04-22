@@ -3,6 +3,8 @@ List of project donators
 
 These donations is a very pleasant sign of the community support. My great thanks to:
 
+**Marcin Wionczyk** 10,00 EUR
+
 **Arno Moonen** 10,00 EUR
 > Thanks for the CLion plug-in! Now I can even enjoy all the JetBrains goodness when working on my embedded projects.
 
