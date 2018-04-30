@@ -27,9 +27,44 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
     private static final String ATTR_GDB_PORT = "gdb-port";
     private static final String ATTR_TELNET_PORT = "telnet-port";
     private static final String ATTR_BOARD_CONFIG = "board-config";
+    public static final String TAG_CUSTOM_SCRIPT = "custom-ocd-script";
+    public static final String ATTR_RESET_TYPE = "reset-type";
+    public static final String ATTR_DOWNLOAD_TYPE = "download-type";
     private int gdbPort = DEF_GDB_PORT;
     private int telnetPort = DEF_TELNET_PORT;
     private String boardConfigFile;
+    private String customScriptTemplate; //TODO: D
+    private DownloadType downloadType = DownloadType.ALWAYS;
+    private ResetType resetType = ResetType.INIT;
+
+    public enum DownloadType {
+
+        ALWAYS,          //TODO: U
+        UPDATED_ONLY,   //TODO: U
+        NONE;           //TODO: U
+
+        @Override
+        public String toString() {
+            return toBeautyString(super.toString());
+        }
+    }
+
+    public static String toBeautyString(String obj) {
+        return StringUtil.toTitleCase(obj.toLowerCase().replace("_", " "));
+    }
+
+    public enum ResetType {
+        INIT,  //TODO: U
+        NONE,  //TODO: U
+        RESET, //TODO: U
+        HALT,  //TODO: U
+        CUSTOM_SCRIPT;   //TODO: U
+
+        @Override
+        public String toString() {
+            return toBeautyString(super.toString());
+        }
+    }
 
 
     @SuppressWarnings("WeakerAccess")
@@ -47,14 +82,35 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
     public void readExternal(@NotNull Element element) throws InvalidDataException {
         super.readExternal(element);
         boardConfigFile = element.getAttributeValue(ATTR_BOARD_CONFIG, NAMESPACE);
-        gdbPort = intAttribute(element, ATTR_GDB_PORT, DEF_GDB_PORT);
-        telnetPort = intAttribute(element, ATTR_TELNET_PORT, DEF_TELNET_PORT);
+        gdbPort = readIntAttr(element, ATTR_GDB_PORT, DEF_GDB_PORT);
+        telnetPort = readIntAttr(element, ATTR_TELNET_PORT, DEF_TELNET_PORT);
+        Element customScriptElement = element.getChild(TAG_CUSTOM_SCRIPT, NAMESPACE);
+
+        if (customScriptElement != null) {
+            customScriptTemplate = customScriptElement.getText();
+        } else {
+            customScriptTemplate = "";
+        }
+        resetType = readEnumAttr(element, ATTR_RESET_TYPE, ResetType.INIT);
+        downloadType = readEnumAttr(element, ATTR_DOWNLOAD_TYPE, DownloadType.ALWAYS);
     }
 
-    private int intAttribute(@NotNull Element element, String name, int def) {
+    private int readIntAttr(@NotNull Element element, String name, int def) {
         String s = element.getAttributeValue(name, NAMESPACE);
         if (StringUtil.isEmpty(s)) return def;
         return Integer.parseUnsignedInt(s);
+    }
+
+    private <T extends Enum> T readEnumAttr(@NotNull Element element, String name, T def) {
+        String s = element.getAttributeValue(name, NAMESPACE);
+        if (StringUtil.isEmpty(s)) return def;
+        try {
+            //noinspection unchecked
+            return (T) Enum.valueOf(def.getClass(), s);
+        } catch (Throwable t) {
+            //todo logging
+            return def;
+        }
     }
 
     @Override
@@ -65,6 +121,10 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
         if (boardConfigFile != null) {
             element.setAttribute(ATTR_BOARD_CONFIG, boardConfigFile, NAMESPACE);
         }
+        Element customScriptElement = new Element(TAG_CUSTOM_SCRIPT, NAMESPACE).addContent(customScriptTemplate);
+        element.addContent(customScriptElement);
+        element.setAttribute(ATTR_RESET_TYPE, resetType.name(), NAMESPACE);
+        element.setAttribute(ATTR_DOWNLOAD_TYPE, downloadType.name(), NAMESPACE);
     }
 
     @Override
@@ -107,5 +167,29 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
 
     public void setBoardConfigFile(String boardConfigFile) {
         this.boardConfigFile = boardConfigFile;
+    }
+
+    public String getCustomScriptTemplate() {
+        return customScriptTemplate;
+    }
+
+    public void setCustomScriptTemplate(String customScriptTemplate) {
+        this.customScriptTemplate = customScriptTemplate;
+    }
+
+    public DownloadType getDownloadType() {
+        return downloadType;
+    }
+
+    public void setDownloadType(DownloadType downloadType) {
+        this.downloadType = downloadType;
+    }
+
+    public ResetType getResetType() {
+        return resetType;
+    }
+
+    public void setResetType(ResetType resetType) {
+        this.resetType = resetType;
     }
 }
