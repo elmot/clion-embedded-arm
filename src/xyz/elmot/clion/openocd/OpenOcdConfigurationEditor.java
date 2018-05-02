@@ -4,7 +4,6 @@ import com.intellij.execution.ui.CommonProgramParametersPanel;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VfsUtil;
-import com.intellij.ui.components.fields.ExpandableTextField;
 import com.intellij.ui.components.fields.IntegerField;
 import com.intellij.util.ui.GridBag;
 import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
@@ -17,7 +16,6 @@ import xyz.elmot.clion.openocd.OpenOcdConfiguration.ResetType;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Objects;
 
 public class OpenOcdConfigurationEditor extends CMakeAppRunConfigurationSettingsEditor {
     private IntegerField gdbPort;
@@ -27,7 +25,6 @@ public class OpenOcdConfigurationEditor extends CMakeAppRunConfigurationSettings
     private String openocdHome;
     private JXRadioGroup<DownloadType> downloadGroup;
     private JXRadioGroup<ResetType> resetGroup;
-    private ExpandableTextField customScriptPane;
 
     @SuppressWarnings("WeakerAccess")
     public OpenOcdConfigurationEditor(Project project, @NotNull CMakeBuildConfigurationHelper cMakeBuildConfigurationHelper) {
@@ -49,7 +46,6 @@ public class OpenOcdConfigurationEditor extends CMakeAppRunConfigurationSettings
         ocdConfiguration.setTelnetPort(telnetPort.getValue());
         ocdConfiguration.setDownloadType(downloadGroup.getSelectedValue());
         ocdConfiguration.setResetType(resetGroup.getSelectedValue());
-        ocdConfiguration.setCustomScriptTemplate(customScriptPane.getText());
     }
 
     @Override
@@ -68,7 +64,6 @@ public class OpenOcdConfigurationEditor extends CMakeAppRunConfigurationSettings
         telnetPort.setText("" + ocd.getTelnetPort());
         downloadGroup.setSelectedValue(ocd.getDownloadType());
         resetGroup.setSelectedValue(ocd.getResetType());
-        customScriptPane.setText(ocd.getCustomScriptTemplate());
     }
 
     @Override
@@ -100,12 +95,6 @@ public class OpenOcdConfigurationEditor extends CMakeAppRunConfigurationSettings
         panel.add(new JLabel("Reset:"), gridBag.nextLine().next());
         resetGroup = new JXRadioGroup<>(ResetType.values());
         panel.add(resetGroup, gridBag.next());
-        resetGroup.addActionListener(event ->
-                customScriptPane.setEnabled(Objects.equals(resetGroup.getSelectedValue(), ResetType.CUSTOM_SCRIPT))
-        );
-        customScriptPane = new ExpandableTextField();
-        panel.add(new JLabel("Custom Script:"),gridBag.nextLine().next());
-        panel.add(customScriptPane,gridBag.next());
     }
 
     private IntegerField addPortInput(JPanel portsPanel, String label, int defaultValue) {

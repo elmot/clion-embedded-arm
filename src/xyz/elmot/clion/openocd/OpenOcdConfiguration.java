@@ -6,8 +6,11 @@ import com.intellij.execution.configurations.RuntimeConfigurationException;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.InvalidDataException;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.WriteExternalException;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
 import com.jetbrains.cidr.execution.CidrCommandLineState;
 import com.jetbrains.cidr.execution.CidrExecutableDataHolder;
@@ -15,6 +18,9 @@ import org.jdom.Element;
 import org.jdom.Namespace;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.io.File;
+import java.util.Objects;
 
 /**
  * (c) elmot on 29.9.2017.
@@ -27,13 +33,11 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
     private static final String ATTR_GDB_PORT = "gdb-port";
     private static final String ATTR_TELNET_PORT = "telnet-port";
     private static final String ATTR_BOARD_CONFIG = "board-config";
-    public static final String TAG_CUSTOM_SCRIPT = "custom-ocd-script";
     public static final String ATTR_RESET_TYPE = "reset-type";
     public static final String ATTR_DOWNLOAD_TYPE = "download-type";
     private int gdbPort = DEF_GDB_PORT;
     private int telnetPort = DEF_TELNET_PORT;
     private String boardConfigFile;
-    private String customScriptTemplate; //TODO: D
     private DownloadType downloadType = DownloadType.ALWAYS;
     private ResetType resetType = ResetType.INIT;
 
@@ -54,16 +58,38 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
     }
 
     public enum ResetType {
-        INIT,  //TODO: U
-        NONE,  //TODO: U
-        RESET, //TODO: U
-        HALT,  //TODO: U
-        CUSTOM_SCRIPT;   //TODO: U
+        INIT {
+            @Override
+            public String getCommand() {
+                return "reset init;";
+            }
+        },  //TODO: U
+        NONE {
+            @Override
+            public String getCommand() {
+                return "";
+            }
+        },  //TODO: U
+        RESET {
+            @Override
+            public String getCommand() {
+                return "reset";
+            }
+        }, //TODO: U
+        HALT {
+            @Override
+            public String getCommand() {
+                return "reset halt";
+            }
+        };  //TODO: U
 
         @Override
         public String toString() {
             return toBeautyString(super.toString());
         }
+
+        public abstract String getCommand();
+
     }
 
 
@@ -84,13 +110,6 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
         boardConfigFile = element.getAttributeValue(ATTR_BOARD_CONFIG, NAMESPACE);
         gdbPort = readIntAttr(element, ATTR_GDB_PORT, DEF_GDB_PORT);
         telnetPort = readIntAttr(element, ATTR_TELNET_PORT, DEF_TELNET_PORT);
-        Element customScriptElement = element.getChild(TAG_CUSTOM_SCRIPT, NAMESPACE);
-
-        if (customScriptElement != null) {
-            customScriptTemplate = customScriptElement.getText();
-        } else {
-            customScriptTemplate = "";
-        }
         resetType = readEnumAttr(element, ATTR_RESET_TYPE, ResetType.INIT);
         downloadType = readEnumAttr(element, ATTR_DOWNLOAD_TYPE, DownloadType.ALWAYS);
     }
@@ -121,8 +140,6 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
         if (boardConfigFile != null) {
             element.setAttribute(ATTR_BOARD_CONFIG, boardConfigFile, NAMESPACE);
         }
-        Element customScriptElement = new Element(TAG_CUSTOM_SCRIPT, NAMESPACE).addContent(customScriptTemplate);
-        element.addContent(customScriptElement);
         element.setAttribute(ATTR_RESET_TYPE, resetType.name(), NAMESPACE);
         element.setAttribute(ATTR_DOWNLOAD_TYPE, downloadType.name(), NAMESPACE);
     }
@@ -167,14 +184,6 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
 
     public void setBoardConfigFile(String boardConfigFile) {
         this.boardConfigFile = boardConfigFile;
-    }
-
-    public String getCustomScriptTemplate() {
-        return customScriptTemplate;
-    }
-
-    public void setCustomScriptTemplate(String customScriptTemplate) {
-        this.customScriptTemplate = customScriptTemplate;
     }
 
     public DownloadType getDownloadType() {

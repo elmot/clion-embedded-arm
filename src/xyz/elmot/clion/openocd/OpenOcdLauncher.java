@@ -1,11 +1,5 @@
 package xyz.elmot.clion.openocd;
 
-import java.io.File;
-import java.util.List;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.CommandLineState;
 import com.intellij.execution.configurations.GeneralCommandLine;
@@ -38,6 +32,13 @@ import com.jetbrains.cidr.execution.testing.CidrLauncher;
 import org.jdesktop.swingx.util.OS;
 import org.jetbrains.annotations.NotNull;
 import xyz.elmot.clion.openocd.OpenOcdComponent.STATUS;
+import xyz.elmot.clion.openocd.OpenOcdConfiguration.DownloadType;
+
+import java.io.File;
+import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * (c) elmot on 19.10.2017.
@@ -170,13 +171,21 @@ class OpenOcdLauncher extends CidrLauncher {
     public CidrDebugProcess startDebugProcess(@NotNull CommandLineState commandLineState,
                                               @NotNull XDebugSession xDebugSession) throws ExecutionException {
 
-        File runFile = findRunFile(commandLineState);
+        File runFile = null;
+        if (openOcdConfiguration.getDownloadType() != DownloadType.NONE) {
+            runFile = findRunFile(commandLineState);
+            if (openOcdConfiguration.getDownloadType() == DownloadType.UPDATED_ONLY) {
+                if (OpenOcdComponent.isLatestUploaded(runFile)) {
+                    runFile = null;
+                }
+            }
+        }
 
         try {
             xDebugSession.stop();
             OpenOcdComponent openOcdComponent = findOpenOcdAction(commandLineState.getEnvironment().getProject());
             openOcdComponent.stopOpenOcd();
-            Future<STATUS> downloadResult = openOcdComponent.startOpenOcd(openOcdConfiguration, runFile, "reset init");
+            Future<STATUS> downloadResult = openOcdComponent.startOpenOcd(openOcdConfiguration, runFile, openOcdConfiguration.getResetType().getCommand());
 
             ThrowableComputable<STATUS, ExecutionException> process = () -> {
                 try {
