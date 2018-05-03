@@ -4,13 +4,15 @@ import com.intellij.execution.ui.CommonProgramParametersPanel;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VfsUtil;
-import com.intellij.ui.components.JBTextField;
 import com.intellij.ui.components.fields.IntegerField;
 import com.intellij.util.ui.GridBag;
 import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
 import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfigurationSettingsEditor;
 import com.jetbrains.cidr.cpp.execution.CMakeBuildConfigurationHelper;
+import org.jdesktop.swingx.JXRadioGroup;
 import org.jetbrains.annotations.NotNull;
+import xyz.elmot.clion.openocd.OpenOcdConfiguration.DownloadType;
+import xyz.elmot.clion.openocd.OpenOcdConfiguration.ResetType;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,7 +23,10 @@ public class OpenOcdConfigurationEditor extends CMakeAppRunConfigurationSettings
 
     private FileChooseInput boardConfigFile;
     private String openocdHome;
+    private JXRadioGroup<DownloadType> downloadGroup;
+    private JXRadioGroup<ResetType> resetGroup;
 
+    @SuppressWarnings("WeakerAccess")
     public OpenOcdConfigurationEditor(Project project, @NotNull CMakeBuildConfigurationHelper cMakeBuildConfigurationHelper) {
         super(project, cMakeBuildConfigurationHelper);
     }
@@ -39,6 +44,8 @@ public class OpenOcdConfigurationEditor extends CMakeAppRunConfigurationSettings
         telnetPort.validateContent();
         ocdConfiguration.setGdbPort(gdbPort.getValue());
         ocdConfiguration.setTelnetPort(telnetPort.getValue());
+        ocdConfiguration.setDownloadType(downloadGroup.getSelectedValue());
+        ocdConfiguration.setResetType(resetGroup.getSelectedValue());
     }
 
     @Override
@@ -54,15 +61,17 @@ public class OpenOcdConfigurationEditor extends CMakeAppRunConfigurationSettings
 
         gdbPort.setText("" + ocd.getGdbPort());
 
-        telnetPort.setText(""  + ocd.getTelnetPort());
+        telnetPort.setText("" + ocd.getTelnetPort());
+        downloadGroup.setSelectedValue(ocd.getDownloadType());
+        resetGroup.setSelectedValue(ocd.getResetType());
     }
 
     @Override
     protected void createEditorInner(JPanel panel, GridBag gridBag) {
         super.createEditorInner(panel, gridBag);
 
-        for (Component component: panel.getComponents()) {
-            if(component instanceof CommonProgramParametersPanel) {
+        for (Component component : panel.getComponents()) {
+            if (component instanceof CommonProgramParametersPanel) {
                 component.setVisible(false);//todo get rid of this hack
             }
         }
@@ -71,23 +80,26 @@ public class OpenOcdConfigurationEditor extends CMakeAppRunConfigurationSettings
         boardConfigFile = new FileChooseInput.BoardCfg("Board config", VfsUtil.getUserHomeDir(), this::getOpenocdHome);
         panel.add(boardConfigFile, gridBag.next().coverLine());
 
-        ((JBTextField) boardConfigFile.getChildComponent()).getEmptyText().setText("<use project default>");
-
-        JPanel portsPanel = new JPanel();
-        portsPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
+        JPanel portsPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
 
         gdbPort = addPortInput(portsPanel, "GDB port", OpenOcdConfiguration.DEF_GDB_PORT);
         portsPanel.add(Box.createHorizontalStrut(10));
 
-        telnetPort = addPortInput(portsPanel,"Telnet port",OpenOcdConfiguration.DEF_TELNET_PORT);
+        telnetPort = addPortInput(portsPanel, "Telnet port", OpenOcdConfiguration.DEF_TELNET_PORT);
 
         panel.add(portsPanel, gridBag.nextLine().next().coverLine());
 
+        panel.add(new JLabel("Download:"), gridBag.nextLine().next());
+        downloadGroup = new JXRadioGroup<>(DownloadType.values());
+        panel.add(downloadGroup, gridBag.next().fillCellHorizontally());
+        panel.add(new JLabel("Reset:"), gridBag.nextLine().next());
+        resetGroup = new JXRadioGroup<>(ResetType.values());
+        panel.add(resetGroup, gridBag.next());
     }
 
     private IntegerField addPortInput(JPanel portsPanel, String label, int defaultValue) {
         portsPanel.add(new JLabel(label + ": "));
-        IntegerField field = new IntegerField(label, 1024,65535);
+        IntegerField field = new IntegerField(label, 1024, 65535);
         field.setDefaultValue(defaultValue);
         field.setColumns(5);
         portsPanel.add(field);

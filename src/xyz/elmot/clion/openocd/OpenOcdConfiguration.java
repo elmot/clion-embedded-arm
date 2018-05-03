@@ -27,9 +27,65 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
     private static final String ATTR_GDB_PORT = "gdb-port";
     private static final String ATTR_TELNET_PORT = "telnet-port";
     private static final String ATTR_BOARD_CONFIG = "board-config";
+    public static final String ATTR_RESET_TYPE = "reset-type";
+    public static final String ATTR_DOWNLOAD_TYPE = "download-type";
+    public static final ResetType DEFAULT_RESET = ResetType.INIT;
     private int gdbPort = DEF_GDB_PORT;
     private int telnetPort = DEF_TELNET_PORT;
     private String boardConfigFile;
+    private DownloadType downloadType = DownloadType.ALWAYS;
+    private ResetType resetType = DEFAULT_RESET;
+
+    public enum DownloadType {
+
+        ALWAYS,
+        UPDATED_ONLY,
+        NONE;
+
+        @Override
+        public String toString() {
+            return toBeautyString(super.toString());
+        }
+    }
+
+    public static String toBeautyString(String obj) {
+        return StringUtil.toTitleCase(obj.toLowerCase().replace("_", " "));
+    }
+
+    public enum ResetType {
+        RUN {
+            @Override
+            public String getCommand() {
+                return "init;reset run;";
+            }
+        },
+        INIT {
+            @Override
+            public String getCommand() {
+                return "init;reset init;";
+            }
+        },
+        HALT {
+            @Override
+            public String getCommand() {
+                return "init;reset halt";
+            }
+        },
+        NONE {
+            @Override
+            public String getCommand() {
+                return "";
+            }
+        };
+
+        @Override
+        public String toString() {
+            return toBeautyString(super.toString());
+        }
+
+        public abstract String getCommand();
+
+    }
 
 
     @SuppressWarnings("WeakerAccess")
@@ -47,14 +103,27 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
     public void readExternal(@NotNull Element element) throws InvalidDataException {
         super.readExternal(element);
         boardConfigFile = element.getAttributeValue(ATTR_BOARD_CONFIG, NAMESPACE);
-        gdbPort = intAttribute(element, ATTR_GDB_PORT, DEF_GDB_PORT);
-        telnetPort = intAttribute(element, ATTR_TELNET_PORT, DEF_TELNET_PORT);
+        gdbPort = readIntAttr(element, ATTR_GDB_PORT, DEF_GDB_PORT);
+        telnetPort = readIntAttr(element, ATTR_TELNET_PORT, DEF_TELNET_PORT);
+        resetType = readEnumAttr(element, ATTR_RESET_TYPE, DEFAULT_RESET);
+        downloadType = readEnumAttr(element, ATTR_DOWNLOAD_TYPE, DownloadType.ALWAYS);
     }
 
-    private int intAttribute(@NotNull Element element, String name, int def) {
+    private int readIntAttr(@NotNull Element element, String name, int def) {
         String s = element.getAttributeValue(name, NAMESPACE);
         if (StringUtil.isEmpty(s)) return def;
         return Integer.parseUnsignedInt(s);
+    }
+
+    private <T extends Enum> T readEnumAttr(@NotNull Element element, String name, T def) {
+        String s = element.getAttributeValue(name, NAMESPACE);
+        if (StringUtil.isEmpty(s)) return def;
+        try {
+            //noinspection unchecked
+            return (T) Enum.valueOf(def.getClass(), s);
+        } catch (Throwable t) {
+            return def;
+        }
     }
 
     @Override
@@ -65,6 +134,8 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
         if (boardConfigFile != null) {
             element.setAttribute(ATTR_BOARD_CONFIG, boardConfigFile, NAMESPACE);
         }
+        element.setAttribute(ATTR_RESET_TYPE, resetType.name(), NAMESPACE);
+        element.setAttribute(ATTR_DOWNLOAD_TYPE, downloadType.name(), NAMESPACE);
     }
 
     @Override
@@ -107,5 +178,21 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
 
     public void setBoardConfigFile(String boardConfigFile) {
         this.boardConfigFile = boardConfigFile;
+    }
+
+    public DownloadType getDownloadType() {
+        return downloadType;
+    }
+
+    public void setDownloadType(DownloadType downloadType) {
+        this.downloadType = downloadType;
+    }
+
+    public ResetType getResetType() {
+        return resetType;
+    }
+
+    public void setResetType(ResetType resetType) {
+        this.resetType = resetType;
     }
 }

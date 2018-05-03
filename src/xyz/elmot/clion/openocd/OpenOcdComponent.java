@@ -28,15 +28,20 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.Objects;
 import java.util.concurrent.Future;
 
 public class OpenOcdComponent {
 
+    @SuppressWarnings("WeakerAccess")
     public static final String SCRIPTS_PATH_SHORT = "scripts";
+    @SuppressWarnings("WeakerAccess")
     public static final String SCRIPTS_PATH_LONG = "share/openocd/" + SCRIPTS_PATH_SHORT;
+    @SuppressWarnings("WeakerAccess")
     public static final String BIN_OPENOCD;
+    private static final Key<Long> UPLOAD_LOAD_COUNT_KEY = new Key<>(OpenOcdConfiguration.class.getName() + "#LAST_DOWNLOAD_MOD_COUNT");
     private static final String ERROR_PREFIX = "Error: ";
-    private static final String[] IGNORED_STRINGS = { //todo take into use
+    private static final String[] IGNORED_STRINGS = {
             "clearing lockup after double fault",
             "LIB_USB_NOT_SUPPORTED"};
 
@@ -44,6 +49,7 @@ public class OpenOcdComponent {
             "** Programming Failed **", "communication failure", "** OpenOCD init failed **"};
     private static final String FLASH_SUCCESS_TEXT = "** Programming Finished **";
     private static final Logger LOG = Logger.getInstance(OpenOcdComponent.class);
+    private static final String ADAPTER_SPEED = "adapter speed";
 
     static {
         BIN_OPENOCD = "bin/openocd" + (OS.isWindows() ? ".exe" : "");
@@ -58,7 +64,7 @@ public class OpenOcdComponent {
 
     @SuppressWarnings("WeakerAccess")
     @NotNull
-    public static GeneralCommandLine createOcdCommandLine(OpenOcdConfiguration config, File fileToLoad,@Nullable String additionalCommand, boolean shutdown) throws ConfigurationException {
+    public static GeneralCommandLine createOcdCommandLine(OpenOcdConfiguration config, File fileToLoad, @Nullable String additionalCommand, boolean shutdown) throws ConfigurationException {
         Project project = config.getProject();
         OpenOcdSettingsState ocdSettings = project.getComponent(OpenOcdSettingsState.class);
         if (StringUtil.isEmpty(config.getBoardConfigFile())) {
@@ -125,7 +131,7 @@ public class OpenOcdComponent {
             LOG.info("openOcd is already run");
             return new FutureResult<>(STATUS.FLASH_ERROR);
         }
-
+        VirtualFile virtualFile = fileToLoad != null ? VfsUtil.findFileByIoFile(fileToLoad, true) : null;
         Project project = config.getProject();
         try {
             process = new OSProcessHandler(commandLine) {
@@ -134,7 +140,7 @@ public class OpenOcdComponent {
                     return true;
                 }
             };
-            DownloadFollower downloadFollower = new DownloadFollower();
+            DownloadFollower downloadFollower = new DownloadFollower(virtualFile);
             process.addProcessListener(downloadFollower);
             RunContentExecutor openOCDConsole = new RunContentExecutor(project, process)
                     .withTitle("OpenOCD console")
@@ -149,10 +155,6 @@ public class OpenOcdComponent {
             ExecutionErrorDialog.show(e, "OpenOCD start failed", project);
             return new FutureResult<>(STATUS.FLASH_ERROR);
         }
-    }
-
-    public boolean isRun() {
-        return process != null && !process.isProcessTerminated();
     }
 
     public enum STATUS {
@@ -196,6 +198,12 @@ public class OpenOcdComponent {
     }
 
     private class DownloadFollower extends FutureResult<STATUS> implements ProcessListener {
+        @Nullable
+        private final VirtualFile vRunFile;
+
+        DownloadFollower(@Nullable VirtualFile vRunFile) {
+            this.vRunFile = vRunFile;
+        }
 
         @Override
         public void startNotified(@NotNull ProcessEvent event) {
@@ -223,9 +231,16 @@ public class OpenOcdComponent {
             if (containsOneOf(text, FAIL_STRINGS)) {
                 reset();
                 set(STATUS.FLASH_ERROR);
-            } else if (text.equals(FLASH_SUCCESS_TEXT)) {
+            } else if (vRunFile == null && text.startsWith(ADAPTER_SPEED)) {
                 reset();
                 set(STATUS.FLASH_SUCCESS);
+            } else if (text.equals(FLASH_SUCCESS_TEXT)) {
+                reset();
+                if (vRunFile != null) {
+                    UPLOAD_LOAD_COUNT_KEY.set(vRunFile, vRunFile.getModificationCount());
+                }
+                set(STATUS.FLASH_SUCCESS);
+
             } else if (text.startsWith(ERROR_PREFIX) && !containsOneOf(text, IGNORED_STRINGS)) {
                 reset();
                 set(STATUS.FLASH_WARNING);
@@ -242,5 +257,12 @@ public class OpenOcdComponent {
         }
         return false;
 
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    public static boolean isLatestUploaded(File runFile) {
+        VirtualFile vRunFile = VfsUtil.findFileByIoFile(runFile, true);
+        Long latestDownloadModCount = UPLOAD_LOAD_COUNT_KEY.get(vRunFile);
+        return vRunFile != null && Objects.equals(latestDownloadModCount, vRunFile.getModificationCount());
     }
 }
