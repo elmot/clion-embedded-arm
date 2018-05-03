@@ -202,8 +202,9 @@ class OpenOcdLauncher extends CidrLauncher {
                     throw new ExecutionException(e);
                 }
             };
+            String progressTitle = runFile == null ? "Start OpenOCD" :"Firmware Download";
             STATUS downloadStatus = progressManager.runProcessWithProgressSynchronously(
-                    process, "Firmware Download", true, getProject());
+                    process, progressTitle, true, getProject());
             if (downloadStatus == STATUS.FLASH_ERROR) {
                 downloadResult.cancel(true);
                 throw new ExecutionException("OpenOCD cancelled");
