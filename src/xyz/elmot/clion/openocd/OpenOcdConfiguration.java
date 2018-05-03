@@ -44,9 +44,9 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
 
     public enum DownloadType {
 
-        ALWAYS,          //TODO: U
-        UPDATED_ONLY,   //TODO: U
-        NONE;           //TODO: U
+        ALWAYS,
+        UPDATED_ONLY,
+        NONE;
 
         @Override
         public String toString() {
@@ -64,25 +64,25 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
             public String getCommand() {
                 return "init;reset run;";
             }
-        }, //TODO: U
+        },
         INIT {
             @Override
             public String getCommand() {
                 return "init;reset init;";
             }
-        },  //TODO: U
+        },
         HALT {
             @Override
             public String getCommand() {
                 return "init;reset halt";
             }
-        },  //TODO: U
+        },
         NONE {
             @Override
             public String getCommand() {
                 return "";
             }
-        };  //TODO: U
+        };
 
         @Override
         public String toString() {
@@ -128,7 +128,6 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
             //noinspection unchecked
             return (T) Enum.valueOf(def.getClass(), s);
         } catch (Throwable t) {
-            //todo logging
             return def;
         }
     }

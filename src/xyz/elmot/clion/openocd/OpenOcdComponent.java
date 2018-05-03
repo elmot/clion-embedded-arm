@@ -41,7 +41,7 @@ public class OpenOcdComponent {
     public static final String BIN_OPENOCD;
     private static final Key<Long> UPLOAD_LOAD_COUNT_KEY = new Key<>(OpenOcdConfiguration.class.getName() + "#LAST_DOWNLOAD_MOD_COUNT");
     private static final String ERROR_PREFIX = "Error: ";
-    private static final String[] IGNORED_STRINGS = { //todo take into use
+    private static final String[] IGNORED_STRINGS = {
             "clearing lockup after double fault",
             "LIB_USB_NOT_SUPPORTED"};
 
