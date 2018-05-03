@@ -174,10 +174,9 @@ class OpenOcdLauncher extends CidrLauncher {
         File runFile = null;
         if (openOcdConfiguration.getDownloadType() != DownloadType.NONE) {
             runFile = findRunFile(commandLineState);
-            if (openOcdConfiguration.getDownloadType() == DownloadType.UPDATED_ONLY) {
-                if (OpenOcdComponent.isLatestUploaded(runFile)) {
-                    runFile = null;
-                }
+            if (openOcdConfiguration.getDownloadType() == DownloadType.UPDATED_ONLY &&
+                    OpenOcdComponent.isLatestUploaded(runFile)) {
+                runFile = null;
             }
         }
 
@@ -191,9 +190,9 @@ class OpenOcdLauncher extends CidrLauncher {
             ThrowableComputable<STATUS, ExecutionException> process = () -> {
                 try {
                     progressManager.getProgressIndicator().setIndeterminate(true);
-                    while(true) {
+                    while (true) {
                         try {
-                            return downloadResult.get(500,TimeUnit.MILLISECONDS);
+                            return downloadResult.get(500, TimeUnit.MILLISECONDS);
                         } catch (TimeoutException ignored) {
                             ProgressManager.checkCanceled();
                         }
@@ -202,7 +201,7 @@ class OpenOcdLauncher extends CidrLauncher {
                     throw new ExecutionException(e);
                 }
             };
-            String progressTitle = runFile == null ? "Start OpenOCD" :"Firmware Download";
+            String progressTitle = runFile == null ? "Start OpenOCD" : "Firmware Download";
             STATUS downloadStatus = progressManager.runProcessWithProgressSynchronously(
                     process, progressTitle, true, getProject());
             if (downloadStatus == STATUS.FLASH_ERROR) {

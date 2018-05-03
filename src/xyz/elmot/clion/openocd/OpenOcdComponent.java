@@ -49,7 +49,7 @@ public class OpenOcdComponent {
             "** Programming Failed **", "communication failure", "** OpenOCD init failed **"};
     private static final String FLASH_SUCCESS_TEXT = "** Programming Finished **";
     private static final Logger LOG = Logger.getInstance(OpenOcdComponent.class);
-    public static final String ADAPTER_SPEED = "adapter speed";
+    private static final String ADAPTER_SPEED = "adapter speed";
 
     static {
         BIN_OPENOCD = "bin/openocd" + (OS.isWindows() ? ".exe" : "");
@@ -198,12 +198,12 @@ public class OpenOcdComponent {
     }
 
     private class DownloadFollower extends FutureResult<STATUS> implements ProcessListener {
+        @Nullable
+        private final VirtualFile vRunFile;
+
         DownloadFollower(@Nullable VirtualFile vRunFile) {
             this.vRunFile = vRunFile;
         }
-
-        @Nullable
-        final VirtualFile vRunFile;
 
         @Override
         public void startNotified(@NotNull ProcessEvent event) {
