@@ -35,11 +35,12 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
     private static final String ATTR_BOARD_CONFIG = "board-config";
     public static final String ATTR_RESET_TYPE = "reset-type";
     public static final String ATTR_DOWNLOAD_TYPE = "download-type";
+    public static final ResetType DEFAULT_RESET = ResetType.INIT;
     private int gdbPort = DEF_GDB_PORT;
     private int telnetPort = DEF_TELNET_PORT;
     private String boardConfigFile;
     private DownloadType downloadType = DownloadType.ALWAYS;
-    private ResetType resetType = ResetType.INIT;
+    private ResetType resetType = DEFAULT_RESET;
 
     public enum DownloadType {
 
@@ -58,28 +59,28 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
     }
 
     public enum ResetType {
+        RUN {
+            @Override
+            public String getCommand() {
+                return "init;reset run;";
+            }
+        }, //TODO: U
         INIT {
             @Override
             public String getCommand() {
-                return "reset init;";
+                return "init;reset init;";
+            }
+        },  //TODO: U
+        HALT {
+            @Override
+            public String getCommand() {
+                return "init;reset halt";
             }
         },  //TODO: U
         NONE {
             @Override
             public String getCommand() {
                 return "";
-            }
-        },  //TODO: U
-        RESET {
-            @Override
-            public String getCommand() {
-                return "reset";
-            }
-        }, //TODO: U
-        HALT {
-            @Override
-            public String getCommand() {
-                return "reset halt";
             }
         };  //TODO: U
 
@@ -110,7 +111,7 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
         boardConfigFile = element.getAttributeValue(ATTR_BOARD_CONFIG, NAMESPACE);
         gdbPort = readIntAttr(element, ATTR_GDB_PORT, DEF_GDB_PORT);
         telnetPort = readIntAttr(element, ATTR_TELNET_PORT, DEF_TELNET_PORT);
-        resetType = readEnumAttr(element, ATTR_RESET_TYPE, ResetType.INIT);
+        resetType = readEnumAttr(element, ATTR_RESET_TYPE, DEFAULT_RESET);
         downloadType = readEnumAttr(element, ATTR_DOWNLOAD_TYPE, DownloadType.ALWAYS);
     }
 
