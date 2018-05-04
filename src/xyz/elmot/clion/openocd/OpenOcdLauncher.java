@@ -32,6 +32,7 @@ import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import com.jetbrains.cidr.execution.debugger.CidrDebugProcess;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerCommandException;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriver;
+import com.jetbrains.cidr.execution.debugger.backend.gdb.GDBDriver;
 import com.jetbrains.cidr.execution.debugger.remote.CidrRemoteDebugParameters;
 import com.jetbrains.cidr.execution.debugger.remote.CidrRemoteGDBDebugProcess;
 import com.jetbrains.cidr.execution.testing.CidrLauncher;
@@ -112,7 +113,79 @@ class OpenOcdLauncher extends CidrLauncher {
                         remoteDebugParameters,
                         xDebugSession,
                         commandLineState.getConsoleBuilder(),
-                        project1 -> new Filter[0]);
+                        project1 -> new Filter[0]) {
+                    @Override
+                    public void handleAttached(int i) {
+                        super.handleAttached(i);
+                    }
+
+                    @Override
+                    public void handleConnected(@NotNull String s) {
+                        XDebugSession session = getSession();
+                        session.pause();
+                        postCommand(drv -> {
+                            try {
+                                ProgressManager.getInstance().runProcess(() -> {
+                                    while (drv.getState() != DebuggerDriver.TargetState.SUSPENDED) {
+                                        Thread.yield();
+                                    }
+                                }, null);
+                                drv.executeConsoleCommand("load");
+                                drv.executeConsoleCommand("monitor reset init");
+                                session.resume();
+                            } catch (DebuggerCommandException exception) {
+                                throw new ExecutionException(exception);
+                            }
+                        });
+
+                        super.handleConnected(s);
+                    }
+
+                    @Override
+                    public void handleRunning() {
+                        super.handleRunning();
+                    }
+
+                    @NotNull
+                    @Override
+                    protected DebuggerDriver.Inferior doLoadTarget(DebuggerDriver debuggerDriver)
+                            throws ExecutionException {
+                        DebuggerDriver.Inferior inferior = super.doLoadTarget(debuggerDriver);
+/*
+                        DebuggerDriver.Inferior myInferior =
+                                debuggerDriver.new Inferior(inferior.getId()) {
+                            @Override
+                            protected long startImpl() throws ExecutionException {
+                                long start = inferior.start();
+                                try {
+                                    getDriver().executeConsoleCommand("load");
+
+                                } catch (DebuggerCommandException e) {
+                                    throw new ExecutionException(e);
+                                }
+                                return start;
+                            }
+
+                            @Override
+                            protected void detachImpl() throws ExecutionException {
+                                inferior.detach();
+                            }
+
+                            @Override
+                            protected boolean destroyImpl() throws ExecutionException {
+                                return inferior.destroy();
+                            }
+                        };
+*/
+//                        return myInferior;
+                        return inferior;
+                    }
+
+                    @Override
+                    public void addSymbolsFile(File file, File file1) {
+                        super.addSymbolsFile(file, file1);
+                    }
+                };
         debugProcess.getProcessHandler().addProcessListener(new ProcessAdapter() {
             @Override
             public void processWillTerminate(@NotNull ProcessEvent event, boolean willBeDestroyed) {
@@ -176,7 +249,7 @@ class OpenOcdLauncher extends CidrLauncher {
             xDebugSession.stop();
             OpenOcdComponent openOcdComponent = findOpenOcdAction(commandLineState.getEnvironment().getProject());
             openOcdComponent.stopOpenOcd();
-            Future<STATUS> downloadResult = openOcdComponent.startOpenOcd(openOcdConfiguration, runFile, "reset init");
+            Future<STATUS> downloadResult = openOcdComponent.startOpenOcd(openOcdConfiguration, null, null);
 
             ThrowableComputable<STATUS, ExecutionException> process = () -> {
                 try {
