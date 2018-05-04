@@ -207,6 +207,7 @@ public class OpenOcdComponent {
 
         @Override
         public void startNotified(@NotNull ProcessEvent event) {
+            //nothing to do
         }
 
         @Override

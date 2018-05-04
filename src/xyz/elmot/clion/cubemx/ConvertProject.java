@@ -14,6 +14,7 @@ import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.util.exception.RootRuntimeException;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
 import org.apache.commons.lang.text.StrSubstitutor;
@@ -113,7 +114,7 @@ public class ConvertProject extends AnAction {
                     try {
                         cMakeWorkspace.waitForReloadsToFinish();
                     } catch (TimeoutException e) {
-                        throw new RuntimeException(e);
+                        throw new RootRuntimeException(e);
                     }
                     modifyCMakeConfigs(project, projectData);
 
