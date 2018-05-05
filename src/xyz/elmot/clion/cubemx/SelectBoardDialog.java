@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 
 import static xyz.elmot.clion.openocd.OpenOcdComponent.require;
 
-class SelectBoardDialog extends DialogWrapper {
+public class SelectBoardDialog extends DialogWrapper {
     private static Logger LOGGER = Logger.getInstance(DialogWrapper.class);
     private final String[] values;
     private int result = 0;
@@ -42,7 +42,7 @@ class SelectBoardDialog extends DialogWrapper {
         JBList<String> boardList = new JBList<>(values);
         boardList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         boardList.setSelectedIndex(result);
-        boardList.addListSelectionListener(e -> result = e.getFirstIndex());
+        boardList.addListSelectionListener(e -> result = boardList.getSelectedIndex());
         boardList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -55,7 +55,7 @@ class SelectBoardDialog extends DialogWrapper {
         return new JBScrollPane(boardList);
     }
 
-    public static String findBoardByPriority(ProjectData projectData, Project project) {
+    public static String selectBoardByPriority(ProjectData projectData, Project project) {
         try {
             List<Pair<String, Integer>> keywordWeight = new ArrayList<>();
             String board = Objects.toString(projectData.getBoard(), "").toUpperCase();

@@ -7,7 +7,7 @@ import java.util.Map;
  * (c) elmot on 28.9.2017.
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
-class ProjectData {
+public class ProjectData {
     private String projectName;
     private String linkerScript;
     private String mcuFamily;

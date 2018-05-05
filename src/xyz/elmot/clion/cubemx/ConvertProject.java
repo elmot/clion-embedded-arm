@@ -22,6 +22,7 @@ import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.xpath.XPath;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import xyz.elmot.clion.openocd.Informational;
 import xyz.elmot.clion.openocd.OpenOcdConfiguration;
 import xyz.elmot.clion.openocd.OpenOcdConfigurationType;
@@ -54,28 +55,8 @@ public class ConvertProject extends AnAction {
     }
 
     public static void updateProject(Project project) {
-        if (project == null) return;
-        Element cProject = detectAndLoadFile(project, CPROJECT_FILE_NAME);
-        Element dotProject = detectAndLoadFile(project, PROJECT_FILE_NAME);
-        if (dotProject == null || cProject == null) {
-            return;
-        }
-        Context context = new Context(cProject);
-        ProjectData projectData = new ProjectData();
-        //noinspection ConstantConditions
-        projectData.setProjectName(dotProject.getChild("name").getText());
-        try {
-            String linkerScript = fetchValueBySuperClass(context, "fr.ac6.managedbuild.tool.gnu.cross.c.linker.script");
-            projectData.setLinkerScript(linkerScript.replace("../", ""));
-            projectData.setMcuFamily(fetchValueBySuperClass(context, "fr.ac6.managedbuild.option.gnu.cross.mcu"));
-            projectData.setLinkerFlags(fetchValueBySuperClass(context, "gnu.c.link.option.ldflags"));
-            projectData.setBoard(fetchValueBySuperClass(context, "fr.ac6.managedbuild.option.gnu.cross.board"));
-            projectData.setDefines(loadDefines(context));
-            projectData.setIncludes(loadIncludes(context));
-            projectData.setSources(loadSources(context));
-        } catch (JDOMException e) {
-            Messages.showErrorDialog(project, "Xml data error", String.format("XML data retrieval error\n Key: %s ", context.currentKey));
-        }
+        ProjectData projectData = loadProjectData(project);
+        if (projectData == null) return;
 
         Application application = ApplicationManager.getApplication();
         application.saveAll();
@@ -127,6 +108,33 @@ public class ConvertProject extends AnAction {
         );
     }
 
+    @Nullable
+    public static ProjectData loadProjectData(Project project) {
+        if (project == null) return null;
+        Element cProject = detectAndLoadFile(project, CPROJECT_FILE_NAME);
+        Element dotProject = detectAndLoadFile(project, PROJECT_FILE_NAME);
+        if (dotProject == null || cProject == null) {
+            return null;
+        }
+        Context context = new Context(cProject);
+        ProjectData projectData = new ProjectData();
+        //noinspection ConstantConditions
+        projectData.setProjectName(dotProject.getChild("name").getText());
+        try {
+            String linkerScript = fetchValueBySuperClass(context, "fr.ac6.managedbuild.tool.gnu.cross.c.linker.script");
+            projectData.setLinkerScript(linkerScript.replace("../", ""));
+            projectData.setMcuFamily(fetchValueBySuperClass(context, "fr.ac6.managedbuild.option.gnu.cross.mcu"));
+            projectData.setLinkerFlags(fetchValueBySuperClass(context, "gnu.c.link.option.ldflags"));
+            projectData.setBoard(fetchValueBySuperClass(context, "fr.ac6.managedbuild.option.gnu.cross.board"));
+            projectData.setDefines(loadDefines(context));
+            projectData.setIncludes(loadIncludes(context));
+            projectData.setSources(loadSources(context));
+        } catch (JDOMException e) {
+            Messages.showErrorDialog(project, "Xml data error", String.format("XML data retrieval error\n Key: %s ", context.currentKey));
+        }
+        return projectData;
+    }
+
     @NotNull
     private static String loadCmakeTemplateFromResources() throws IOException {
         return FileUtil.loadTextAndClose(ConvertProject.class.getResourceAsStream("tmpl_CMakeLists.txt"));
@@ -156,7 +164,7 @@ public class ConvertProject extends AnAction {
             OpenOcdConfiguration configuration = (OpenOcdConfiguration) newRunConfig.getConfiguration();
             configuration.setupDefaultTargetAndExecutable();
             ApplicationManager.getApplication().invokeLater(() -> {
-                configuration.setBoardConfigFile(SelectBoardDialog.findBoardByPriority(projectData, project));
+                configuration.setBoardConfigFile(SelectBoardDialog.selectBoardByPriority(projectData, project));
                 ApplicationManager.getApplication().runWriteAction(() ->
                 {
                     runManager.addConfiguration(newRunConfig);
