@@ -55,6 +55,7 @@ public class ConvertProject extends AnAction {
     }
 
     public static void updateProject(Project project) {
+        if (project == null) return;
         ProjectData projectData = loadProjectData(project);
         if (projectData == null) return;
 
@@ -110,7 +111,6 @@ public class ConvertProject extends AnAction {
 
     @Nullable
     public static ProjectData loadProjectData(Project project) {
-        if (project == null) return null;
         Element cProject = detectAndLoadFile(project, CPROJECT_FILE_NAME);
         Element dotProject = detectAndLoadFile(project, PROJECT_FILE_NAME);
         if (dotProject == null || cProject == null) {
