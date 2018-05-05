@@ -5,17 +5,22 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.ui.components.fields.IntegerField;
+import com.intellij.ui.components.panels.HorizontalBox;
 import com.intellij.util.ui.GridBag;
 import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
 import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfigurationSettingsEditor;
 import com.jetbrains.cidr.cpp.execution.CMakeBuildConfigurationHelper;
 import org.jdesktop.swingx.JXRadioGroup;
 import org.jetbrains.annotations.NotNull;
+import xyz.elmot.clion.cubemx.ConvertProject;
+import xyz.elmot.clion.cubemx.ProjectData;
+import xyz.elmot.clion.cubemx.SelectBoardDialog;
 import xyz.elmot.clion.openocd.OpenOcdConfiguration.DownloadType;
 import xyz.elmot.clion.openocd.OpenOcdConfiguration.ResetType;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 
 public class OpenOcdConfigurationEditor extends CMakeAppRunConfigurationSettingsEditor {
     private IntegerField gdbPort;
@@ -58,7 +63,6 @@ public class OpenOcdConfigurationEditor extends CMakeAppRunConfigurationSettings
 
         boardConfigFile.setText(ocd.getBoardConfigFile());
 
-
         gdbPort.setText("" + ocd.getGdbPort());
 
         telnetPort.setText("" + ocd.getTelnetPort());
@@ -76,9 +80,8 @@ public class OpenOcdConfigurationEditor extends CMakeAppRunConfigurationSettings
             }
         }
 
-        panel.add(new JLabel("Board config file"), gridBag.nextLine().next());
-        boardConfigFile = new FileChooseInput.BoardCfg("Board config", VfsUtil.getUserHomeDir(), this::getOpenocdHome);
-        panel.add(boardConfigFile, gridBag.next().coverLine());
+        JPanel boardPanel = createBoardSelector(panel, gridBag);
+        panel.add(boardPanel, gridBag.next().coverLine());
 
         JPanel portsPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
 
@@ -95,6 +98,25 @@ public class OpenOcdConfigurationEditor extends CMakeAppRunConfigurationSettings
         panel.add(new JLabel("Reset:"), gridBag.nextLine().next());
         resetGroup = new JXRadioGroup<>(ResetType.values());
         panel.add(resetGroup, gridBag.next());
+    }
+
+    @NotNull
+    private JPanel createBoardSelector(JPanel panel, GridBag gridBag) {
+        panel.add(new JLabel("Board config file"), gridBag.nextLine().next());
+        JPanel boardPanel = new HorizontalBox();
+        boardPanel.add(new JButton(new AbstractAction("Assist...") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ProjectData projectData = ConvertProject.loadProjectData(myProject);
+                String selectedBoard = SelectBoardDialog.selectBoardByPriority(projectData, myProject);
+                if(selectedBoard!=null && !"".equals(selectedBoard)) {
+                    boardConfigFile.setText(selectedBoard);
+                }
+            }
+        }));
+        boardConfigFile = new FileChooseInput.BoardCfg("Board config", VfsUtil.getUserHomeDir(), this::getOpenocdHome);
+        boardPanel.add(boardConfigFile);
+        return boardPanel;
     }
 
     private IntegerField addPortInput(JPanel portsPanel, String label, int defaultValue) {

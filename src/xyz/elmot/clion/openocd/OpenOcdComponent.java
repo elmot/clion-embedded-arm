@@ -102,7 +102,7 @@ public class OpenOcdComponent {
     }
 
     @NotNull
-    private static VirtualFile require(VirtualFile fileToCheck) throws ConfigurationException {
+    public static VirtualFile require(VirtualFile fileToCheck) throws ConfigurationException {
         if (fileToCheck == null) {
             openOcdNotFound();
         }

@@ -52,13 +52,13 @@ public class OpenOcdConfigurationType extends CMakeRunConfigurationType {
     }
 
     @Override
-    public SettingsEditor<? extends CMakeAppRunConfiguration> createEditor(@NotNull Project project) {
+    public OpenOcdConfigurationEditor createEditor(@NotNull Project project) {
         return new OpenOcdConfigurationEditor(project, getHelper(project));
     }
 
     @NotNull
     @Override
-    protected CMakeAppRunConfiguration createRunConfiguration(@NotNull Project project, @NotNull ConfigurationFactory configurationFactory) {
+    protected OpenOcdConfiguration createRunConfiguration(@NotNull Project project, @NotNull ConfigurationFactory configurationFactory) {
         return new OpenOcdConfiguration(project, factory, "");
     }
 }
