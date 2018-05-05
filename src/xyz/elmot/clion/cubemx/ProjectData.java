@@ -17,6 +17,7 @@ class ProjectData {
     private String includes;
     private String sources;
     private String mcpu;
+    private String board;
 
     public void setProjectName(String projectName) {
         this.projectName = projectName;
@@ -88,6 +89,10 @@ class ProjectData {
         return mcpu;
     }
 
+    public String getBoard() {
+        return board;
+    }
+
     public void setDefines(String defines) {
         this.defines = defines;
     }
@@ -98,6 +103,10 @@ class ProjectData {
 
     public void setSources(String sources) {
         this.sources = sources;
+    }
+
+    public void setBoard(String board) {
+        this.board = board;
     }
 
     @Override

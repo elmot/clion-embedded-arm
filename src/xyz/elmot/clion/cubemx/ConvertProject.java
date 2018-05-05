@@ -16,7 +16,6 @@ import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.exception.RootRuntimeException;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
-import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.jdom.Attribute;
 import org.jdom.Element;
@@ -24,6 +23,7 @@ import org.jdom.JDOMException;
 import org.jdom.xpath.XPath;
 import org.jetbrains.annotations.NotNull;
 import xyz.elmot.clion.openocd.Informational;
+import xyz.elmot.clion.openocd.OpenOcdConfiguration;
 import xyz.elmot.clion.openocd.OpenOcdConfigurationType;
 
 import java.io.IOException;
@@ -69,7 +69,7 @@ public class ConvertProject extends AnAction {
             projectData.setLinkerScript(linkerScript.replace("../", ""));
             projectData.setMcuFamily(fetchValueBySuperClass(context, "fr.ac6.managedbuild.option.gnu.cross.mcu"));
             projectData.setLinkerFlags(fetchValueBySuperClass(context, "gnu.c.link.option.ldflags"));
-
+            projectData.setBoard(fetchValueBySuperClass(context, "fr.ac6.managedbuild.option.gnu.cross.board"));
             projectData.setDefines(loadDefines(context));
             projectData.setIncludes(loadIncludes(context));
             projectData.setSources(loadSources(context));
@@ -153,14 +153,17 @@ public class ConvertProject extends AnAction {
         if (runManager.findConfigurationByTypeAndName(OpenOcdConfigurationType.TYPE_ID, name) == null) {
             RunnerAndConfigurationSettings newRunConfig = runManager.createRunConfiguration(name, factory);
             newRunConfig.setSingleton(true);
-            ((CMakeAppRunConfiguration) newRunConfig.getConfiguration()).setupDefaultTargetAndExecutable();
-            ApplicationManager.getApplication().invokeLater(() ->
-                    ApplicationManager.getApplication().runWriteAction(() ->
-                    {
-                        runManager.addConfiguration(newRunConfig);
-                        runManager.makeStable(newRunConfig);
-                        runManager.setSelectedConfiguration(newRunConfig);
-                    }));
+            OpenOcdConfiguration configuration = (OpenOcdConfiguration) newRunConfig.getConfiguration();
+            configuration.setupDefaultTargetAndExecutable();
+            ApplicationManager.getApplication().invokeLater(() -> {
+                configuration.setBoardConfigFile(SelectBoardDialog.findBoardByPriority(projectData, project));
+                ApplicationManager.getApplication().runWriteAction(() ->
+                {
+                    runManager.addConfiguration(newRunConfig);
+                    runManager.makeStable(newRunConfig);
+                    runManager.setSelectedConfiguration(newRunConfig);
+                });
+            });
         }
     }
 
