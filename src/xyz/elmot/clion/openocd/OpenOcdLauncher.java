@@ -7,6 +7,7 @@ import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessHandler;
+import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressManager;
@@ -23,7 +24,6 @@ import com.jetbrains.cidr.execution.testing.CidrLauncher;
 import org.jdesktop.swingx.util.OS;
 import org.jetbrains.annotations.NotNull;
 import xyz.elmot.clion.openocd.OpenOcdComponent.STATUS;
-import xyz.elmot.clion.openocd.OpenOcdConfiguration.DownloadType;
 
 import java.io.File;
 import java.util.concurrent.Future;
@@ -37,7 +37,7 @@ class OpenOcdLauncher extends CidrLauncher {
 
     private final OpenOcdConfiguration openOcdConfiguration;
 
-    OpenOcdLauncher(OpenOcdConfiguration openOcdConfiguration) {
+    public OpenOcdLauncher(OpenOcdConfiguration openOcdConfiguration) {
         this.openOcdConfiguration = openOcdConfiguration;
     }
 
@@ -95,61 +95,23 @@ class OpenOcdLauncher extends CidrLauncher {
             CPPDebugger cppDebugger = CPPDebugger.create(CPPDebugger.Kind.CUSTOM_GDB, gdbPath);
             toolchain.setDebugger(cppDebugger);
         }
-        GDBDriverConfiguration gdbDriverConfiguration = new GDBDriverConfiguration(getProject(), toolchain);
+        GDBDriverConfiguration gdbDriverConfiguration = new GDBDriverConfiguration(project, toolchain);
         xDebugSession.stop();
-        OpenOcdGDBDebugProcess debugProcess =
-                new OpenOcdGDBDebugProcess(gdbDriverConfiguration,
-                        remoteDebugParameters,
-                        xDebugSession,
-                        commandLineState.getConsoleBuilder());
-        debugProcess.getProcessHandler().addProcessListener(new ProcessAdapter() {
-            @Override
-            public void processWillTerminate(@NotNull ProcessEvent event, boolean willBeDestroyed) {
-                super.processWillTerminate(event, willBeDestroyed);
-                findOpenOcdAction(project).stopOpenOcd();
-            }
-        });
-        return debugProcess;
-    }
-
-    @NotNull
-    private File findRunFile(CommandLineState commandLineState) throws ExecutionException {
-        String targetProfileName = commandLineState.getExecutionTarget().getDisplayName();
-        CMakeAppRunConfiguration.BuildAndRunConfigurations runConfigurations = openOcdConfiguration
-                .getBuildAndRunConfigurations(targetProfileName);
-        if (runConfigurations == null) {
-            throw new ExecutionException("Target is not defined");
-        }
-        File runFile = runConfigurations.getRunFile();
-        if (runFile == null) {
-            throw new ExecutionException("Run file is not defined for " + runConfigurations);
-        }
-        if (!runFile.exists() || !runFile.isFile()) {
-            throw new ExecutionException("Invalid run file " + runFile.getAbsolutePath());
-        }
-        return runFile;
-    }
-
-
-    @NotNull
-    @Override
-    public CidrDebugProcess startDebugProcess(@NotNull CommandLineState commandLineState,
-                                              @NotNull XDebugSession xDebugSession) throws ExecutionException {
-
         File runFile = null;
-        if (openOcdConfiguration.getDownloadType() != DownloadType.NONE) {
+        if (openOcdConfiguration.getDownloadType() != OpenOcdConfiguration.DownloadType.NONE) {
             runFile = findRunFile(commandLineState);
-            if (openOcdConfiguration.getDownloadType() == DownloadType.UPDATED_ONLY &&
+            if (openOcdConfiguration.getDownloadType() == OpenOcdConfiguration.DownloadType.UPDATED_ONLY &&
                     OpenOcdComponent.isLatestUploaded(runFile)) {
                 runFile = null;
             }
         }
 
+        ConsoleView openOcdConsole = commandLineState.getConsoleBuilder().getConsole();
         try {
             xDebugSession.stop();
             OpenOcdComponent openOcdComponent = findOpenOcdAction(commandLineState.getEnvironment().getProject());
             openOcdComponent.stopOpenOcd();
-            Future<STATUS> downloadResult = openOcdComponent.startOpenOcd(openOcdConfiguration, runFile, openOcdConfiguration.getResetType().getCommand());
+            Future<STATUS> downloadResult = openOcdComponent.startOpenOcd(openOcdConfiguration, runFile, openOcdConfiguration.getResetType().getCommand(), openOcdConsole);
 
             ProgressManager progressManager = ProgressManager.getInstance();
             ThrowableComputable<STATUS, ExecutionException> process = () -> {
@@ -173,11 +135,34 @@ class OpenOcdLauncher extends CidrLauncher {
                 downloadResult.cancel(true);
                 throw new ExecutionException("OpenOCD cancelled");
             }
-            return super.startDebugProcess(commandLineState, xDebugSession);
         } catch (ConfigurationException e) {
             Informational.showPluginError(getProject(), e);
             throw new ExecutionException(e);
         }
+
+        return new OpenOcdGDBDebugProcess(gdbDriverConfiguration,
+                remoteDebugParameters,
+                xDebugSession,
+                commandLineState.getConsoleBuilder(), findOpenOcdAction(project)
+        ,openOcdConsole);
+    }
+
+    @NotNull
+    private File findRunFile(CommandLineState commandLineState) throws ExecutionException {
+        String targetProfileName = commandLineState.getExecutionTarget().getDisplayName();
+        CMakeAppRunConfiguration.BuildAndRunConfigurations runConfigurations = openOcdConfiguration
+                .getBuildAndRunConfigurations(targetProfileName);
+        if (runConfigurations == null) {
+            throw new ExecutionException("Target is not defined");
+        }
+        File runFile = runConfigurations.getRunFile();
+        if (runFile == null) {
+            throw new ExecutionException("Run file is not defined for " + runConfigurations);
+        }
+        if (!runFile.exists() || !runFile.isFile()) {
+            throw new ExecutionException("Invalid run file " + runFile.getAbsolutePath());
+        }
+        return runFile;
     }
 
 

@@ -3,13 +3,11 @@ package xyz.elmot.clion.openocd;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.filters.Filter;
 import com.intellij.execution.filters.TextConsoleBuilder;
+import com.intellij.execution.process.ProcessAdapter;
+import com.intellij.execution.process.ProcessEvent;
+import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.RunnerLayoutUi;
-import com.intellij.icons.AllIcons;
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.actionSystem.Anchor;
-import com.intellij.openapi.actionSystem.Constraints;
-import com.intellij.openapi.actionSystem.DefaultActionGroup;
+import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.ui.content.Content;
@@ -23,15 +21,24 @@ import com.jetbrains.cidr.execution.debugger.remote.CidrRemoteDebugParameters;
 import com.jetbrains.cidr.execution.debugger.remote.CidrRemoteGDBDebugProcess;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.*;
-
 public class OpenOcdGDBDebugProcess extends CidrRemoteGDBDebugProcess {
+
+    private final ConsoleView openOcdConsole;
+
     public OpenOcdGDBDebugProcess(GDBDriverConfiguration gdbDriverConfiguration,
                                   CidrRemoteDebugParameters remoteDebugParameters,
                                   XDebugSession xDebugSession,
-                                  TextConsoleBuilder consoleBuilder) throws ExecutionException {
+                                  TextConsoleBuilder consoleBuilder, final OpenOcdComponent openOcdAction, ConsoleView openOcdConsole) throws ExecutionException {
         super(gdbDriverConfiguration, remoteDebugParameters, xDebugSession, consoleBuilder,
                 project1 -> new Filter[0]);
+        getProcessHandler().addProcessListener(new ProcessAdapter() {
+            @Override
+            public void processWillTerminate(@NotNull ProcessEvent event, boolean willBeDestroyed) {
+                super.processWillTerminate(event, willBeDestroyed);
+                openOcdAction.stopOpenOcd();
+            }
+        });
+        this.openOcdConsole = openOcdConsole;
     }
 
     @NotNull
@@ -42,7 +49,10 @@ public class OpenOcdGDBDebugProcess extends CidrRemoteGDBDebugProcess {
             @Override
             public void registerAdditionalContent(@NotNull RunnerLayoutUi ui) {
                 tabLayouter.registerAdditionalContent(ui);
-                Content content = ui.createContent("TestContent", new JPanel(), "TestContent", AllIcons.Toolwindows.ToolWindowAnt, null);
+                Content content = ui.createContent("OPENOCD_CONSOLE", openOcdConsole.getComponent(), "OpenOCD Console",
+                        IconLoader.getIcon("ocd.png",OpenOcdGDBDebugProcess.class),
+                        openOcdConsole.getPreferredFocusableComponent());
+//                Content content = ui.createContent("TestContent", new JPanel(), "TestContent", AllIcons.Toolwindows.ToolWindowAnt, null);
                 ui.addContent(content);
             }
         };

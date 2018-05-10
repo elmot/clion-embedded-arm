@@ -8,6 +8,7 @@ import com.intellij.execution.filters.Filter;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessListener;
+import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.execution.util.ExecutionErrorDialog;
 import com.intellij.openapi.diagnostic.Logger;
@@ -124,7 +125,8 @@ public class OpenOcdComponent {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public Future<STATUS> startOpenOcd(OpenOcdConfiguration config, @Nullable File fileToLoad, @Nullable String additionalCommand) throws ConfigurationException {
+    public Future<STATUS> startOpenOcd(OpenOcdConfiguration config, @Nullable File fileToLoad,
+                                       @Nullable String additionalCommand, @Nullable ConsoleView consoleView) throws ConfigurationException {
         if (config == null) return new FutureResult<>(STATUS.FLASH_ERROR);
         GeneralCommandLine commandLine = createOcdCommandLine(config, fileToLoad, additionalCommand, false);
         if (process != null && !process.isProcessTerminated()) {
@@ -144,6 +146,7 @@ public class OpenOcdComponent {
             process.addProcessListener(downloadFollower);
             RunContentExecutor openOCDConsole = new RunContentExecutor(project, process)
                     .withTitle("OpenOCD console")
+                    .withConsole(consoleView)
                     .withActivateToolWindow(true)
                     .withFilter(new ErrorFilter(project))
                     .withStop(process::destroyProcess,
