@@ -87,14 +87,14 @@ public class ConvertProject extends AnAction {
         });
 
         CMakeWorkspace cMakeWorkspace = CMakeWorkspace.getInstance(project);
-        if (cMakeWorkspace.getCMakeFiles().isEmpty()) {
+        if (cMakeWorkspace.getCMakeDependencyFiles().isEmpty()) {
             cMakeWorkspace.selectProjectDir(VfsUtil.virtualToIoFile(project.getBaseDir()));
         }
         cMakeWorkspace.scheduleClearGeneratedFilesAndReload();
         ApplicationManager.getApplication().executeOnPooledThread(() ->
                 {
                     try {
-                        cMakeWorkspace.waitForReloadsToFinish();
+                        cMakeWorkspace.waitForReloadsToFinish(100000);
                     } catch (TimeoutException e) {
                         throw new RootRuntimeException(e);
                     }
