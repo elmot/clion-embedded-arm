@@ -140,7 +140,7 @@ class OpenOcdLauncher extends CidrLauncher {
             throw new ExecutionException(e);
         }
 
-        return new OpenOcdGDBDebugProcess(gdbDriverConfiguration,
+        return new OpenOcdGDBDebugProcess(toolchain,
                 remoteDebugParameters,
                 xDebugSession,
                 commandLineState.getConsoleBuilder(), findOpenOcdAction(project)
