@@ -3,6 +3,9 @@ List of project donators
 
 These donations is a very pleasant sign of the community support. My great thanks to:
 
+**Andreas Schneider**  10,00 EUR
+>	Thank you for your continued work on the OpenOCD/STM32 CLion Plugin!
+
 **Marcin Wionczyk** 10,00 EUR
 
 **Arno Moonen** 10,00 EUR
