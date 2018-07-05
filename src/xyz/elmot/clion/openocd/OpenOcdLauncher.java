@@ -24,6 +24,7 @@ import com.jetbrains.cidr.cpp.execution.debugger.backend.GDBDriverConfiguration;
 import com.jetbrains.cidr.cpp.toolchains.CPPDebugger;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import com.jetbrains.cidr.execution.debugger.CidrDebugProcess;
+import com.jetbrains.cidr.execution.debugger.CidrDebuggerPathManager;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerCommandException;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriver;
 import com.jetbrains.cidr.execution.debugger.remote.CidrRemoteDebugParameters;
@@ -98,10 +99,7 @@ class OpenOcdLauncher extends CidrLauncher {
         String gdbPath;
         if (ocdSettings.shippedGdb) {
             toolchain = toolchain.copy();
-            File gdbFile = PathManager.findBinFile("gdb/bin/gdb" + (OS.isWindows() ? ".exe" : ""));
-            if (gdbFile == null) {
-                throw new ExecutionException("Shipped gdb is not found. Please check your CLion install");
-            }
+            File gdbFile = CidrDebuggerPathManager.getBundledGDBBinary();
             gdbPath = gdbFile.getAbsolutePath();
             CPPDebugger cppDebugger = CPPDebugger.create(CPPDebugger.Kind.CUSTOM_GDB, gdbPath);
             toolchain.setDebugger(cppDebugger);
