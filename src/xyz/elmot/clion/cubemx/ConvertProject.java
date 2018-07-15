@@ -20,7 +20,9 @@ import org.apache.commons.lang.text.StrSubstitutor;
 import org.jdom.Attribute;
 import org.jdom.Element;
 import org.jdom.JDOMException;
-import org.jdom.xpath.XPath;
+import org.jdom.filter2.AttributeFilter;
+import org.jdom.xpath.XPathExpression;
+import org.jdom.xpath.XPathFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.elmot.clion.openocd.Informational;
@@ -42,12 +44,26 @@ public class ConvertProject extends AnAction {
     protected static final String CPROJECT_FILE_NAME = ".cproject";
     private static final String DEFINES_KEY = "gnu.c.compiler.option.preprocessor.def.symbols";
     private static final String CONFIG_DEBUG_XPATH = ".//configuration[@artifactExtension='elf' and @name='Debug']";
-    private static final String DEFINES_XPATH = CONFIG_DEBUG_XPATH + "//*[@superClass='" + DEFINES_KEY + "']/listOptionValue/@value";
     private static final String INCLUDES_KEY = "gnu.c.compiler.option.include.paths";
-    private static final String INCLUDES_XPATH = CONFIG_DEBUG_XPATH + "//*[@superClass='" + INCLUDES_KEY + "']/listOptionValue/@value";
-    private static final String SOURCE_XPATH = CONFIG_DEBUG_XPATH + "//sourceEntries/entry/@name";
     private static final String PROJECT_FILE_NAME = ".project";
     private static final String HELP_URL = "https://github.com/elmot/clion-embedded-arm/blob/master/USAGE.md#project-creation-and-conversion-howto";
+
+    public static final AttributeFilter ATTRIBUTES_ONLY = new AttributeFilter();
+    private static final XPathExpression<Attribute> INCLUDES_XPATH;
+    private static final XPathExpression<Attribute> DEFINES_XPATH;
+    private static final XPathExpression<Attribute> SOURCE_XPATH;
+
+    static {
+        INCLUDES_XPATH = XPathFactory.instance()
+                .compile(CONFIG_DEBUG_XPATH + "//*[@superClass='" + INCLUDES_KEY + "']/listOptionValue/@value",
+                        ATTRIBUTES_ONLY);
+        DEFINES_XPATH = XPathFactory.instance()
+                .compile(CONFIG_DEBUG_XPATH + "//*[@superClass='" + DEFINES_KEY + "']/listOptionValue/@value",
+                        ATTRIBUTES_ONLY);
+        SOURCE_XPATH = XPathFactory.instance()
+                .compile(CONFIG_DEBUG_XPATH + "//sourceEntries/entry/@name", ATTRIBUTES_ONLY);
+
+    }
 
     @SuppressWarnings("WeakerAccess")
     public ConvertProject() {
@@ -55,9 +71,13 @@ public class ConvertProject extends AnAction {
     }
 
     public static void updateProject(Project project) {
-        if (project == null) return;
+        if (project == null) {
+            return;
+        }
         ProjectData projectData = loadProjectData(project);
-        if (projectData == null) return;
+        if (projectData == null) {
+            return;
+        }
 
         Application application = ApplicationManager.getApplication();
         application.saveAll();
@@ -65,7 +85,9 @@ public class ConvertProject extends AnAction {
             String fileName = null;
             try {
                 fileName = ".gitignore";
-                writeProjectFile(project, () -> FileUtil.loadTextAndClose(ConvertProject.class.getResourceAsStream("tmpl_gitignore.txt")), fileName, projectData, STRATEGY.CREATEONLY);
+                writeProjectFile(project,
+                        () -> FileUtil.loadTextAndClose(ConvertProject.class.getResourceAsStream("tmpl_gitignore.txt")),
+                        fileName, projectData, STRATEGY.CREATEONLY);
 
                 fileName = "CMakeLists_template.txt";
                 VirtualFile cmakeTemplate = project.getBaseDir().findOrCreateChildData(project, fileName);
@@ -120,18 +142,14 @@ public class ConvertProject extends AnAction {
         ProjectData projectData = new ProjectData();
         //noinspection ConstantConditions
         projectData.setProjectName(dotProject.getChild("name").getText());
-        try {
-            String linkerScript = fetchValueBySuperClass(context, "fr.ac6.managedbuild.tool.gnu.cross.c.linker.script");
-            projectData.setLinkerScript(linkerScript.replace("../", ""));
-            projectData.setMcuFamily(fetchValueBySuperClass(context, "fr.ac6.managedbuild.option.gnu.cross.mcu"));
-            projectData.setLinkerFlags(fetchValueBySuperClass(context, "gnu.c.link.option.ldflags"));
-            projectData.setBoard(fetchValueBySuperClass(context, "fr.ac6.managedbuild.option.gnu.cross.board"));
-            projectData.setDefines(loadDefines(context));
-            projectData.setIncludes(loadIncludes(context));
-            projectData.setSources(loadSources(context));
-        } catch (JDOMException e) {
-            Messages.showErrorDialog(project, "Xml data error", String.format("XML data retrieval error\n Key: %s ", context.currentKey));
-        }
+        String linkerScript = fetchValueBySuperClass(context, "fr.ac6.managedbuild.tool.gnu.cross.c.linker.script");
+        projectData.setLinkerScript(linkerScript.replace("../", ""));
+        projectData.setMcuFamily(fetchValueBySuperClass(context, "fr.ac6.managedbuild.option.gnu.cross.mcu"));
+        projectData.setLinkerFlags(fetchValueBySuperClass(context, "gnu.c.link.option.ldflags"));
+        projectData.setBoard(fetchValueBySuperClass(context, "fr.ac6.managedbuild.option.gnu.cross.board"));
+        projectData.setDefines(loadDefines(context));
+        projectData.setIncludes(loadIncludes(context));
+        projectData.setSources(loadSources(context));
         return projectData;
     }
 
@@ -141,7 +159,8 @@ public class ConvertProject extends AnAction {
     }
 
     private static void writeProjectFile(Project project, ThrowableComputable<String, IOException> template,
-                                         String fileName, ProjectData projectData, STRATEGY strategy) throws IOException {
+                                         String fileName, ProjectData projectData, STRATEGY strategy)
+            throws IOException {
         VirtualFile projectFile = project.getBaseDir().findChild(fileName);
         if (projectFile == null) {
             projectFile = project.getBaseDir().createChildData(project, fileName);
@@ -175,20 +194,16 @@ public class ConvertProject extends AnAction {
         }
     }
 
-    private static String loadIncludes(Context context) throws JDOMException {
-        context.currentKey = INCLUDES_KEY;
-        @SuppressWarnings("unchecked")
-        List<Attribute> list = XPath.selectNodes(context.cProjectElement, INCLUDES_XPATH);
+    private static String loadIncludes(Context context) {
+        List<Attribute> list = INCLUDES_XPATH.evaluate(context.cProjectElement);
         return list.stream()
                 .map(Attribute::getValue)
                 .map(s -> s.replace("../", ""))
                 .collect(Collectors.joining(" "));
     }
 
-    private static String loadSources(Context context) throws JDOMException {
-        context.currentKey = SOURCE_XPATH;
-        @SuppressWarnings("unchecked")
-        List<Attribute> list = XPath.selectNodes(context.cProjectElement, SOURCE_XPATH);
+    private static String loadSources(Context context) {
+        List<Attribute> list = SOURCE_XPATH.evaluate(context.cProjectElement);
 
         return list.stream()
                 .map(Attribute::getValue)
@@ -196,10 +211,8 @@ public class ConvertProject extends AnAction {
                 .collect(Collectors.joining(" "));
     }
 
-    private static String loadDefines(Context context) throws JDOMException {
-        context.currentKey = DEFINES_KEY;
-        @SuppressWarnings("unchecked")
-        List<Attribute> list = XPath.selectNodes(context.cProjectElement, DEFINES_XPATH);
+    private static String loadDefines(Context context) {
+        List<Attribute> list = DEFINES_XPATH.evaluate(context.cProjectElement);
         return list.stream()
                 .map(Attribute::getValue)
                 .map(s -> "-D" + s
@@ -210,9 +223,10 @@ public class ConvertProject extends AnAction {
                 .collect(Collectors.joining(" "));
     }
 
-    private static String fetchValueBySuperClass(Context context, String key) throws JDOMException {
-        context.currentKey = key;
-        return ((Attribute) XPath.selectSingleNode(context.cProjectElement, ".//*[@superClass='" + key + "']/@value")).getValue();
+    private static String fetchValueBySuperClass(Context context, String key) {
+        XPathExpression<Attribute> xPath = XPathFactory.instance()
+                .compile(".//*[@superClass='" + key + "']/@value", ATTRIBUTES_ONLY);
+        return xPath.evaluateFirst(context.cProjectElement).getValue();
     }
 
     private static Element detectAndLoadFile(Project project, String fileName) {
@@ -227,7 +241,8 @@ public class ConvertProject extends AnAction {
             return load(child.getInputStream());
         } catch (IOException | JDOMException e) {
             Messages.showErrorDialog(
-                    String.format("Failed to read %s in project directory %s\n(%s)", fileName, project.getBasePath(), e.getLocalizedMessage()),
+                    String.format("Failed to read %s in project directory %s\n(%s)", fileName, project.getBasePath(),
+                            e.getLocalizedMessage()),
                     "File Read Error");
             return null;
         }
@@ -244,7 +259,6 @@ public class ConvertProject extends AnAction {
 
     private static class Context {
         private final Element cProjectElement;
-        private String currentKey;
 
         Context(Element cProjectElement) {
             this.cProjectElement = cProjectElement;

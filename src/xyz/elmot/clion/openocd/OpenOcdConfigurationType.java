@@ -3,11 +3,10 @@ package xyz.elmot.clion.openocd;
 import com.intellij.execution.configuration.ConfigurationFactoryEx;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.RunConfiguration;
-import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.IconLoader;
-import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
 import com.jetbrains.cidr.cpp.execution.CMakeRunConfigurationType;
+import kotlin.Lazy;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -27,7 +26,23 @@ public class OpenOcdConfigurationType extends CMakeRunConfigurationType {
                 FACTORY_ID,
                 "OpenOCD Download & Run",
                 "Downloads and Runs Embedded Applications using OpenOCD",
-                getPluginIcon());
+                new Lazy<Icon>() {
+                    Icon icon;
+
+                    @Override
+                    public Icon getValue() {
+                        if (icon == null) {
+                            icon = getPluginIcon();
+                        }
+                        return icon;
+                    }
+
+                    @Override
+                    public boolean isInitialized() {
+                        return icon != null;
+                    }
+                }
+        );
         factory = new ConfigurationFactoryEx(this) {
             @NotNull
             @Override
@@ -58,7 +73,8 @@ public class OpenOcdConfigurationType extends CMakeRunConfigurationType {
 
     @NotNull
     @Override
-    protected OpenOcdConfiguration createRunConfiguration(@NotNull Project project, @NotNull ConfigurationFactory configurationFactory) {
+    protected OpenOcdConfiguration createRunConfiguration(@NotNull Project project,
+                                                          @NotNull ConfigurationFactory configurationFactory) {
         return new OpenOcdConfiguration(project, factory, "");
     }
 }

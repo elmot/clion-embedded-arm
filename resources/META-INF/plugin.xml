@@ -43,7 +43,7 @@ The plugin is free, but if you like it, you may support my work with a PayPal do
     </change-notes>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-    <idea-version since-build="182.3569" until-build="182.*"/>
+    <idea-version since-build="182.3684" until-build="182.*"/>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
          on how to target different products -->
