@@ -43,7 +43,9 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
     @Override
     public boolean isModified() {
         OpenOcdSettingsState state = project.getComponent(OpenOcdSettingsState.class);
-        if (state == null) return true;
+        if (state == null) {
+            return true;
+        }
         return !(
                         Objects.equals(panel.openOcdHome.getText(), state.openOcdHome) &&
                         panel.shippedRadioButton.isSelected() == state.shippedGdb &&
@@ -90,7 +92,7 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
      */
     public static class OpenOcdSettingsPanel extends JPanel {
 
-//        private final FileChooseInput boardConfigFile;
+        //        private final FileChooseInput boardConfigFile;
         private final FileChooseInput openOcdHome;
         private final JBCheckBox autoUpdateCmake;
         private JRadioButton toolchainRadioButton;
@@ -127,12 +129,12 @@ public class OpenOcdSettings implements ProjectComponent, Configurable {
 
         private void updateToolchainGdbName() {
             CPPToolchains.Toolchain toolchain = CPPToolchains.getInstance().getDefaultToolchain();
-            File debugger = toolchain == null ? null: toolchain.getDebugger().getGdbExecutable();
-            if(debugger == null){
+            File debugger = toolchain == null ? null : toolchain.getDebugger().getGdbExecutable();
+            if (debugger == null) {
                 toolchainRadioButton.setText("From Toolchain");
                 toolchainRadioButton.setToolTipText(null);
-            }else {
-                toolchainRadioButton.setText(String.format("From Toolchain (%s)",debugger.getName()));
+            } else {
+                toolchainRadioButton.setText(String.format("From Toolchain (%s)", debugger.getName()));
                 toolchainRadioButton.setToolTipText(debugger.getAbsolutePath());
             }
         }

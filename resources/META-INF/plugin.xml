@@ -55,6 +55,7 @@ The plugin is free, but if you like it, you may support my work with a PayPal do
         <configurationType implementation="xyz.elmot.clion.openocd.OpenOcdConfigurationType" id="elmot.embedded.openocd.conf.type"/>
         <projectConfigurable order="last" id="elmot.embedded.config" instance="xyz.elmot.clion.openocd.OpenOcdSettings"
                              displayName="OpenOCD Support" groupId="build"/>
+        <toolWindow id="Signal" anchor="bottom" factoryClass="xyz.elmot.clion.charttool.ChartTool"/>
     </extensions>
     <actions>
         <group id="elmot.embedded.grp" icon="/xyz/elmot/clion/openocd/ocd.png" description="ARM MCU Firmware"
@@ -71,6 +72,9 @@ The plugin is free, but if you like it, you may support my work with a PayPal do
         </component>
         <component>
             <implementation-class>xyz.elmot.clion.openocd.OpenOcdSettings</implementation-class>
+        </component>
+        <component>
+            <implementation-class>xyz.elmot.clion.charttool.ChartToolPersistence</implementation-class>
         </component>
         <component>
             <implementation-class>xyz.elmot.clion.openocd.OpenOcdComponent</implementation-class>
