@@ -11,7 +11,7 @@ import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.ui.ExecutionConsole;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.application.PathManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
@@ -27,10 +27,11 @@ import com.jetbrains.cidr.execution.debugger.CidrDebugProcess;
 import com.jetbrains.cidr.execution.debugger.CidrDebuggerPathManager;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerCommandException;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriver;
+import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriverConfiguration;
+import com.jetbrains.cidr.execution.debugger.backend.gdb.GDBDriver;
 import com.jetbrains.cidr.execution.debugger.remote.CidrRemoteDebugParameters;
 import com.jetbrains.cidr.execution.debugger.remote.CidrRemoteGDBDebugProcess;
 import com.jetbrains.cidr.execution.testing.CidrLauncher;
-import org.jdesktop.swingx.util.OS;
 import org.jetbrains.annotations.NotNull;
 import xyz.elmot.clion.openocd.OpenOcdComponent.STATUS;
 import xyz.elmot.clion.openocd.OpenOcdConfiguration.DownloadType;
@@ -44,9 +45,10 @@ import java.util.concurrent.TimeoutException;
 /**
  * (c) elmot on 19.10.2017.
  */
-class OpenOcdLauncher extends CidrLauncher {
+public class OpenOcdLauncher extends CidrLauncher {
 
     private static final Key<AnAction> RESTART_KEY = Key.create(OpenOcdLauncher.class.getName() + "#restartAction");
+    private static final Logger LOG = Logger.getInstance(OpenOcdLauncher.class);
     private final OpenOcdConfiguration openOcdConfiguration;
 
     OpenOcdLauncher(OpenOcdConfiguration openOcdConfiguration) {
@@ -104,14 +106,20 @@ class OpenOcdLauncher extends CidrLauncher {
             CPPDebugger cppDebugger = CPPDebugger.create(CPPDebugger.Kind.CUSTOM_GDB, gdbPath);
             toolchain.setDebugger(cppDebugger);
         }
-        GDBDriverConfiguration gdbDriverConfiguration = new GDBDriverConfiguration(getProject(), toolchain);
+        GDBDriverConfiguration gdbDriverConfiguration = new GDBDriverConfiguration(getProject(), toolchain) {
+            @Override
+            public @NotNull DebuggerDriver createDriver(DebuggerDriver.Handler handler)
+                    throws ExecutionException {
+                return new ExtendedGdbDriver(handler, this);
+            }
+        };
         xDebugSession.stop();
         CidrRemoteGDBDebugProcess debugProcess =
                 new CidrRemoteGDBDebugProcess(gdbDriverConfiguration,
                         remoteDebugParameters,
                         xDebugSession,
                         commandLineState.getConsoleBuilder(),
-                        project1 -> new Filter[0]);
+                        theProject -> new Filter[0]);
         debugProcess.getProcessHandler().addProcessListener(new ProcessAdapter() {
             @Override
             public void processWillTerminate(@NotNull ProcessEvent event, boolean willBeDestroyed) {
@@ -182,7 +190,8 @@ class OpenOcdLauncher extends CidrLauncher {
             xDebugSession.stop();
             OpenOcdComponent openOcdComponent = findOpenOcdAction(commandLineState.getEnvironment().getProject());
             openOcdComponent.stopOpenOcd();
-            Future<STATUS> downloadResult = openOcdComponent.startOpenOcd(openOcdConfiguration, runFile, openOcdConfiguration.getResetType().getCommand());
+            Future<STATUS> downloadResult = openOcdComponent
+                    .startOpenOcd(openOcdConfiguration, runFile, openOcdConfiguration.getResetType().getCommand());
 
             ProgressManager progressManager = ProgressManager.getInstance();
             ThrowableComputable<STATUS, ExecutionException> process = () -> {
@@ -236,4 +245,17 @@ class OpenOcdLauncher extends CidrLauncher {
         return openOcdConfiguration.getProject();
     }
 
+    public static class ExtendedGdbDriver extends GDBDriver {
+        public ExtendedGdbDriver(
+                @NotNull Handler handler,
+                @NotNull DebuggerDriverConfiguration debuggerDriverConfiguration)
+                throws ExecutionException {
+            super(handler, debuggerDriverConfiguration);
+        }
+
+        public @NotNull String requestValue(@NotNull String expression, @NotNull Object... objects) throws
+                ExecutionException, DebuggerCommandException {
+            return super.sendRequestAndWaitForDone(expression, objects).getOutput();
+        }
+    }
 }
