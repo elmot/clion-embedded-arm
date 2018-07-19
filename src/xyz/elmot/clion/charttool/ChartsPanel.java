@@ -10,11 +10,13 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.jetbrains.annotations.NotNull;
 import xyz.elmot.clion.charttool.state.ChartExpr;
 import xyz.elmot.clion.charttool.state.ExpressionState;
+import xyz.elmot.clion.charttool.ui.Zoomer;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,15 +28,15 @@ public class ChartsPanel extends JFXPanel {
     private boolean initialized = false;
     public static final int MAX_SERIES = 50;
 
-    private Button reset;
     private LineChart<Number, Number> lineChart;
     private Map<String, ChartExpressionData> seriesByName = new ConcurrentHashMap<>();
 
     public ChartsPanel() {
         Platform.runLater(() -> {
 
-            reset = new Button("Clear");
+            Button reset = new Button("Clear");
             reset.setOnAction(e -> clear());
+            Button noZoom = new Button("Reset Zoom");
             //defining the axes
             final NumberAxis xAxis = new NumberAxis();
             final NumberAxis yAxis = new NumberAxis();
@@ -42,13 +44,15 @@ public class ChartsPanel extends JFXPanel {
             lineChart = new LineChart<>(xAxis, yAxis);
             lineChart.setCreateSymbols(false);
 
-            VBox vBox = new VBox(10, lineChart, reset);
+            Zoomer zoomer = new Zoomer(lineChart);
+            noZoom.setOnAction(e -> zoomer.resetZoom());
+            VBox vBox = new VBox(10, zoomer, new HBox(10,reset,noZoom));
             vBox.setPadding(new Insets(10));
             Scene scene = new Scene(vBox);
 
             lineChart.setAnimated(false);
             vBox.setFillWidth(true);
-            VBox.setVgrow(lineChart, Priority.ALWAYS);
+            VBox.setVgrow(zoomer, Priority.ALWAYS);
             lineChart.setScaleShape(true);
             setScene(scene);
             invalidate();

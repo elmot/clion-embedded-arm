@@ -2,6 +2,9 @@ package xyz.elmot.clion.charttool;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.MessageType;
+import com.intellij.openapi.wm.ToolWindowId;
+import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.XDebugSessionListener;
 import com.intellij.xdebugger.XDebuggerManager;
@@ -15,11 +18,14 @@ import org.jetbrains.concurrency.Promise;
 import xyz.elmot.clion.charttool.state.ChartExpr;
 import xyz.elmot.clion.charttool.state.ExpressionState;
 import xyz.elmot.clion.charttool.state.LineState;
+import xyz.elmot.clion.openocd.Informational;
+import xyz.elmot.clion.openocd.OpenOcdConfigurationType;
 import xyz.elmot.clion.openocd.OpenOcdLauncher;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -99,11 +105,28 @@ public class DebugListener implements XDebugSessionListener {
                             .requestValue("p/r " + expressionTrim))
             );
             try {
-                String evalResult = sinDataPromise.onError(e -> showError(e, expressionTrim))
+                String evalResult = sinDataPromise
                         .blockingGet(20, TimeUnit.SECONDS);
                 processGdbOutput(evalResult, chartExpr);
+            } catch (ExecutionException e) {
+                ApplicationManager.getApplication().invokeLater(() ->
+                        {
+                            ToolWindowManager toolWindowManager = ToolWindowManager.getInstance(project);
+                            if (toolWindowManager.canShowNotification(ToolWindowId.RUN)) {
+                                Throwable t = e;
+                                while (t.getCause() != null) {
+                                    t = t.getCause();
+                                }
+                                String localizedMessage = t.getLocalizedMessage();
+                                toolWindowManager.notifyByBalloon(ToolWindowId.DEBUG, MessageType.WARNING,
+                                        expressionTrim + ": " + localizedMessage,
+                                        OpenOcdConfigurationType.getPluginIcon(), null
+                                );
+                            }
+                        }
+                );
             } catch (Throwable e) {
-                showError(e, expressionTrim);//todo do not show the dialog
+                showError(e, expressionTrim);
             }
 
         }

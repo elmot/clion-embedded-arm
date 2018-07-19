@@ -30,7 +30,7 @@ public class SignalSources extends JBSplitter implements XDebuggerManagerListene
 
     public SignalSources(Project project, DebugListener debugListener, ChartToolPersistence persistence,
                          ChartsPanel chartsPanel) {
-        super(false, 0.5f, 0.1f, 0.9f);
+        super(true, 0.5f, 0.1f, 0.9f);
         setBorder(JBUI.Borders.empty(15));
         this.project = project;
         this.debugListener = debugListener;
