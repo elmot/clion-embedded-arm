@@ -1,7 +1,9 @@
 package xyz.elmot.clion.charttool.ui;
 
 import com.intellij.openapi.ui.DialogBuilder;
+import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.ui.AddEditRemovePanel;
+import com.intellij.ui.DocumentAdapter;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBTextField;
@@ -11,7 +13,13 @@ import xyz.elmot.clion.charttool.ChartToolPersistence;
 import xyz.elmot.clion.charttool.state.ChartExpr;
 import xyz.elmot.clion.charttool.state.ExpressionState;
 
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.beans.PropertyChangeListener;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public class ExpressionList extends AddEditRemovePanel<ChartExpr> {
@@ -84,7 +92,6 @@ public class ExpressionList extends AddEditRemovePanel<ChartExpr> {
     @Nullable
     private ChartExpr doEdit(ChartExpr chartExpr) {
         JBTextField expressionField = new JBTextField();
-//        expressionField.getDocument().addDocumentListener(e->);//todo enable/disable OK
         JBTextField nameField = new JBTextField();
         JBTextField baseXField = new JBTextField();
         JBTextField baseYField = new JBTextField();
@@ -120,7 +127,24 @@ public class ExpressionList extends AddEditRemovePanel<ChartExpr> {
                 .centerPanel(dataPanel)
                 .title("Edit expression");
         dialogBuilder.addOkAction();
+        expressionField.getDocument().addDocumentListener(new DocumentAdapter() {
+            @Override
+            protected void textChanged(DocumentEvent e) {
+                dialogBuilder.setOkActionEnabled(!expressionField.getText().trim().isEmpty());
+            }
+        });
+
         dialogBuilder.addCancelAction();
+        dialogBuilder.addAction(new AbstractAction("Reset") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                baseXField.setText("" + 0.0);
+                baseYField.setText("" + 0.0);
+                scaleXField.setText("" + 1.0);
+                scaleYField.setText("" + 1.0);
+
+            }
+        });
 
         expressionField.setText(chartExpr.getExpression());
         nameField.setText(chartExpr.getName());
@@ -136,16 +160,23 @@ public class ExpressionList extends AddEditRemovePanel<ChartExpr> {
             chartExpr.setName(nameField.getText().trim());
             chartExpr.setState(stateGroup.getSelectedValue());
 
-            chartExpr.setXBase(Double.parseDouble(baseXField.getText()));
-            chartExpr.setYBase(Double.parseDouble(baseYField.getText()));
+            setDouble(baseXField, chartExpr::setXBase);
+            setDouble(baseYField, chartExpr::setYBase);
 
-            chartExpr.setXScale(Double.parseDouble(scaleXField.getText()));
-            chartExpr.setYScale(Double.parseDouble(scaleYField.getText()));
+            setDouble(scaleXField, chartExpr::setXScale);
+            setDouble(scaleYField, chartExpr::setYScale);
 
             persistence.registerChange();
             updateRunner.run();
             return chartExpr;
         }
         return null;
+    }
+
+    private void setDouble(JTextComponent field, Consumer<Double> target) {
+        try {
+            target.accept(Double.parseDouble(field.getText()));
+        } catch (NumberFormatException ignore) {
+        }
     }
 }
