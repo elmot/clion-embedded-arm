@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>xyz.elmot.clion.armsupport.prj</id>
     <name>OpenOCD + STM32CubeMX support for ARM embedded development</name>
-    <version>1.1.alpha7</version>
+    <version>1.1.signal.experiment1</version>
     <vendor email="me@elmot.xyz" url="http://elmot.xyz">Elmot</vendor>
 
     <description><![CDATA[
@@ -12,6 +12,7 @@ ARM MCU development plugin
     <li>Convert a project made in <i>STM32CubeMX</i> into a <i>CLion</i> project</li>
     <li>Compile and downloads firmware into compatible ARM MCU using <i>OpenOCD</i></li>
     <li>Debug the firmware on the chip</li>
+    <li><i>Experimental</i>: Signal processing helper: display charts from MCU memory data</li>
 </ul>
 <br>
 <a href="https://github.com/elmot/clion-embedded-arm/blob/master/USAGE.md">See more details</a>
@@ -37,6 +38,7 @@ The plugin is free, but if you like it, you may support my work with a PayPal do
 
     <change-notes><![CDATA[
         <ul>
+        <li>Experimental Signal Tool</li>
         <li>Improved CLion 2018.2 support</li>
         </ul>
     ]]>
