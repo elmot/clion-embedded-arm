@@ -47,7 +47,7 @@ Project creation and conversion HowTo
       STM32F4 MCU family. If there is no suitable config among existing, you can write your own *.cfg* file and use it. 
       Refer to OpenOCD documentation for more details. 
     1. Select **Tools -\> Update CMake project with STM32CubeMX project**. This will regenerate project files and reload _cmake_ configs.
- 1. (**Mac Only**) Install multi-arch GDB since CLion does not bundle this on macOS versions of CLion:
+ 1. (**Mac Only**) Install multi-arch GDB since CLion does not bundle this on macOS:
     1. Install [Homebrew](https://brew.sh/)
     1. `brew cask install gcc-arm-embedded`
     1. You may also want to install OpenOCD using Homebrew: `brew install openocd`
