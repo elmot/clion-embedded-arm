@@ -35,7 +35,7 @@ See [USAGE.md](USAGE.md).
 
 Contributions
 ===
-First of all, please have a look at our [code of conduct](CODE_OF_CONDUCT.txt). Well, it's standard stuff, I believe you won't do wrong things. Then read our [contribution guide](CONTRIBUTING.md). 
+First of all, please have a look at our [code of conduct](CODE_OF_CONDUCT.md). Well, it's standard stuff, I believe you won't do wrong things. Then read our [contribution guide](CONTRIBUTING.md). 
 
 Likes and Donations
 ===
