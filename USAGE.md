@@ -18,8 +18,10 @@ You will need following tools being installed and configured:
 
  * Compatible hardware, virtually any of [STM32 development boards](http://www.st.com/en/evaluation-tools/stm32-mcu-eval-tools.html)
  * [CLion](https://www.jetbrains.com/clion/). The project tested against CLion 2017.3.
- * [GNU Arm Embedded Toolchain](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm) 
+ * [GNU Arm Embedded Toolchain](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm)
+   * **(Mac only)** Install GNU Arm Embedded Toolchain via [Homebrew](https://brew.sh/): `brew cask install gcc-arm-embedded`
  * [OpenOCD](http://openocd.org/)
+   * **(Mac only)** Install OpenOCD via [Homebrew](https://brew.sh/): `brew install openocd`
  * **(Windows only)** ST-LINK/V2 driver. May be downloaded from 
  [st.com](http://www.st.com/en/development-tools/stsw-link009.html) or just borrowed from OpenOCD binary distribution
  * [STM32CubeMX](http://www.st.com/en/development-tools/stm32cubemx.html). After installation, do not forget
@@ -39,18 +41,17 @@ Project creation and conversion HowTo
     1. In project settings, select **SW4STM32** as a toolchain and keep **Generate Under Root** checked.
     1. Click **Generate Code**. This will generate Eclipse-style project stub with libraries and sources. 
  1. Run _Clion_ and:
-    1. Open or import the result folder of the previous step as a project. Ignore all the errors shown.
-    1. Go to **File -\> Settings...  -\> Build, Execution, Deployment -\> OpenOCD support** and configure tools locations and tcp ports.
-    1. In the same dialog, select your board config file. OpenOCD is shipped with a set of board config files located at 
+    1. Open or import the resulting folder of the previous step as a project. Ignore all the errors shown.
+    1. Go to **File -\> Settings...  -\> Build, Execution, Deployment -\> OpenOCD support** and configure tool locations.
+    1. Select **Tools -\> Update CMake project with STM32CubeMX project**. This will regenerate project files and reload _cmake_ configs.
+    1. In the newly popped dialog, select your board config file. OpenOCD is shipped with a set of board config files located at 
     */usr/share/openocd/scripts/board* folder, in case of Windows *\<openocd_home\>/share/openocd/scripts/board*. Those files are 
     _OpenOCD_ predefined ones and they are quite obviously named, for instance *st_nucleo_f4.cfg* is the config file for any *STM32 Nucleo* boards based on
       STM32F4 MCU family. If there is no suitable config among existing, you can write your own *.cfg* file and use it. 
-      Refer to OpenOCD documentation for more details. 
-    1. Select **Tools -\> Update CMake project with STM32CubeMX project**. This will regenerate project files and reload _cmake_ configs.
- 1. (**Mac Only**) Install multi-arch GDB since CLion does not bundle this on macOS:
-    1. Install [Homebrew](https://brew.sh/)
-    1. `brew cask install gcc-arm-embedded`
-    1. You may also want to install OpenOCD using Homebrew: `brew install openocd`
+      Refer to OpenOCD documentation for more details.
+    1. To customize TCP ports or the board config file afterwards, open **Run -\> Edit Configurations ... -\> OpenOCD Download & Run**.
+ 1. **(Mac Only)** Configure CLion to point to the Homebrew-installed multi-arch GDB (installed in the **Prerequisites** section), 
+    since CLion does not bundle this on macOS:
     1. Change **Preferences -\> Build, Execution, Deployment -\> Toochains -\> Debugger** to `arm-none-eabi-gdb`
     1. Change **Preferences -\> Build, Execution, Deployment -\> OpenOCD Support -\> Use GDB** to `From Toolchain (arm-none-eabi-gdb)`
 
