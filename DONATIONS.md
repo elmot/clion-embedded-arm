@@ -3,6 +3,8 @@ List of project donators
 
 These donations is a very pleasant sign of the community support. My great thanks to:
 
+**Esa Varemo**  10,00 EUR
+
 **Ruslan Stepanenko** 1500 RUB
 
 **Kieren Rasmussen**  10,00 EUR
