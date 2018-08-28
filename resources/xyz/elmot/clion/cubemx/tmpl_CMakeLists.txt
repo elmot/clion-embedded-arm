@@ -29,6 +29,7 @@ SET(CMAKE_CXX_FLAGS_INIT "$${COMMON_FLAGS} -std=c++11")
 SET(CMAKE_C_FLAGS_INIT "$${COMMON_FLAGS} -std=gnu99")
 SET(CMAKE_EXE_LINKER_FLAGS_INIT "-Wl,-gc-sections,--print-memory-usage -T $${LINKER_SCRIPT}")
 
+# To switch to a C++ project, add CXX to the PROJECT language list command and rename main.c to main.cpp.
 PROJECT(${projectName} C ASM)
 set(CMAKE_CXX_STANDARD 11)
 
