@@ -27,8 +27,8 @@ public class Informational {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public static void showSuccessfulDownloadNotification(Project project) {
-        showMessage(project, MessageType.INFO, "Firmware Download Success");
+    public static void showSuccessfulUploadNotification(Project project) {
+        showMessage(project, MessageType.INFO, "Firmware Upload Success");
     }
 
     public static void showMessage(Project project, MessageType messageType, String message) {
@@ -46,7 +46,7 @@ public class Informational {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public static void showFailedDownloadNotification(Project project) {
+    public static void showFailedUploadNotification(Project project) {
         showMessage(project, MessageType.ERROR,
                 "MCU Communication FAILURE.\nCheck <a href=\""+
                         SETTINGS_PROTOCOL +

@@ -4,18 +4,20 @@ import com.intellij.execution.ui.CommonProgramParametersPanel;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.ui.components.JBTextField;
 import com.intellij.ui.components.fields.IntegerField;
 import com.intellij.ui.components.panels.HorizontalBox;
 import com.intellij.util.ui.GridBag;
 import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
 import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfigurationSettingsEditor;
 import com.jetbrains.cidr.cpp.execution.CMakeBuildConfigurationHelper;
+import java.awt.event.ActionListener;
 import org.jdesktop.swingx.JXRadioGroup;
 import org.jetbrains.annotations.NotNull;
 import xyz.elmot.clion.cubemx.ConvertProject;
 import xyz.elmot.clion.cubemx.ProjectData;
 import xyz.elmot.clion.cubemx.SelectBoardDialog;
-import xyz.elmot.clion.openocd.OpenOcdConfiguration.DownloadType;
+import xyz.elmot.clion.openocd.OpenOcdConfiguration.UploadType;
 import xyz.elmot.clion.openocd.OpenOcdConfiguration.ResetType;
 
 import javax.swing.*;
@@ -27,8 +29,10 @@ public class OpenOcdConfigurationEditor extends CMakeAppRunConfigurationSettings
     private IntegerField telnetPort;
 
     private FileChooseInput boardConfigFile;
+    private JBTextField resetCommand;
+    private JBTextField uploadCommand;
     private String openocdHome;
-    private JXRadioGroup<DownloadType> downloadGroup;
+    private JXRadioGroup<UploadType> uploadGroup;
     private JXRadioGroup<ResetType> resetGroup;
 
     @SuppressWarnings("WeakerAccess")
@@ -49,8 +53,10 @@ public class OpenOcdConfigurationEditor extends CMakeAppRunConfigurationSettings
         telnetPort.validateContent();
         ocdConfiguration.setGdbPort(gdbPort.getValue());
         ocdConfiguration.setTelnetPort(telnetPort.getValue());
-        ocdConfiguration.setDownloadType(downloadGroup.getSelectedValue());
+        ocdConfiguration.setUploadType(uploadGroup.getSelectedValue());
         ocdConfiguration.setResetType(resetGroup.getSelectedValue());
+        ocdConfiguration.setResetCommand(resetCommand.getText());
+        ocdConfiguration.setUploadCommand(uploadCommand.getText());
     }
 
     @Override
@@ -66,8 +72,10 @@ public class OpenOcdConfigurationEditor extends CMakeAppRunConfigurationSettings
         gdbPort.setText("" + ocd.getGdbPort());
 
         telnetPort.setText("" + ocd.getTelnetPort());
-        downloadGroup.setSelectedValue(ocd.getDownloadType());
+        uploadGroup.setSelectedValue(ocd.getUploadType());
         resetGroup.setSelectedValue(ocd.getResetType());
+        resetCommand.setText(ocd.getResetCommand());
+        uploadCommand.setText(ocd.getUploadCommand());
     }
 
     @Override
@@ -92,12 +100,32 @@ public class OpenOcdConfigurationEditor extends CMakeAppRunConfigurationSettings
 
         panel.add(portsPanel, gridBag.nextLine().next().coverLine());
 
-        panel.add(new JLabel("Download:"), gridBag.nextLine().next());
-        downloadGroup = new JXRadioGroup<>(DownloadType.values());
-        panel.add(downloadGroup, gridBag.next().fillCellHorizontally());
+        panel.add(new JLabel("Upload:"), gridBag.nextLine().next());
+        uploadGroup = new JXRadioGroup<>(UploadType.values());
+        panel.add(uploadGroup, gridBag.next().fillCellHorizontally());
         panel.add(new JLabel("Reset:"), gridBag.nextLine().next());
         resetGroup = new JXRadioGroup<>(ResetType.values());
         panel.add(resetGroup, gridBag.next());
+
+        JPanel editPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
+        resetCommand = addTextInput(editPanel, "Reset command");
+        editPanel.add(Box.createHorizontalStrut(5));
+        uploadCommand = addTextInput(editPanel, "Upload command");
+        panel.add(editPanel, gridBag.nextLine().next().coverLine());
+
+        resetGroup.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                updateResetCommandState();
+            }
+        });
+    }
+
+    private void updateResetCommandState() {
+        final ResetType resetType = resetGroup.getSelectedValue();
+        final Boolean isCustom = resetType == null || resetType.equals(ResetType.CUSTOM);
+        resetCommand.setEnabled(isCustom);
+        resetCommand.setText(isCustom ? "" : resetType.getCommand());
     }
 
     @NotNull
@@ -128,9 +156,15 @@ public class OpenOcdConfigurationEditor extends CMakeAppRunConfigurationSettings
         return field;
     }
 
+    private JBTextField addTextInput(JPanel panel, String label) {
+        panel.add(new JLabel(label + ": "));
+        JBTextField field = new JBTextField(label);
+        field.setColumns(12);
+        panel.add(field);
+        return field;
+    }
 
     private String getOpenocdHome() {
         return openocdHome;
     }
-
 }

@@ -28,15 +28,21 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
     private static final String ATTR_TELNET_PORT = "telnet-port";
     private static final String ATTR_BOARD_CONFIG = "board-config";
     public static final String ATTR_RESET_TYPE = "reset-type";
-    public static final String ATTR_DOWNLOAD_TYPE = "download-type";
+    public static final String ATTR_UPLOAD_TYPE = "upload-type";
     public static final ResetType DEFAULT_RESET = ResetType.INIT;
+    public static final String ATTR_CUSTOM_RESET = "custom-reset-cmd";
+    public static final String ATTR_CUSTOM_UPLOAD = "custom-upload-cmd";
+    public static final String DEFAULT_UPLOAD_CMD = "program";
     private int gdbPort = DEF_GDB_PORT;
     private int telnetPort = DEF_TELNET_PORT;
     private String boardConfigFile;
-    private DownloadType downloadType = DownloadType.ALWAYS;
+    private String customResetCmd;
+    private String customUploadCmd = DEFAULT_UPLOAD_CMD;
+
+    private UploadType uploadType = UploadType.ALWAYS;
     private ResetType resetType = DEFAULT_RESET;
 
-    public enum DownloadType {
+    public enum UploadType {
 
         ALWAYS,
         UPDATED_ONLY,
@@ -56,7 +62,8 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
         RUN("init;reset run"),
         HALT("init;reset halt"),
         INIT("init;reset init"),
-        NONE("");
+        NONE(""),
+        CUSTOM("");
 
         private String resetCmd;
 
@@ -88,17 +95,25 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
     @Override
     public void readExternal(@NotNull Element element) throws InvalidDataException {
         super.readExternal(element);
-        boardConfigFile = element.getAttributeValue(ATTR_BOARD_CONFIG, NAMESPACE);
+        boardConfigFile = readStringAttr(element, ATTR_BOARD_CONFIG, "");
+        customResetCmd  = readStringAttr(element, ATTR_CUSTOM_RESET, "");
+        customUploadCmd = readStringAttr(element, ATTR_CUSTOM_UPLOAD, DEFAULT_UPLOAD_CMD);
         gdbPort = readIntAttr(element, ATTR_GDB_PORT, DEF_GDB_PORT);
         telnetPort = readIntAttr(element, ATTR_TELNET_PORT, DEF_TELNET_PORT);
         resetType = readEnumAttr(element, ATTR_RESET_TYPE, DEFAULT_RESET);
-        downloadType = readEnumAttr(element, ATTR_DOWNLOAD_TYPE, DownloadType.ALWAYS);
+        uploadType = readEnumAttr(element, ATTR_UPLOAD_TYPE, UploadType.ALWAYS);
     }
 
     private int readIntAttr(@NotNull Element element, String name, int def) {
         String s = element.getAttributeValue(name, NAMESPACE);
         if (StringUtil.isEmpty(s)) return def;
         return Integer.parseUnsignedInt(s);
+    }
+
+    private String readStringAttr(@NotNull Element element, String name, String def) {
+        String s = element.getAttributeValue(name, NAMESPACE);
+        if (StringUtil.isEmpty(s)) return def;
+        return s;
     }
 
     private <T extends Enum> T readEnumAttr(@NotNull Element element, String name, T def) {
@@ -121,7 +136,13 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
             element.setAttribute(ATTR_BOARD_CONFIG, boardConfigFile, NAMESPACE);
         }
         element.setAttribute(ATTR_RESET_TYPE, resetType.name(), NAMESPACE);
-        element.setAttribute(ATTR_DOWNLOAD_TYPE, downloadType.name(), NAMESPACE);
+        element.setAttribute(ATTR_UPLOAD_TYPE, uploadType.name(), NAMESPACE);
+        if (resetType.equals(ResetType.CUSTOM)) {
+            element.setAttribute(ATTR_CUSTOM_RESET, customResetCmd, NAMESPACE);
+        }
+        if (!customUploadCmd.equals(DEFAULT_UPLOAD_CMD)) {
+            element.setAttribute(ATTR_CUSTOM_UPLOAD, customUploadCmd, NAMESPACE);
+        }
     }
 
     @Override
@@ -166,12 +187,12 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
         this.boardConfigFile = boardConfigFile;
     }
 
-    public DownloadType getDownloadType() {
-        return downloadType;
+    public UploadType getUploadType() {
+        return uploadType;
     }
 
-    public void setDownloadType(DownloadType downloadType) {
-        this.downloadType = downloadType;
+    public void setUploadType(UploadType uploadType) {
+        this.uploadType = uploadType;
     }
 
     public ResetType getResetType() {
@@ -181,4 +202,33 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
     public void setResetType(ResetType resetType) {
         this.resetType = resetType;
     }
+
+    public String getResetCommand() {
+        return resetType.equals(ResetType.CUSTOM) ? customResetCmd : resetType.getCommand();
+    }
+
+    public void setResetCommand(String cmd) {
+        if (resetType.equals(ResetType.CUSTOM)) {
+            customResetCmd = cmd;
+        } else {
+            customResetCmd = "";
+        }
+    }
+
+    public String getCustomResetCommand() {
+        return customResetCmd;
+    }
+
+    public void setCustomResetCommand(String cmd) {
+        this.customResetCmd = cmd;
+    }
+
+    public String getUploadCommand() {
+        return customUploadCmd;
+    }
+
+    public void setUploadCommand(String cmd) {
+        customUploadCmd = cmd;
+    }
+
 }

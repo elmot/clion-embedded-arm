@@ -48,6 +48,8 @@ public class OpenOcdComponent {
     private final static String[] FAIL_STRINGS = {
             "** Programming Failed **", "communication failure", "** OpenOCD init failed **"};
     private static final String FLASH_SUCCESS_TEXT = "** Programming Finished **";
+    private static final String UPLOAD_SUCCESS_TEXT =
+            "(.*)downloaded ([0-9]+) bytes in ([0-9.]+)s (.*)";
     private static final Logger LOG = Logger.getInstance(OpenOcdComponent.class);
     private static final String ADAPTER_SPEED = "adapter speed";
 
@@ -89,7 +91,7 @@ public class OpenOcdComponent {
         }
         commandLine.addParameters("-f", config.getBoardConfigFile());
         if (fileToLoad != null) {
-            String command = "program \"" + fileToLoad.getAbsolutePath().replace(File.separatorChar, '/') + "\"";
+            String command = config.getUploadCommand()+ " \"" + fileToLoad.getAbsolutePath().replace(File.separatorChar, '/') + "\"";
             commandLine.addParameters("-c", command);
         }
         if (additionalCommand != null && !additionalCommand.isEmpty()) {
@@ -182,7 +184,7 @@ public class OpenOcdComponent {
         @Override
         public Result applyFilter(String line, int entireLength) {
             if (containsOneOf(line, FAIL_STRINGS)) {
-                Informational.showFailedDownloadNotification(project);
+                Informational.showFailedUploadNotification(project);
                 return new Result(0, line.length(), null,
                         myColorsScheme.getAttributes(ConsoleViewContentType.ERROR_OUTPUT_KEY)) {
                     @Override
@@ -190,8 +192,9 @@ public class OpenOcdComponent {
                         return HighlighterLayer.ERROR;
                     }
                 };
-            } else if (line.contains(FLASH_SUCCESS_TEXT)) {
-                Informational.showSuccessfulDownloadNotification(project);
+            } else if (line.contains(FLASH_SUCCESS_TEXT) ||
+                       line.matches(UPLOAD_SUCCESS_TEXT)) {
+                Informational.showSuccessfulUploadNotification(project);
             }
             return null;
         }
@@ -235,7 +238,8 @@ public class OpenOcdComponent {
             } else if (vRunFile == null && text.startsWith(ADAPTER_SPEED)) {
                 reset();
                 set(STATUS.FLASH_SUCCESS);
-            } else if (text.equals(FLASH_SUCCESS_TEXT)) {
+            } else if (text.equals(FLASH_SUCCESS_TEXT) ||
+                       text.matches(UPLOAD_SUCCESS_TEXT)) {
                 reset();
                 if (vRunFile != null) {
                     UPLOAD_LOAD_COUNT_KEY.set(vRunFile, vRunFile.getModificationCount());
