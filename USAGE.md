@@ -42,7 +42,7 @@ Project creation and conversion HowTo
     1. Click **Generate Code**. This will generate Eclipse-style project stub with libraries and sources. 
  1. Run _Clion_ and:
     1. Open or import the resulting folder of the previous step as a project. Ignore all the errors shown.
-    1. Go to **File -\> Settings...  -\> Build, Execution, Deployment -\> OpenOCD support** and configure tool locations.
+    1. Go to **File -\> Settings...  -\> Build, Execution, Deployment -\> OpenOCD support** and configure tool location.
     1. Select **Tools -\> Update CMake project with STM32CubeMX project**. This will regenerate project files and reload _cmake_ configs.
     1. In the newly popped dialog, select your board config file. OpenOCD is shipped with a set of board config files located at 
     */usr/share/openocd/scripts/board* folder, in case of Windows *\<openocd_home\>/share/openocd/scripts/board*. Those files are 
