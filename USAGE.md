@@ -25,7 +25,7 @@ You will need following tools being installed and configured:
  * **(Windows only)** ST-LINK/V2 driver. May be downloaded from 
  [st.com](http://www.st.com/en/development-tools/stsw-link009.html) or just borrowed from OpenOCD binary distribution
  * [STM32CubeMX](http://www.st.com/en/development-tools/stm32cubemx.html). After installation, do not forget
- to download MCU support library for your MCU. See _Help -> Install new libraries_ there.
+ to download MCU support library for your MCU. See _Help -> Manage embedded software packages_ there.
  * **(Windows only)** [MinGW](http://www.mingw.org/)
 
 Install Plugin 
