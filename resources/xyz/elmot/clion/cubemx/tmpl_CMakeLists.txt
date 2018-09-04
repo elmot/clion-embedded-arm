@@ -6,6 +6,7 @@ cmake_minimum_required(VERSION 3.7)
 # specify the cross compiler
 SET(CMAKE_C_COMPILER_WORKS 1)
 SET(CMAKE_C_COMPILER arm-none-eabi-gcc)
+SET(CMAKE_CXX_COMPILER_WORKS 1)
 SET(CMAKE_CXX_COMPILER arm-none-eabi-g++)
 set(AS arm-none-eabi-as)
 set(AR arm-none-eabi-ar)
