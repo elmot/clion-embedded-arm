@@ -53,40 +53,26 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
     }
 
     public enum ResetType {
-        RUN {
-            @Override
-            public String getCommand() {
-                return "init;reset run;";
-            }
-        },
-        INIT {
-            @Override
-            public String getCommand() {
-                return "init;reset init;";
-            }
-        },
-        HALT {
-            @Override
-            public String getCommand() {
-                return "init;reset halt";
-            }
-        },
-        NONE {
-            @Override
-            public String getCommand() {
-                return "";
-            }
-        };
+        RUN("init;reset run"),
+        HALT("init;reset halt"),
+        INIT("init;reset init"),
+        NONE("");
+
+        private String resetCmd;
+
+        ResetType(String cmd) {
+            resetCmd = cmd;
+        }
+
+        public String getCommand() {
+            return resetCmd;
+        }
 
         @Override
         public String toString() {
             return toBeautyString(super.toString());
         }
-
-        public abstract String getCommand();
-
-    }
-
+    };
 
     @SuppressWarnings("WeakerAccess")
     public OpenOcdConfiguration(Project project, ConfigurationFactory configurationFactory, String targetName) {
