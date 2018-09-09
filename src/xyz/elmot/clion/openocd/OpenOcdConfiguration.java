@@ -1,5 +1,6 @@
 package xyz.elmot.clion.openocd;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.RuntimeConfigurationException;
@@ -30,6 +31,7 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
     public static final String ATTR_RESET_TYPE = "reset-type";
     public static final String ATTR_UPLOAD_TYPE = "upload-type";
     public static final ResetType DEFAULT_RESET = ResetType.INIT;
+    public static final UploadType DEFAULT_UPLOAD = UploadType.ALWAYS;
     public static final String ATTR_CUSTOM_RESET = "custom-reset-cmd";
     public static final String ATTR_CUSTOM_UPLOAD = "custom-upload-cmd";
     public static final String DEFAULT_UPLOAD_CMD = "program";
@@ -39,7 +41,7 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
     private String customResetCmd;
     private String customUploadCmd = DEFAULT_UPLOAD_CMD;
 
-    private UploadType uploadType = UploadType.ALWAYS;
+    private UploadType uploadType = DEFAULT_UPLOAD;
     private ResetType resetType = DEFAULT_RESET;
 
     public enum UploadType {
@@ -101,22 +103,30 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
         gdbPort = readIntAttr(element, ATTR_GDB_PORT, DEF_GDB_PORT);
         telnetPort = readIntAttr(element, ATTR_TELNET_PORT, DEF_TELNET_PORT);
         resetType = readEnumAttr(element, ATTR_RESET_TYPE, DEFAULT_RESET);
-        uploadType = readEnumAttr(element, ATTR_UPLOAD_TYPE, UploadType.ALWAYS);
+        uploadType = readEnumAttr(element, ATTR_UPLOAD_TYPE, DEFAULT_UPLOAD);
     }
 
-    private int readIntAttr(@NotNull Element element, String name, int def) {
+    @VisibleForTesting
+    public static int readIntAttr(@NotNull Element element, String name, int def) {
         String s = element.getAttributeValue(name, NAMESPACE);
         if (StringUtil.isEmpty(s)) return def;
-        return Integer.parseUnsignedInt(s);
+        try {
+            return Integer.parseUnsignedInt(s);
+        } catch(NumberFormatException e) {
+            // XML data fromat mismatch; return default; TODO: log the issue
+            return def;
+        }
     }
 
-    private String readStringAttr(@NotNull Element element, String name, String def) {
+    @VisibleForTesting
+    public static String readStringAttr(@NotNull Element element, String name, String def) {
         String s = element.getAttributeValue(name, NAMESPACE);
         if (StringUtil.isEmpty(s)) return def;
         return s;
     }
 
-    private <T extends Enum> T readEnumAttr(@NotNull Element element, String name, T def) {
+    @VisibleForTesting
+    public static <T extends Enum> T readEnumAttr(@NotNull Element element, String name, T def) {
         String s = element.getAttributeValue(name, NAMESPACE);
         if (StringUtil.isEmpty(s)) return def;
         try {
