@@ -14,8 +14,7 @@ Blog post at [CLion blog](https://blog.jetbrains.com/clion/2017/12/clion-for-emb
 
 The plugin is able to:
 ---
- * Convert a project made in *[STM32CubeMX](http://www.st.com/en/development-tools/stm32cubemx.html)* into a  *[CLion](https://www.jetbrains.com/clion/)* project. The project tested against CLion 2017.3.
- project
+ * Convert a project made in *[STM32CubeMX](http://www.st.com/en/development-tools/stm32cubemx.html)* into a  *[CLion](https://www.jetbrains.com/clion/)* project. The project tested against CLion 2018.3 EAP.
  * Download project binaries into compatible MCU using *[OpenOCD](http://openocd.org/)*
  * Debug project on chip
  
