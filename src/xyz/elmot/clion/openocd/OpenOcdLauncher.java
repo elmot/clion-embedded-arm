@@ -11,7 +11,6 @@ import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.ui.ExecutionConsole;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
@@ -30,7 +29,6 @@ import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriver;
 import com.jetbrains.cidr.execution.debugger.remote.CidrRemoteDebugParameters;
 import com.jetbrains.cidr.execution.debugger.remote.CidrRemoteGDBDebugProcess;
 import com.jetbrains.cidr.execution.testing.CidrLauncher;
-import org.jdesktop.swingx.util.OS;
 import org.jetbrains.annotations.NotNull;
 import xyz.elmot.clion.openocd.OpenOcdComponent.STATUS;
 import xyz.elmot.clion.openocd.OpenOcdConfiguration.DownloadType;
@@ -122,7 +120,7 @@ class OpenOcdLauncher extends CidrLauncher {
         debugProcess.getProcessHandler().putUserData(RESTART_KEY,
                 new AnAction("Reset", "MCU Reset", IconLoader.findIcon("reset.png", OpenOcdLauncher.class)) {
                     @Override
-                    public void actionPerformed(AnActionEvent e) {
+                    public void actionPerformed(@NotNull AnActionEvent e) {
                         XDebugSession session = debugProcess.getSession();
                         session.pause();
                         debugProcess.postCommand(drv -> {

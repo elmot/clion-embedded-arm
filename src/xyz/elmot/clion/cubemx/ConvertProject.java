@@ -3,11 +3,13 @@ package xyz.elmot.clion.cubemx;
 import com.intellij.execution.RunManager;
 import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.configurations.ConfigurationFactory;
+import com.intellij.execution.configurations.ConfigurationTypeUtil;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.ThrowableComputable;
@@ -15,8 +17,15 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.exception.RootRuntimeException;
+import com.jetbrains.cidr.cpp.cmake.model.CMakeTarget;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
+import com.jetbrains.cidr.cpp.execution.CMakeBuildConfigurationHelper;
+import com.jetbrains.cidr.cpp.execution.CMakeRunConfigurationType;
+import com.jetbrains.cidr.execution.BuildTargetAndConfigurationData;
+import com.jetbrains.cidr.execution.BuildTargetData;
+import com.jetbrains.cidr.execution.ExecutableData;
 import org.apache.commons.lang.text.StrSubstitutor;
+import org.intellij.lang.annotations.MagicConstant;
 import org.jdom.Attribute;
 import org.jdom.Element;
 import org.jdom.JDOMException;
@@ -84,13 +93,15 @@ public class ConvertProject extends AnAction {
         application.runWriteAction(() -> {
             String fileName = null;
             try {
+                final VirtualFile projectDir = ProjectUtil.guessProjectDir(project);
+                if (projectDir == null) return;
                 fileName = ".gitignore";
                 writeProjectFile(project,
                         () -> FileUtil.loadTextAndClose(ConvertProject.class.getResourceAsStream("tmpl_gitignore.txt")),
                         fileName, projectData, STRATEGY.CREATEONLY);
 
                 fileName = "CMakeLists_template.txt";
-                VirtualFile cmakeTemplate = project.getBaseDir().findOrCreateChildData(project, fileName);
+                VirtualFile cmakeTemplate = projectDir.findOrCreateChildData(project, fileName);
                 String templateText;
                 if (cmakeTemplate.getLength() <= 0) {
                     templateText = loadCmakeTemplateFromResources();
@@ -98,8 +109,7 @@ public class ConvertProject extends AnAction {
                 } else {
                     templateText = VfsUtil.loadText(cmakeTemplate);
                 }
-                fileName = "CMakeLists.txt";
-                writeProjectFile(project, () -> templateText, fileName, projectData, STRATEGY.OVERWRITE);
+                writeProjectFile(project, () -> templateText, "CMakeLists.txt", projectData, STRATEGY.OVERWRITE);
             } catch (IOException e) {
                 String msg = String.format("%s:\n %s ", fileName, e.getLocalizedMessage());
                 application.invokeLater(() ->
@@ -110,7 +120,9 @@ public class ConvertProject extends AnAction {
 
         CMakeWorkspace cMakeWorkspace = CMakeWorkspace.getInstance(project);
         if (cMakeWorkspace.getCMakeDependencyFiles().isEmpty()) {
-            cMakeWorkspace.selectProjectDir(VfsUtil.virtualToIoFile(project.getBaseDir()));
+            final VirtualFile projectDir = ProjectUtil.guessProjectDir(project);
+            if (projectDir != null)
+                cMakeWorkspace.selectProjectDir(VfsUtil.virtualToIoFile(projectDir));
         }
         cMakeWorkspace.scheduleClearGeneratedFilesAndReload();
         ApplicationManager.getApplication().executeOnPooledThread(() ->
@@ -131,6 +143,7 @@ public class ConvertProject extends AnAction {
         );
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     @Nullable
     public static ProjectData loadProjectData(Project project) {
         Element cProject = detectAndLoadFile(project, CPROJECT_FILE_NAME);
@@ -161,9 +174,11 @@ public class ConvertProject extends AnAction {
     private static void writeProjectFile(Project project, ThrowableComputable<String, IOException> template,
                                          String fileName, ProjectData projectData, STRATEGY strategy)
             throws IOException {
-        VirtualFile projectFile = project.getBaseDir().findChild(fileName);
+        final VirtualFile projectDir = ProjectUtil.guessProjectDir(project);
+        if (projectDir == null) return;
+        VirtualFile projectFile = projectDir.findChild(fileName);
         if (projectFile == null) {
-            projectFile = project.getBaseDir().createChildData(project, fileName);
+            projectFile = projectDir.createChildData(project, fileName);
         } else if (strategy == STRATEGY.CREATEONLY) {
             return;
         }
@@ -174,14 +189,25 @@ public class ConvertProject extends AnAction {
     private static void modifyCMakeConfigs(Project project, ProjectData projectData) {
         RunManager runManager = RunManager.getInstance(project);
         @SuppressWarnings("ConstantConditions")
-        ConfigurationFactory factory = runManager.getConfigurationType(OpenOcdConfigurationType.TYPE_ID)
-                .getConfigurationFactories()[0];
+        ConfigurationFactory factory =
+                ConfigurationTypeUtil.findConfigurationType(OpenOcdConfigurationType.TYPE_ID).getConfigurationFactories()[0];
         String name = "OCD " + projectData.getProjectName();
         if (runManager.findConfigurationByTypeAndName(OpenOcdConfigurationType.TYPE_ID, name) == null) {
-            RunnerAndConfigurationSettings newRunConfig = runManager.createRunConfiguration(name, factory);
-            newRunConfig.setSingleton(true);
+            RunnerAndConfigurationSettings newRunConfig = runManager.createConfiguration(name, factory);
+            newRunConfig.setShared(true);
             OpenOcdConfiguration configuration = (OpenOcdConfiguration) newRunConfig.getConfiguration();
-            configuration.setupDefaultTargetAndExecutable();
+            configuration.setAllowRunningInParallel(false);
+            final CMakeBuildConfigurationHelper helper = CMakeRunConfigurationType.getHelper(project);
+            CMakeTarget target = helper.getDefaultTarget();
+            if (target != null && !target.isExecutable()) {
+                target = helper.getTargets().stream().filter(CMakeTarget::isExecutable).findFirst().orElse(null);
+            }
+            if (target != null) {
+                final BuildTargetData buildTargetData = new BuildTargetData(project.getName(), target.getName());
+                final BuildTargetAndConfigurationData data = new BuildTargetAndConfigurationData(buildTargetData, null);
+                configuration.setTargetAndConfigurationData(data);
+                configuration.setExecutableData(new ExecutableData(buildTargetData));
+            }
             ApplicationManager.getApplication().invokeLater(() -> {
                 configuration.setBoardConfigFile(SelectBoardDialog.selectBoardByPriority(projectData, project));
                 ApplicationManager.getApplication().runWriteAction(() ->
@@ -223,14 +249,15 @@ public class ConvertProject extends AnAction {
                 .collect(Collectors.joining(" "));
     }
 
-    private static String fetchValueBySuperClass(Context context, String key) {
+    private static String fetchValueBySuperClass(Context context, @MagicConstant String key) {
         XPathExpression<Attribute> xPath = XPathFactory.instance()
                 .compile(".//*[@superClass='" + key + "']/@value", ATTRIBUTES_ONLY);
         return xPath.evaluateFirst(context.cProjectElement).getValue();
     }
 
     private static Element detectAndLoadFile(Project project, String fileName) {
-        VirtualFile child = project.getBaseDir().findChild(fileName);
+        final VirtualFile projectDir = ProjectUtil.guessProjectDir(project);
+        VirtualFile child = projectDir == null ? null : projectDir.findChild(fileName);
         if (child == null || !child.exists() || child.isDirectory()) {
             Messages.showErrorDialog(
                     String.format("File %s is not found in the project directory %s", fileName, project.getBasePath()),
@@ -249,7 +276,7 @@ public class ConvertProject extends AnAction {
     }
 
     @Override
-    public void actionPerformed(AnActionEvent event) {
+    public void actionPerformed(@NotNull AnActionEvent event) {
 
         Project project = getEventProject(event);
         updateProject(project);

@@ -81,6 +81,7 @@ public class OpenOcdSettingsState implements PersistentStateComponent<OpenOcdSet
         return "C:\\";
     }
 
+    @SuppressWarnings("SameParameterValue")
     @Nullable
     private File findExecutableInPath(String name) {
         if (SystemInfo.isWindows) {
