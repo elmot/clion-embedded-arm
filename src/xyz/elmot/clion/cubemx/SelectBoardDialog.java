@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 import static xyz.elmot.clion.openocd.OpenOcdComponent.require;
 
 public class SelectBoardDialog extends DialogWrapper {
-    private static Logger LOGGER = Logger.getInstance(DialogWrapper.class);
+    private static final Logger LOGGER = Logger.getInstance(DialogWrapper.class);
     private final String[] values;
     private int result = 0;
 

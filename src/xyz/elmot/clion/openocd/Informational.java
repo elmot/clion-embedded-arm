@@ -37,7 +37,7 @@ public class Informational {
                     ToolWindowManager toolWindowManager = ToolWindowManager.getInstance(project);
                     if (toolWindowManager.canShowNotification(ToolWindowId.RUN)) {
                         toolWindowManager.notifyByBalloon(ToolWindowId.RUN, messageType, message,
-                                OpenOcdConfigurationType.getPluginIcon(),
+                                OpenOcdConfigurationType.ICON.getValue(),
                                 new HyperlinkHandler(project)
                         );
                     }

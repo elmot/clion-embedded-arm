@@ -154,6 +154,8 @@ public abstract class FileChooseInput extends TextFieldWithBrowseButton {
 
     }
 
+    @SuppressWarnings("unused")
+    // Might be used in future
     public static class ExeFile extends FileChooseInput {
         @SuppressWarnings("WeakerAccess")
         public ExeFile(String valueName, VirtualFile defValue) {
@@ -166,6 +168,7 @@ public abstract class FileChooseInput extends TextFieldWithBrowseButton {
                     && VfsUtil.virtualToIoFile(virtualFile).canExecute();
         }
 
+        @Override
         protected FileChooserDescriptor createFileChooserDescriptor() {
             if (SystemInfo.isWindows) {
                 return FileChooserDescriptorFactory.createSingleFileDescriptor("exe");

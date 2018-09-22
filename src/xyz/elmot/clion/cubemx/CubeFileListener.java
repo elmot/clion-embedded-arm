@@ -2,9 +2,10 @@ package xyz.elmot.clion.cubemx;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.components.ApplicationComponent;
+import com.intellij.openapi.components.BaseComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VfsUtilCore;
@@ -20,7 +21,7 @@ import java.util.List;
 /**
  * (c) elmot on 29.10.2017.
  */
-public class CubeFileListener implements ApplicationComponent, BulkFileListener {
+public class CubeFileListener implements BaseComponent, BulkFileListener {
 
     @Override
     public void initComponent() {
@@ -36,7 +37,8 @@ public class CubeFileListener implements ApplicationComponent, BulkFileListener 
             if (name.endsWith(ConvertProject.CPROJECT_FILE_NAME)) {
                 Project[] openProjects = ProjectManager.getInstance().getOpenProjects();
                 for (Project openProject : openProjects) {
-                    if (VfsUtilCore.isAncestor(openProject.getBaseDir(), file, true)) {
+                    final VirtualFile projectDir = ProjectUtil.guessProjectDir(openProject);
+                    if (projectDir!=null && VfsUtilCore.isAncestor(projectDir, file, true)) {
                         ApplicationManager.getApplication().invokeLater(
                                 () -> askProjectUpdate(openProject)
                         );
