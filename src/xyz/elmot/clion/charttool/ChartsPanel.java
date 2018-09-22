@@ -29,7 +29,7 @@ public class ChartsPanel extends JFXPanel {
     public static final int MAX_SERIES = 50;
 
     private LineChart<Number, Number> lineChart;
-    private Map<String, ChartExpressionData> seriesByName = new ConcurrentHashMap<>();
+    private final Map<String, ChartExpressionData> seriesByName = new ConcurrentHashMap<>();
 
     public ChartsPanel() {
         Platform.runLater(() -> {

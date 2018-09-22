@@ -73,8 +73,6 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
             return command;
         }
 
-        ;
-
     }
 
 

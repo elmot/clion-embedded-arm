@@ -34,8 +34,7 @@ public class SignalSources extends JBSplitter implements XDebuggerManagerListene
         setBorder(JBUI.Borders.empty(15));
         this.project = project;
         this.debugListener = debugListener;
-        ChartToolPersistence persistence1 = persistence;
-        persistence1.setChangeListener(this::setAllBreakpoints);
+        persistence.setChangeListener(this::setAllBreakpoints);
         bpList = new BreakpointList(persistence);
         setAllBreakpoints();
         ExpressionList expressionList = new ExpressionList(persistence,

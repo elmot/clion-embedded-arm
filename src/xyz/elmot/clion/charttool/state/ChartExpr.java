@@ -30,10 +30,11 @@ public class ChartExpr {
         return (name == null || "".equals(name)) ? expression : name;
     }
 
-    public void setName(String name) {
+    public void setName(@Nullable String name) {
         this.name = name;
     }
 
+    @NotNull
     public String getExpression() {
         return expression;
     }

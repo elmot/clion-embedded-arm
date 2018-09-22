@@ -20,9 +20,6 @@ public class ChartTool implements ToolWindowFactory {
     }
 
 
-    public ChartTool() {
-    }
-
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         ContentManager contentManager = toolWindow.getContentManager();

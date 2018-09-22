@@ -15,7 +15,6 @@ import java.util.LinkedList;
 public class Zoomer extends StackPane {
 
     public static final int ZOOM_GO_BACK_DEPTH = 5;
-    private final XYChart<Number, Number> chart;
 
     private double zoomStartX = -1;
     private double zoomStartY = -1;
@@ -27,7 +26,6 @@ public class Zoomer extends StackPane {
 
     public Zoomer(XYChart<Number, Number> chart) {
         super(chart);
-        this.chart = chart;
         zoomRectangle = new Rectangle(0, 0, new Color(0, 0.5, 1, 0.2));
         zoomRectangle.setManaged(false);
         getChildren().add(zoomRectangle);

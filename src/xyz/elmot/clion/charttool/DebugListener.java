@@ -18,7 +18,6 @@ import org.jetbrains.concurrency.Promise;
 import xyz.elmot.clion.charttool.state.ChartExpr;
 import xyz.elmot.clion.charttool.state.ExpressionState;
 import xyz.elmot.clion.charttool.state.LineState;
-import xyz.elmot.clion.openocd.Informational;
 import xyz.elmot.clion.openocd.OpenOcdConfigurationType;
 import xyz.elmot.clion.openocd.OpenOcdLauncher;
 
@@ -37,7 +36,7 @@ public class DebugListener implements XDebugSessionListener {
     private final Project project;
     private final ChartsPanel chartsPanel;
     private final XDebuggerManager debuggerManager;
-    private ChartToolPersistence persistence;
+    private final ChartToolPersistence persistence;
 
     public DebugListener(Project project, ChartsPanel chartsPanel, ChartToolPersistence persistence) {
         this.project = project;
@@ -120,7 +119,7 @@ public class DebugListener implements XDebugSessionListener {
                                 String localizedMessage = t.getLocalizedMessage();
                                 toolWindowManager.notifyByBalloon(ToolWindowId.DEBUG, MessageType.WARNING,
                                         expressionTrim + ": " + localizedMessage,
-                                        OpenOcdConfigurationType.getPluginIcon(), null
+                                        OpenOcdConfigurationType.ICON.getValue(), null
                                 );
                             }
                         }
@@ -137,7 +136,6 @@ public class DebugListener implements XDebugSessionListener {
             try {
                 String strippedV = ARRAY_STRIPPER.matcher(v).replaceAll("");
                 List<Number> data = new ArrayList<>();
-                int i = 1;
                 for (StringTokenizer tokenizer = new StringTokenizer(strippedV, ",");
                      tokenizer.hasMoreTokens(); ) {
                     data.add(Double.parseDouble(tokenizer.nextToken()));

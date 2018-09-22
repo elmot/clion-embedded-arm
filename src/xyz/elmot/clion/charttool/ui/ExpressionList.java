@@ -1,13 +1,13 @@
 package xyz.elmot.clion.charttool.ui;
 
 import com.intellij.openapi.ui.DialogBuilder;
-import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.ui.AddEditRemovePanel;
 import com.intellij.ui.DocumentAdapter;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBTextField;
 import org.jdesktop.swingx.JXRadioGroup;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.elmot.clion.charttool.ChartToolPersistence;
 import xyz.elmot.clion.charttool.state.ChartExpr;
@@ -18,7 +18,6 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.beans.PropertyChangeListener;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -129,7 +128,7 @@ public class ExpressionList extends AddEditRemovePanel<ChartExpr> {
         dialogBuilder.addOkAction();
         expressionField.getDocument().addDocumentListener(new DocumentAdapter() {
             @Override
-            protected void textChanged(DocumentEvent e) {
+            protected void textChanged(@NotNull DocumentEvent e) {
                 dialogBuilder.setOkActionEnabled(!expressionField.getText().trim().isEmpty());
             }
         });
