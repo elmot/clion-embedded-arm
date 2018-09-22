@@ -53,37 +53,27 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
     }
 
     public enum ResetType {
-        RUN {
-            @Override
-            public String getCommand() {
-                return "init;reset run;";
-            }
-        },
-        INIT {
-            @Override
-            public String getCommand() {
-                return "init;reset init;";
-            }
-        },
-        HALT {
-            @Override
-            public String getCommand() {
-                return "init;reset halt";
-            }
-        },
-        NONE {
-            @Override
-            public String getCommand() {
-                return "";
-            }
-        };
+        RUN("init;reset run;"),
+        INIT("init;reset init;"),
+        HALT("init;reset halt"),
+        NONE("");
 
         @Override
         public String toString() {
             return toBeautyString(super.toString());
         }
 
-        public abstract String getCommand();
+        ResetType(String command) {
+            this.command = command;
+        }
+
+        private final String command;
+
+        public final String getCommand() {
+            return command;
+        }
+
+        ;
 
     }
 
@@ -120,7 +110,7 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
         if (StringUtil.isEmpty(s)) return def;
         try {
             //noinspection unchecked
-            return (T) Enum.valueOf(def.getClass(), s);
+            return (T) Enum.valueOf(def.getDeclaringClass(), s);
         } catch (Throwable t) {
             return def;
         }
