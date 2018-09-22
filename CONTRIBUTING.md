@@ -28,7 +28,7 @@ See above. Please note that formatting fixes may merged, or may be rejected with
 
 #### **Do you want to contribute to the documentation?**
 
-This is the best contribution to the project. Go right ahead, open a pull request! You can do it [online](//help.github.com/articles/editing-files-in-another-user-s-repository/)
+This is the best contribution to the project. Go right ahead, open a pull request! You can do it [online](https://help.github.com/articles/editing-files-in-another-user-s-repository/)
 
 Thanks! :heartbeat: 
 
