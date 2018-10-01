@@ -24,7 +24,9 @@ SET(LINKER_SCRIPT $${CMAKE_SOURCE_DIR}/${linkerScript})
 #Uncomment for software floating point
 #SET(FPU_FLAGS "-mfloat-abi=soft")
 
-SET(COMMON_FLAGS "-mcpu=${mcpu} $${FPU_FLAGS} -mthumb -mthumb-interwork -ffunction-sections -fdata-sections -g -fno-common -fmessage-length=0 ${linkerFlags}")
+SET(COMMON_FLAGS
+    "-mcpu=${mcpu} $${FPU_FLAGS} -mthumb -mthumb-interwork -ffunction-sections -fdata-sections \
+    -g -fno-common -fmessage-length=0 ${linkerFlags}")
 
 SET(CMAKE_CXX_FLAGS_INIT "$${COMMON_FLAGS} -std=c++11")
 SET(CMAKE_C_FLAGS_INIT "$${COMMON_FLAGS} -std=gnu99")
@@ -42,7 +44,8 @@ include_directories(${includes})
 
 add_executable($${PROJECT_NAME}.elf $${SOURCES} $${LINKER_SCRIPT})
 
-set(CMAKE_EXE_LINKER_FLAGS "$${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=$${PROJECT_BINARY_DIR}/$${PROJECT_NAME}.map")
+set(CMAKE_EXE_LINKER_FLAGS
+    "$${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=$${PROJECT_BINARY_DIR}/$${PROJECT_NAME}.map")
 
 set(HEX_FILE $${PROJECT_BINARY_DIR}/$${PROJECT_NAME}.hex)
 set(BIN_FILE $${PROJECT_BINARY_DIR}/$${PROJECT_NAME}.bin)
