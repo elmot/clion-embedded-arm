@@ -6,6 +6,7 @@ import java.util.Objects;
 import com.intellij.CommonBundle;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.Project;
@@ -83,7 +84,7 @@ public class Informational {
             if(link.toLowerCase().startsWith(SETTINGS_PROTOCOL)) {
                 try {
                     String className = link.substring(SETTINGS_PROTOCOL.length());
-                    ShowSettingsUtil.getInstance().showSettingsDialog(project, Class.forName(className));
+                    ShowSettingsUtil.getInstance().showSettingsDialog(project, (Class<Configurable>)Class.forName(className));
                 } catch (ClassNotFoundException ignored) {
                 }
             } else {
