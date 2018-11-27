@@ -41,13 +41,11 @@ Likes and Donations
 
 If you like the plugin, you may :star: the project at github (button at top-right of the page) and at [jetbrains plugins repository](https://plugins.jetbrains.com/plugin/10115).
 
-The plugin is free, but you can support my work with a donation. 
+The plugin is free<s>, but you can support my work with a donation</s>. 
 
-[10 EUR](https://paypal.me/elmot/10eur) |
-[20 EUR](https://paypal.me/elmot/20eur) |
-[Other amount](https://paypal.me/elmot)
+<s>10 EUR | 20 EUR | Other amount</s>
 
-![PayPal](https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png)
+Thanks to all the donators, you gave me some resources, and a very important feeling that I am doing a good thing. Now I feel I can not ask for donations anymore. If you still have the intention to support free stuff for embedded development, you may donate [OpenOCD.org](http://openocd.org/donations/) project, those guys are doing a great job for all of us. 
 
 [Hall of Donators](DONATIONS.md)
 --
