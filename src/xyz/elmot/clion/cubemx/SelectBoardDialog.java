@@ -80,8 +80,10 @@ public class SelectBoardDialog extends DialogWrapper {
             VirtualFile ocdHome = require(LocalFileSystem.getInstance().findFileByPath(ocdSettings.openOcdHome));
             VirtualFile ocdScripts = require(OpenOcdSettingsState.findOcdScripts(ocdHome));
             VirtualFile[] ocdBoards = require(ocdScripts.findChild("board")).getChildren();
-            Stream<String> boardByScores =
-                    Stream.of(ocdBoards).parallel().map(ocdBoard ->
+            Stream<String> boardByScores = Stream.of(ocdBoards)
+                    .filter(file ->!file.isDirectory())
+                    .parallel()
+                    .map(ocdBoard ->
                             {
                                 try {
                                     String text = VfsUtil.loadText(ocdBoard).toUpperCase();
