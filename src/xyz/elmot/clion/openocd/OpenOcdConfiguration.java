@@ -12,7 +12,6 @@ import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
 import com.jetbrains.cidr.execution.CidrCommandLineState;
 import com.jetbrains.cidr.execution.CidrExecutableDataHolder;
 import org.jdom.Element;
-import org.jdom.Namespace;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,13 +22,13 @@ import org.jetbrains.annotations.Nullable;
 public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements CidrExecutableDataHolder {
     public static final int DEF_GDB_PORT = 3333;
     public static final int DEF_TELNET_PORT = 4444;
-    public static final Namespace NAMESPACE = Namespace.getNamespace("elmot-ocd", "https://github.com/elmot/clion-embedded-arm");
     private static final String ATTR_GDB_PORT = "gdb-port";
     private static final String ATTR_TELNET_PORT = "telnet-port";
     private static final String ATTR_BOARD_CONFIG = "board-config";
     public static final String ATTR_RESET_TYPE = "reset-type";
     public static final String ATTR_DOWNLOAD_TYPE = "download-type";
     public static final ResetType DEFAULT_RESET = ResetType.INIT;
+    public static final String TAG_OPENOCD = "openocd";
     private int gdbPort = DEF_GDB_PORT;
     private int telnetPort = DEF_TELNET_PORT;
     private String boardConfigFile;
@@ -73,8 +72,6 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
             return command;
         }
 
-        ;
-
     }
 
 
@@ -90,23 +87,26 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
     }
 
     @Override
-    public void readExternal(@NotNull Element element) throws InvalidDataException {
-        super.readExternal(element);
-        boardConfigFile = element.getAttributeValue(ATTR_BOARD_CONFIG, NAMESPACE);
-        gdbPort = readIntAttr(element, ATTR_GDB_PORT, DEF_GDB_PORT);
-        telnetPort = readIntAttr(element, ATTR_TELNET_PORT, DEF_TELNET_PORT);
-        resetType = readEnumAttr(element, ATTR_RESET_TYPE, DEFAULT_RESET);
-        downloadType = readEnumAttr(element, ATTR_DOWNLOAD_TYPE, DownloadType.ALWAYS);
+    public void readExternal(@NotNull Element parentElement) throws InvalidDataException {
+        super.readExternal(parentElement);
+        Element element = parentElement.getChild(TAG_OPENOCD);
+        if(element!=null) {
+            boardConfigFile = element.getAttributeValue(ATTR_BOARD_CONFIG);
+            gdbPort = readIntAttr(element, ATTR_GDB_PORT, DEF_GDB_PORT);
+            telnetPort = readIntAttr(element, ATTR_TELNET_PORT, DEF_TELNET_PORT);
+            resetType = readEnumAttr(element, ATTR_RESET_TYPE, DEFAULT_RESET);
+            downloadType = readEnumAttr(element, ATTR_DOWNLOAD_TYPE, DownloadType.ALWAYS);
+        }
     }
 
     private int readIntAttr(@NotNull Element element, String name, int def) {
-        String s = element.getAttributeValue(name, NAMESPACE);
+        String s = element.getAttributeValue(name);
         if (StringUtil.isEmpty(s)) return def;
         return Integer.parseUnsignedInt(s);
     }
 
     private <T extends Enum> T readEnumAttr(@NotNull Element element, String name, T def) {
-        String s = element.getAttributeValue(name, NAMESPACE);
+        String s = element.getAttributeValue(name);
         if (StringUtil.isEmpty(s)) return def;
         try {
             //noinspection unchecked
@@ -117,15 +117,17 @@ public class OpenOcdConfiguration extends CMakeAppRunConfiguration implements Ci
     }
 
     @Override
-    public void writeExternal(@NotNull Element element) throws WriteExternalException {
-        super.writeExternal(element);
-        element.setAttribute(ATTR_GDB_PORT, "" + gdbPort, NAMESPACE);
-        element.setAttribute(ATTR_TELNET_PORT, "" + telnetPort, NAMESPACE);
+    public void writeExternal(@NotNull Element parentElement) throws WriteExternalException {
+        super.writeExternal(parentElement);
+        Element element = new Element(TAG_OPENOCD);
+        parentElement.addContent(element);
+        element.setAttribute(ATTR_GDB_PORT, "" + gdbPort);
+        element.setAttribute(ATTR_TELNET_PORT, "" + telnetPort);
         if (boardConfigFile != null) {
-            element.setAttribute(ATTR_BOARD_CONFIG, boardConfigFile, NAMESPACE);
+            element.setAttribute(ATTR_BOARD_CONFIG, boardConfigFile);
         }
-        element.setAttribute(ATTR_RESET_TYPE, resetType.name(), NAMESPACE);
-        element.setAttribute(ATTR_DOWNLOAD_TYPE, downloadType.name(), NAMESPACE);
+        element.setAttribute(ATTR_RESET_TYPE, resetType.name());
+        element.setAttribute(ATTR_DOWNLOAD_TYPE, downloadType.name());
     }
 
     @Override
