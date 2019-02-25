@@ -78,15 +78,7 @@ Bugs, Feature requests, Questions, and Contribution
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md)
 
-Likes and Donations
+Likes
 ===
 
 If you like the plugin, you may :star: the project at github (button at top-right of the page) and at [jetbrains plugins repository](https://plugins.jetbrains.com/plugin/10115).
-
-The plugin is free, but you can support my work with a donation. 
-
-[10 EUR](https://paypal.me/elmot/10eur) |
-[20 EUR](https://paypal.me/elmot/20eur) |
-[Other amount](https://paypal.me/elmot)
-
-![PayPal](https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png) 
