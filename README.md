@@ -1,7 +1,23 @@
 ARM MCU development plugin for JetBrains CLion 
 ====
+
+
+***:point_up: Please Note!***
+
+*Starting from version 2019.1, CLion fully integrates this plugin, and the plugin is going to be developed as a part of 
+the IDE. Old versions are still available at [plugins repository](https://plugins.jetbrains.com/plugin/10115).*
+
+*For more information, please refer to  a [press release](https://blog.jetbrains.com/clion/2019/02/clion-2019-1-eap-clion-for-embedded-development-part-iii/)*
+
+*Please file & file issues and feature requests to 
+[JetBrains YouTrack system](https://youtrack.jetbrains.com/newIssue?project=CPP&description=Clion%20Version%3A%0AOpenOCD%20Version%3A%0AToolchain%20Version%3A%0ATarget%20MCU%2Fboard%3A&c=Subsystem%20Embedded)*
+
+*This repository is archived and left here read-only mode for reference purposes.*
+
+
+---
+
 [![Join the chat at https://gitter.im/clion-embedded-arm/Lobby](https://badges.gitter.im/clion-embedded-arm/Lobby.svg)](https://gitter.im/clion-embedded-arm/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Version](https://img.shields.io/github/release/elmot/clion-embedded-arm/all.svg)](https://plugins.jetbrains.com/plugin/10115)
 
 Potentially you can use the plugin to work with any kind of MCU supported by GCC and OpenOCD, but major auditory for 
 the plugin are STM32 developers. 
