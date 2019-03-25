@@ -7,7 +7,7 @@ plugin will remain available in the [plugins repository](https://plugins.jetbrai
 
 *For bug reports and feature requests, please use 
 [JetBrains YouTrack](https://youtrack.jetbrains.com/newIssue?project=CPP&description=Clion%20Version%3A%0AOpenOCD%20Version%3A%0AToolchain%20Version%3A%0ATarget%20MCU%2Fboard%3A&c=Subsystem%20Embedded).
-Feel free to upvote and comment in [exising tickets](https://youtrack.jetbrains.com/issues?q=Subsystem:%20Embedded%20sort%20by:%20State%20).*
+Feel free to upvote and comment in [existing tickets](https://youtrack.jetbrains.com/issues?q=Subsystem:%20Embedded%20sort%20by:%20State%20).*
 
 *This repository was archived and turned read-only.*
 
