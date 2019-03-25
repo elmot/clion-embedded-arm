@@ -1,16 +1,17 @@
 ***:point_up: Please Note!***
 
-*Starting from version 2019.1, CLion fully integrates this plugin, and the plugin is going to be developed as a part of 
-the IDE. Old versions are still available at [plugins repository](https://plugins.jetbrains.com/plugin/10115).*
+*This plugin was integrated in CLion 2019.1, and it will be further developed as part of the IDE. Older versions of the 
+plugin will remain available in the [plugins repository](https://plugins.jetbrains.com/plugin/10115).*
 
-*For more information, please refer to  a [press release](https://blog.jetbrains.com/clion/2019/02/clion-2019-1-eap-clion-for-embedded-development-part-iii/)*
+*Refer to the [press release](https://blog.jetbrains.com/clion/2019/02/clion-2019-1-eap-clion-for-embedded-development-part-iii/) for more information.*
 
-*Please file & file issues and feature requests to 
-[JetBrains YouTrack system](https://youtrack.jetbrains.com/newIssue?project=CPP&description=Clion%20Version%3A%0AOpenOCD%20Version%3A%0AToolchain%20Version%3A%0ATarget%20MCU%2Fboard%3A&c=Subsystem%20Embedded)*
+*For bug reports and feature requests, please use 
+[JetBrains YouTrack](https://youtrack.jetbrains.com/newIssue?project=CPP&description=Clion%20Version%3A%0AOpenOCD%20Version%3A%0AToolchain%20Version%3A%0ATarget%20MCU%2Fboard%3A&c=Subsystem%20Embedded).
+Feel free to upvote and comment in [exising tickets](https://youtrack.jetbrains.com/issues?q=Subsystem:%20Embedded%20sort%20by:%20State%20).*
 
-*This repository is archived and left here read-only mode for reference purposes.*
+*This repository was archived and turned read-only.*
 
-***This contribution guide is for reference purposes only***
+***This contribution guide is for reference purposes only.***
 
 ---
 
