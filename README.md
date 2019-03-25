@@ -1,7 +1,6 @@
 ARM MCU development plugin for JetBrains CLion 
 ====
 
-
 ***:point_up: Please Note!***
 
 *Starting from version 2019.1, CLion fully integrates this plugin, and the plugin is going to be developed as a part of 
@@ -13,7 +12,6 @@ the IDE. Old versions are still available at [plugins repository](https://plugin
 [JetBrains YouTrack system](https://youtrack.jetbrains.com/newIssue?project=CPP&description=Clion%20Version%3A%0AOpenOCD%20Version%3A%0AToolchain%20Version%3A%0ATarget%20MCU%2Fboard%3A&c=Subsystem%20Embedded)*
 
 *This repository is archived and left here read-only mode for reference purposes.*
-
 
 ---
 

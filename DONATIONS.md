@@ -1,3 +1,5 @@
+***Thank you, but donations are not accepted anymore***
+
 List of project donators
 ===
 
