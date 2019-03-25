@@ -1,6 +1,6 @@
 ***:point_up: Please Note!***
 
-*This plugin was integrated in CLion 2019.1, and it will be further developed as part of the IDE. Older versions of the 
+*This plugin was integrated to CLion 2019.1, and it will be further developed as part of the IDE. Older versions of the 
 plugin will remain available in the [plugins repository](https://plugins.jetbrains.com/plugin/10115).*
 
 *Refer to the [press release](https://blog.jetbrains.com/clion/2019/02/clion-2019-1-eap-clion-for-embedded-development-part-iii/) for more information.*
